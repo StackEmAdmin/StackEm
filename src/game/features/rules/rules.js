@@ -37,19 +37,26 @@ function calculateAttacks(rules, info) {
  * @param {Object} board - The game board object.
  * @param {Object} piece - The rotated piece object.
  * @param {number} prevRotation - The previous rotation of the piece.
- * @param {Object} kickTable - The kick table used.
+ * @param {string} kickTableName - The kick table name.
  * @param {number} kickNum - The kick number used for the piece.
  *
  * @returns {string} - Depending on maneuver performed, returns 'spin', 'mini', or ''.
  */
 
-function getSpinInfo(rules, board, piece, prevRotation, kickTable, kickNum) {
+function getSpinInfo(
+  rules,
+  board,
+  piece,
+  prevRotation,
+  kickTableName,
+  kickNum
+) {
   return spinLib.getSpinInfo(
     rules.spins,
     board,
     piece,
     prevRotation,
-    kickTable,
+    kickTableName,
     kickNum
   );
 }

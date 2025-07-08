@@ -1,4 +1,5 @@
 import { boardLib } from '../../board/board';
+import { isTSTOrFIN } from '../kick/srsplus';
 
 /**
  * Determines the type of spin maneuver based on the given game board state and rotation.
@@ -6,11 +7,11 @@ import { boardLib } from '../../board/board';
  * @param {Array} gameBoard - The current state of the game board.
  * @param {Object} piece - The (rotated & kicked) piece being placed on the board.
  * @param {number} prevRotation - The previous rotation of the piece.
- * @param {Object} kickTable - The kick table used.
+ * @param {string} kickTableName - The kick table name.
  * @param {number} kickNum - The kick number used for the piece.
  * @returns {string} - The type of maneuver ('spin' or 'mini'), or an empty string if no maneuver is detected.
  */
-function getSpinInfo(gameBoard, piece, prevRotation, kickTable, kickNum) {
+function getSpinInfo(gameBoard, piece, prevRotation, kickTableName, kickNum) {
   // Disclaimer:
   // T Spins are quite a curious sight,
   // Twists and turns in all its might.
@@ -34,8 +35,8 @@ function getSpinInfo(gameBoard, piece, prevRotation, kickTable, kickNum) {
   // Condition 4 applies to srsPlus (and srs when implemented)
   const newRotation = piece.rot;
   if (
-    kickTable.name === 'srsPlus' &&
-    kickTable.isTSTOrFIN(kickNum, prevRotation, newRotation)
+    kickTableName === 'srsPlus' &&
+    isTSTOrFIN(kickNum, prevRotation, newRotation)
   ) {
     return 'spin';
   }

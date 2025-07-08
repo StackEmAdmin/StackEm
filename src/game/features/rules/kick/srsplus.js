@@ -189,9 +189,9 @@ const srsPlusI = {
  * @returns {boolean} - Returns true if the maneuver results in a TST or FIN move, false otherwise.
  */
 function isTSTOrFIN(kickNum, prevRotation, newRotation) {
-  // (kikNum, prevRot, newRot) = (5, 0, 1), (5, 0, 3), (5, 2, 1), or (5, 2, 3)
+  // (kikNum, prevRot, newRot) = (4, 0, 1), (4, 0, 3), (4, 2, 1), or (4, 2, 3)
 
-  if (kickNum !== 5) {
+  if (kickNum !== 4) {
     return false;
   }
 
@@ -222,7 +222,6 @@ function isTSTOrFIN(kickNum, prevRotation, newRotation) {
 // ]
 const srsPlusKickTable = {
   name: 'srsPlus',
-  isTSTOrFIN: isTSTOrFIN,
   o: srsPlusOLJSTZ,
   i: srsPlusI,
   l: srsPlusOLJSTZ,
@@ -232,4 +231,4 @@ const srsPlusKickTable = {
   z: srsPlusOLJSTZ,
 };
 
-export default srsPlusKickTable;
+export { isTSTOrFIN, srsPlusKickTable as default };

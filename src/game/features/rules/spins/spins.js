@@ -18,14 +18,27 @@ function newSpins(system) {
  * @param {Object} board - The game board object.
  * @param {Object} piece - The rotated piece object.
  * @param {number} prevRotation - The previous rotation of the piece.
- * @param {Object} kickTable - The kick table used.
+ * @param {string} kickTableName - The kick table name.
  * @param {number} kickNum - The kick number used for the piece.
  *
  * @returns {string} - Depending on maneuver performed, returns 'spin', 'mini', or ''.
  */
-function getSpinInfo(system, board, piece, prevRotation, kickTable, kickNum) {
+function getSpinInfo(
+  system,
+  board,
+  piece,
+  prevRotation,
+  kickTableName,
+  kickNum
+) {
   if (system === 'tSpin') {
-    return tSpin.getSpinInfo(board, piece, prevRotation, kickTable, kickNum);
+    return tSpin.getSpinInfo(
+      board,
+      piece,
+      prevRotation,
+      kickTableName,
+      kickNum
+    );
   }
 }
 

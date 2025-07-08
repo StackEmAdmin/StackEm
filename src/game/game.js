@@ -136,6 +136,8 @@ function infSoftDrop(game, currentTime) {
  * @param {Object} gameBoard - The game board object.
  * @param {Object} rotatedPiece - The rotated piece object.
  * @param {number} prevRotation - The previous rotation of the piece.
+ * @param {string} kickTableName - The name of the kick table.
+ * @param {Array} kickTable - An array where every element is an array of (x, y) offsets.
  * @param {Array} kickOffset - The kick offset to be applied to the rotated piece.
  * @param {number} kickNum - The kick number.
  *
@@ -149,6 +151,7 @@ function getKickInfo(
   gameBoard,
   rotatedPiece,
   prevRotation,
+  kickTableName,
   kickTable,
   kickNum,
   rulesSpins
@@ -164,7 +167,7 @@ function getKickInfo(
     gameBoard,
     kickedPiece,
     prevRotation,
-    kickTable,
+    kickTableName,
     kickNum
   );
 
@@ -175,6 +178,7 @@ function calculateFirstLegalKick(
   gameBoard,
   rotatedPiece,
   prevRotation,
+  kickTableName,
   kickTable,
   rulesSpins
 ) {
@@ -184,6 +188,7 @@ function calculateFirstLegalKick(
       gameBoard,
       rotatedPiece,
       prevRotation,
+      kickTableName,
       kickTable,
       kickNum,
       rulesSpins
@@ -225,6 +230,7 @@ function rotateAndKick(game, action, currentTime) {
     game.board,
     rotatedPiece,
     prevRotation,
+    game.rules.kick.name,
     kickTable,
     rulesSpins
   );
