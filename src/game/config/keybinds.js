@@ -71,9 +71,6 @@ function loadKeybinds() {
   try {
     let keybinds = JSON.parse(localStorage.getItem(LS_KEYBINDS));
     let modKeybinds = JSON.parse(localStorage.getItem(LS_MOD_KEYBINDS));
-    if (!keybinds && !modKeybinds) {
-      throw new Error('No user keybinds found');
-    }
     if (!keybinds) {
       keybinds = DEFAULT_KEYBINDS;
     }

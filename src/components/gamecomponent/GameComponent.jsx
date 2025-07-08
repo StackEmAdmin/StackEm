@@ -30,8 +30,6 @@ function GameComponent() {
   const accumulatorRef = useRef(0);
   const animationRef = useRef(null);
 
-  console.log('rendering');
-
   useEffect(() => {
     const keyDown = (ev) =>
       handleKeyDown(
