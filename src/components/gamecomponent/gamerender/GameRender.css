@@ -74,12 +74,16 @@
 }
 
 .game-container .hold {
+  box-sizing: content-box;
+  width: calc(4 * var(--cell-size));
+  height: calc(2 * var(--cell-size));
+
   grid-area: hold;
-  aspect-ratio: 2 / 1;
   padding: var(--cell-size);
   margin-right: var(--garbage-width);
 
   display: grid;
+  grid-template-rows: repeat(2, var(--cell-size));
   grid-template-columns: repeat(4, var(--cell-size));
 
   border: var(--border-width) solid var(--text-color);
@@ -89,6 +93,10 @@
 }
 
 .game-container .board {
+  box-sizing: content-box;
+  width: calc(10 * var(--cell-size));
+  height: calc(20 * var(--cell-size));
+
   grid-area: board;
 
   display: grid;
@@ -103,12 +111,16 @@
 }
 
 .game-container .next {
-  aspect-ratio: 8 / 3;
+  box-sizing: content-box;
+  width: calc(4 * var(--cell-size));
+  height: calc(14 * var(--cell-size));
+
   grid-area: next;
   padding: var(--cell-size);
 
   display: grid;
   grid-template-columns: repeat(4, var(--cell-size));
+  grid-template-rows: repeat(14, var(--cell-size));
 
   border: var(--border-width) solid var(--text-color);
   border-left: none;
@@ -128,6 +140,11 @@
 
 .game-container .more-stat {
   grid-area: more-stat;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .game-container .cell {
