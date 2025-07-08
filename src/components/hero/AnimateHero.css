@@ -1,0 +1,136 @@
+body:has(section.no-scroll) {
+  overflow-y: hidden;
+}
+
+.hero-container {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-container .bar-animation {
+  position: absolute;
+  /* Center X: Halfway - (element's height) */
+  top: 50%;
+  transform: translate(-100%, -50%) scaleY(0.333);
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  content: '';
+  z-index: -1;
+
+  background-color: var(--color);
+  border-radius: var(--border-radius-round);
+
+  /* animation: duration, easing-function, [delay], fill-mode, keyframe-name */
+  animation: 1s ease forwards bar-slide-right,
+    1s ease-in 2.8s forwards bar-fill-height;
+}
+
+.hero-container .words-container {
+  font-weight: bold;
+  font-size: 3rem;
+
+  position: absolute;
+  top: 40%;
+  height: 20%;
+  left: 5%;
+  width: 90%;
+}
+
+.hero-container .words-container .word-container {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0;
+
+  width: 100%;
+}
+
+.hero-container .words-container .word-container .letter {
+  position: absolute;
+  top: 0;
+  transform: translate(-50%, -300%);
+  opacity: 0;
+}
+
+.hero-container .words-container .word-container-1 .letter,
+.hero-container .words-container .word-container-2 .letter {
+  /* Animation delay calculated in Hero.jsx */
+  animation: 1.3s ease forwards letter-slide-in-out;
+}
+
+.hero-container .words-container .word-container-3 .letter {
+  animation: 1.5s ease forwards letter-zoom-fade;
+}
+
+@keyframes bar-slide-right {
+  0% {
+    transform: translate(-100%, -50%) scaleY(0.333);
+  }
+
+  100% {
+    /* X: -100 -> 0 */
+    transform: translateY(-50%) scaleY(0.333);
+  }
+}
+
+@keyframes bar-fill-height {
+  0% {
+    transform: translateY(-50%) scaleY(-0.333);
+  }
+  65% {
+    transform: translateY(-50%) scaleY(0);
+  }
+  100% {
+    transform: translateY(-50%) scaleY(1);
+  }
+}
+
+@keyframes letter-slide-in-out {
+  0% {
+    transform: translate(-50%, -300%);
+    opacity: 0;
+  }
+
+  30% {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+
+  70% {
+    transform: translate(-50%, -60%);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, 200%);
+    opacity: 0;
+  }
+}
+
+@keyframes letter-zoom-fade {
+  0% {
+    transform: translate(-50%, -300%);
+  }
+
+  30% {
+    transform: translate(-50%, -45%);
+  }
+
+  70% {
+    transform: translate(-50%, -55%);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -55%) scale(0);
+    opacity: 0;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .hero-container .word-container {
+    font-size: 5rem;
+  }
+}

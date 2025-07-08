@@ -1,0 +1,16 @@
+.solo-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.solo-container .mode {
+  height: 3.5rem;
+  width: 10rem;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 1.1rem;
+}

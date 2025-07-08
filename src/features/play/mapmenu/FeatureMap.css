@@ -1,0 +1,126 @@
+.feature-map-container {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: repeat(2, auto) 1fr repeat(6, auto);
+  /* Note empty - space to push tag, stars, difficulty, attempts together */
+  grid-template-areas:
+    'title title'
+    'author map'
+    'empty map'
+    'tag map'
+    'stars map'
+    'difficulty map'
+    'attempts map'
+    'description description'
+    'play-add play-add';
+  justify-content: space-between;
+  gap: 0.1rem;
+}
+
+.feature-map-container svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.feature-map-container .detail-icon {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.feature-map-container .title {
+  grid-area: title;
+  justify-self: center;
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.feature-map-container .author {
+  grid-area: author;
+  margin-bottom: 1rem;
+}
+
+.feature-map-container .tag {
+  grid-area: tag;
+}
+
+.feature-map-container .stars {
+  grid-area: stars;
+}
+
+.feature-map-container .difficulty {
+  grid-area: difficulty;
+}
+
+.feature-map-container .attempts {
+  grid-area: attempts;
+}
+
+.feature-map-container .description {
+  margin: 1rem 0;
+  grid-area: description;
+}
+
+.feature-map-container .play-add {
+  grid-area: play-add;
+  display: flex;
+  gap: 2rem;
+}
+
+.feature-map-container .feature-map {
+  grid-area: map;
+  justify-self: end;
+
+  aspect-ratio: 1 / 2;
+  height: 100%;
+  min-height: 16rem;
+  background-color: blueviolet;
+}
+
+/* Force a word wrap */
+.feature-map-container .title,
+.feature-map-container .author,
+.feature-map-container .description {
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+@media screen and (min-width: 768px) {
+  .feature-map-container .feature-map {
+    height: 20rem;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .feature-map-container {
+    grid-template-columns: 8rem 1fr auto;
+    grid-template-rows: repeat(2, auto) 1fr repeat(4, auto);
+    /* Note empty - space to push tag, stars, difficulty, attempts together */
+    grid-template-areas:
+      'title title map'
+      'author author map'
+      'description description map'
+      'empty empty map'
+      'tag stars map'
+      'difficulty attempts map'
+      'play-add play-add map';
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .feature-map-container .title {
+    justify-self: start;
+    margin-bottom: 0;
+  }
+
+  .feature-map-container .description {
+    margin: 0;
+    margin-right: 1rem;
+  }
+
+  .feature-map-container .play-add {
+    margin-top: 1rem;
+  }
+}

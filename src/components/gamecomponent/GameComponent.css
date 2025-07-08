@@ -1,0 +1,5 @@
+section.game {
+  display: grid;
+  place-items: center;
+  height: 100%;
+}

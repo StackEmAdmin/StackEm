@@ -1,0 +1,8 @@
+main.home {
+  min-height: 100vh;
+  display: flex;
+}
+
+main.home section {
+  width: 100%;
+}

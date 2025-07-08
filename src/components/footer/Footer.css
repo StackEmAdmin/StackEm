@@ -1,0 +1,109 @@
+footer {
+  position: relative;
+
+  padding: 2rem 4rem;
+  background: var(--color-light);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 10rem;
+}
+
+footer svg {
+  position: relative;
+  z-index: 1;
+  color: var(--text-color);
+  width: 3rem;
+  height: 3rem;
+  padding: 0.1rem;
+
+  transition: color 0.5s ease-out;
+}
+
+footer svg:hover {
+  color: var(--accent-color);
+}
+
+/*
+  Animate footer lines
+*/
+
+footer .lines {
+  /* border: 1px solid red; */
+
+  position: absolute;
+  top: 30%;
+  left: 10%;
+  width: 80%;
+  height: 40%;
+
+  overflow: hidden;
+}
+
+footer .line {
+  position: absolute;
+  background: var(--text-color);
+}
+
+footer .left-line {
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0.15rem;
+
+  transition: all 0.2s 0.2s ease-out;
+  transform: scale(0);
+  transform-origin: bottom;
+}
+
+footer .right-line {
+  top: 0;
+  left: calc(100% - 0.15rem);
+  height: 100%;
+  width: 0.15rem;
+
+  transition: all 0.2s 0.2s ease-out;
+  transform: scale(0);
+  transform-origin: bottom;
+}
+
+footer .bottom-left-line {
+  top: calc(100% - 0.15rem);
+  left: 0;
+  height: 0.15rem;
+  width: calc(50% + 0.15rem);
+
+  transition: all 0.4s ease-out;
+  transform: scale(0) translate(50%);
+  transform-origin: right;
+}
+
+footer .bottom-right-line {
+  top: calc(100% - 0.15rem);
+  right: 0;
+  height: 0.15rem;
+  width: calc(50% + 0.15rem);
+
+  transition: all 0.4s ease-out;
+  transform: scale(0) translate(-50%);
+  transform-origin: left;
+}
+
+footer:has(a:hover) .left-line,
+footer:has(a:hover) .right-line,
+/* footer:has(a:hover) .bottom-left-line, */
+footer:has(a:hover) .bottom-right-line {
+  background: var(--accent-color);
+  transform: scale(1);
+}
+
+footer:has(a:hover) .bottom-left-line {
+  background: var(--accent-color);
+  transform: scale(1) translateX(-100%);
+}
+
+footer:has(a:hover) .bottom-right-line {
+  background: var(--accent-color);
+  transform: scale(1) translateX(100%);
+}

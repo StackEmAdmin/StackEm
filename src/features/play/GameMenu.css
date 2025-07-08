@@ -1,0 +1,200 @@
+.game.menu-container {
+  --button-height: 3rem;
+  --button-width: 10rem;
+  --button-gap: 0.5rem;
+
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--button-gap);
+
+  padding: 2rem 0;
+  transition: height 0.4s 0.2s ease, width 0.4s ease;
+}
+
+.game.menu-container button.menu {
+  --circle-diameter: 0.6rem;
+  --diagonal-width: 1.6rem;
+  --diagonal-height: 0.3rem;
+  --circles-color: var(--text-color);
+
+  position: absolute;
+  z-index: 1;
+  top: 2rem;
+
+  height: var(--button-height);
+  width: var(--button-width);
+
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  gap: 1rem;
+  font-size: 1.1rem;
+  border: 1px solid transparent;
+  color: var(--text-color);
+
+  animation: 0.3s 0.15s ease forwards bring-from-top;
+}
+
+.game.menu-container button.menu:focus {
+  outline: none;
+}
+
+.game.menu-container button.menu:hover,
+.game.menu-container button.menu:focus {
+  border: 1px solid var(--accent-color);
+}
+
+.game.menu-container button.menu:active {
+  border: 1px solid var(--card-border-color-active);
+}
+
+.game.menu-container button.menu .circles {
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+.game.menu-container .game-nav {
+  display: none;
+  padding-top: calc(var(--button-gap) + var(--button-height));
+  flex-direction: column;
+}
+
+.game.menu-container .game-nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--button-gap);
+}
+
+.game.menu-container .game-nav li button {
+  height: var(--button-height);
+  width: var(--button-width);
+
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  font-size: 1.1rem;
+  font-weight: 700;
+
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  border: 1px solid transparent;
+  color: var(--text-color);
+
+  transition: all 0.2s ease-out;
+}
+
+.game.menu-container .game-nav li button:focus {
+  outline: none;
+}
+
+.game.menu-container .game-nav li button svg {
+  height: 1.5rem;
+  width: 1.5rem;
+  transition: color 0.2s ease-out;
+  color: var(--text-color);
+}
+
+.game.menu-container .game-nav li button.selected {
+  background: var(--color-light);
+  border: 1px solid var(--card-border-color);
+}
+
+.game.menu-container .game-nav li button:hover,
+.game.menu-container .game-nav li button:focus,
+.game.menu-container .game-nav li button.selected:hover {
+  border: 1px solid var(--accent-color);
+}
+
+.game.menu-container .game-nav li button:active,
+.game.menu-container .game-nav li button.selected:active {
+  border: 1px solid var(--card-border-color-active);
+}
+
+.game.menu-container .game-nav li button.selected svg {
+  color: var(--accent-color);
+}
+
+.game.menu-container .game-nav li button:active svg {
+  color: var(--text-color);
+}
+
+/* 
+  Animate Navigation
+*/
+
+.game.menu-container.show {
+  height: 24.5rem;
+}
+
+.game.menu-container.hide {
+  height: 7rem;
+}
+
+.game.menu-container.show .game-nav,
+.game.menu-container.hide .game-nav.animate {
+  display: flex;
+}
+
+.game.menu-container .game-nav {
+  transition: transform 0.3s 0.1s ease, opacity 0.3s 0.1s ease-in;
+  transform: translateY(-15rem);
+  opacity: 0;
+}
+
+.game.menu-container.show .game-nav.animate {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.game.menu-container.hide .game-nav.animate {
+  transform: translateY(-15rem);
+  opacity: 0;
+}
+
+@media screen and (min-width: 768px) {
+  .game.menu-container button.menu {
+    position: fixed;
+  }
+
+  .game.menu-container.hide button.menu {
+    opacity: 0.5;
+    border: 1px solid var(--card-border-color);
+
+    transition: border ease-out 0.2s, opacity ease-out 0.2s;
+  }
+
+  .game.menu-container.hide button.menu:hover,
+  .game.menu-container.hide button.menu:focus {
+    opacity: 1;
+    border: 1px solid var(--accent-color);
+  }
+
+  .game.menu-container.hide button.menu:active {
+    border: 1px solid var(--card-border-color-active);
+  }
+
+  /* 
+    On a wider screen, animate from left
+    And center it in screen (position: fixed)
+  */
+
+  .game.menu-container .game-nav {
+    position: fixed;
+    top: 50%;
+
+    transform: translate(-15rem, -50%);
+    opacity: 0;
+  }
+
+  .game.menu-container.show .game-nav.animate {
+    transform: translate(0, -50%);
+  }
+
+  .game.menu-container.hide .game-nav.animate {
+    transform: translate(-15rem, -50%) translateX(-15rem);
+    opacity: 0;
+  }
+}

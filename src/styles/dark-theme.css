@@ -1,0 +1,40 @@
+:root {
+  /* 
+    For conciseness,
+    color represents background(-color), 
+    text-color represents color of text
+  */
+  --color: #0f0f0f;
+  --color-light: #171717;
+  --color-lighter: #202020;
+  --text-color: #edeef0;
+  --text-color-dim: #999999;
+
+  --overlay-color: #a0a0a011;
+
+  --card-color: #111111;
+  --card-border-color: #555555;
+  --card-border-color-dim: #222222;
+  --card-border-color-hover: var(--accent-color);
+  --card-border-color-active: #ffffff;
+  --card-shadow: 0px 10px 18px -10px #333;
+  --card-shadow-hover: 0px 10px 18px -10px #777;
+
+  --accent-color: #26c9ff;
+
+  --error-color: #d7859b;
+
+  --border-radius: 8px;
+  --border-radius-round: 16px;
+  --border-radius-super-round: 24px;
+
+  /* pieces */
+  --white: #ffffff;
+  --o: #f2d74c;
+  --i: #65dbc8;
+  --l: #eda93f;
+  --j: #3358dd;
+  --s: #7acd44;
+  --t: #c132d0;
+  --z: #d83a28;
+}

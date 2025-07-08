@@ -1,0 +1,54 @@
+body {
+  background: var(--color);
+  color: var(--text-color);
+  min-height: 100vh;
+
+  /* For children to take 100% height */
+  display: grid;
+}
+
+/* 
+    Reset Styles
+*/
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+textarea,
+select,
+button {
+  display: block;
+  font-family: inherit;
+  font-size: 100%;
+  border: none;
+  background-color: inherit;
+  color: inherit;
+  width: 100%;
+}
+
+button {
+  cursor: pointer;
+  width: fit-content;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}

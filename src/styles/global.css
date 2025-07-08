@@ -1,0 +1,81 @@
+.--global-hover-focus-active-border {
+  border-radius: var(--border-radius);
+  border: 1px solid var(--card-border-color);
+  transition: border ease-out 0.2s;
+}
+
+.--global-hover-focus-active-border:hover {
+  border: 1px solid var(--accent-color);
+}
+
+.--global-hover-focus-active-border:focus {
+  outline: none;
+  border: 1px solid var(--accent-color);
+}
+
+.--global-hover-focus-active-border:active {
+  border: 1px solid var(--card-border-color-active);
+}
+
+.--global-button {
+  cursor: pointer;
+  width: fit-content;
+  background-color: var(--color);
+  border: 1px solid var(--card-border-color);
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1rem;
+
+  font-weight: bold;
+  font-size: 1rem;
+
+  transition: border ease-out 0.2s;
+}
+
+.--global-button:hover {
+  border: 1px solid var(--accent-color);
+}
+
+.--global-button:focus {
+  outline: none;
+  border: 1px solid var(--accent-color);
+}
+
+.--global-button:active {
+  border: 1px solid var(--card-border-color-active);
+}
+
+.--global-circle-button {
+  cursor: pointer;
+  width: fit-content;
+  background-color: var(--color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 50%;
+  padding: 0.75rem;
+
+  transition: border ease-out 0.2s;
+}
+
+.--global-circle-button:hover {
+  border: 1px solid var(--accent-color);
+}
+
+.--global-circle-button:focus {
+  outline: none;
+  border: 1px solid var(--accent-color);
+}
+
+.--global-circle-button:active {
+  border: 1px solid var(--card-border-color-active);
+}
+
+/* Chrome, Safari, Edge, Opera */
+input.--global-no-spinner::-webkit-outer-spin-button,
+input.--global-no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input.--global-no-spinner[type='number'] {
+  -moz-appearance: textfield;
+}

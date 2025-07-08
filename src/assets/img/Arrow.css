@@ -1,0 +1,54 @@
+svg.svg-arrow {
+  margin-right: 0.7rem;
+  cursor: pointer;
+  overflow: visible;
+
+  color: var(--text-color);
+}
+
+svg.svg-arrow.left {
+  margin-right: -0.7rem;
+  margin-left: 1.4rem;
+}
+
+svg.svg-arrow path {
+  transition: all 1s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+svg.svg-arrow:hover path {
+  transition: all 1s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+svg.svg-arrow:hover .arrow {
+  animation: arrow-svg-anim 1s cubic-bezier(0.2, 1, 0.3, 1) infinite;
+}
+
+svg.svg-arrow:hover .arrow-fixed {
+  animation: arrow-svg-fixed-anim 1s cubic-bezier(0.2, 1, 0.3, 1) infinite;
+}
+
+@keyframes arrow-svg-anim {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  5% {
+    transform: translateX(-0.6rem);
+  }
+  100% {
+    transform: translateX(6rem);
+    opacity: 0;
+  }
+}
+
+@keyframes arrow-svg-fixed-anim {
+  5% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}

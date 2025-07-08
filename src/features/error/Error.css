@@ -1,0 +1,22 @@
+.error-container {
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem 1rem;
+}
+
+.error-container .title {
+  font-size: 3rem;
+}
+
+.error-container .desc {
+  max-width: 30rem;
+}
+
+.error-container .error-text {
+  color: var(--text-color-dim);
+}

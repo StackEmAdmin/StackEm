@@ -1,0 +1,29 @@
+.map-container {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  gap: 5rem;
+}
+
+.map-container .featured-maps-container {
+  width: 100%;
+  display: grid;
+  column-gap: 3rem;
+  row-gap: 5rem;
+}
+
+@media screen and (min-width: 768px) {
+  .map-container {
+    padding-top: 5rem;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .map-container .featured-maps-container {
+    grid-template-columns: repeat(auto-fit, minmax(35rem, 1fr));
+  }
+}

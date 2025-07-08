@@ -1,0 +1,67 @@
+main.play {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--color-light);
+  padding: 0.5rem;
+
+  border-radius: var(--border-radius-round);
+  overflow: hidden;
+}
+
+main.play .game.menu-container {
+  background: var(--color);
+  border-radius: var(--border-radius-round);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+main.play .content-container {
+  background: var(--color);
+  border-radius: var(--border-radius-round);
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  padding: 2rem;
+}
+
+@media screen and (min-width: 768px) {
+  main.play {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  main.play .game.menu-container {
+    height: auto;
+    width: 14rem;
+  }
+
+  main.play:has(.game.menu-container.hide .game-nav.animate) {
+    gap: 0.5rem;
+  }
+
+  main.play:has(.game.menu-container.hide) {
+    gap: 0;
+  }
+
+  main.play .game.menu-container.hide {
+    width: 0;
+  }
+
+  main.play .game.menu-container button.menu {
+    position: fixed;
+    top: 2.5rem;
+    left: 2.5rem;
+  }
+
+  main.play .content-container {
+    flex: 1;
+  }
+}

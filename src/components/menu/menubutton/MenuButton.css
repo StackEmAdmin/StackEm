@@ -1,0 +1,118 @@
+button.menu {
+  --circles-spacing: 0.25rem;
+  --circle-diameter: 0.5rem;
+  --diagonal-width: 1.25rem;
+  --diagonal-height: 0.25rem;
+  --circles-color: var(--text-color);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 
+  Interactive Circles in button
+*/
+
+button.menu .circles {
+  position: relative;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--circles-spacing);
+}
+
+button.menu .circles .circle {
+  background: var(--circles-color);
+  border-radius: 50%;
+  width: var(--circle-diameter);
+  height: var(--circle-diameter);
+}
+
+/*
+  On Menu docking, animate button to position from top
+*/
+
+.menu-container button.menu {
+  transform: translateY(-300%);
+  animation: 1s ease forwards bring-from-top;
+}
+
+/* 
+  Interactive close button (both diagonals form an x)
+*/
+
+button.menu .diagonals .diagonal {
+  position: absolute;
+  top: calc(50% - var(--diagonal-height) / 2);
+  right: calc(50% - var(--diagonal-width) / 2);
+  width: var(--diagonal-width);
+  height: var(--diagonal-height);
+
+  border-radius: var(--border-radius-round);
+  background: var(--circles-color);
+}
+
+button.menu .diagonals .diagonal.bot {
+  top: calc(50% - var(--diagonal-width) / 2);
+  right: calc(50% - var(--diagonal-height) / 2);
+  width: var(--diagonal-height);
+  height: var(--diagonal-width);
+}
+
+/* On button hover, rotate circles 90 degrees */
+
+button.menu .circles {
+  transition: transform 0.2s ease-out;
+}
+
+button.menu:hover .circles {
+  transform: rotate(90deg);
+}
+
+/* On menu open join circles together */
+
+.menu-container.hide button.menu .circles .circle {
+  transition: transform 0.2s 0.2s ease-out;
+}
+
+.menu-container.show button.menu .circles .circle {
+  transition: transform 0.2s ease-out;
+}
+
+.menu-container.show button.menu .circles .circle.top {
+  transform: translateX(
+      calc(var(--circles-spacing) / 2 + var(--circle-diameter) / 2)
+    )
+    scale(0.9);
+}
+
+.menu-container.show button.menu .circles .circle.bot {
+  transform: translateX(
+      calc(-1 * var(--circles-spacing) / 2 - var(--circle-diameter) / 2)
+    )
+    scale(0.9);
+}
+
+/* On menu open expand diagonals */
+
+.menu-container.hide button.menu .diagonals .diagonal {
+  transition: transform 0.2s ease-in;
+  transform: rotate(45deg) scale(0);
+}
+
+.menu-container.show button.menu .diagonals .diagonal {
+  transition: transform 0.2s 0.2s ease;
+  transform: rotate(45deg) scale(1);
+}
+
+@keyframes bring-from-top {
+  0% {
+    transform: translateY(-300%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}

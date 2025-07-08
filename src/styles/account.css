@@ -1,0 +1,24 @@
+.account-action-container {
+  height: 100%;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  gap: 2rem;
+}
+
+.account-action-container section {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.account-action-container section > .title {
+  font-size: 2rem;
+  font-weight: bold;
+  width: fit-content;
+}

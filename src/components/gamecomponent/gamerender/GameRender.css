@@ -1,0 +1,222 @@
+.game-container {
+  --cell-size: 1.75rem;
+  --border-width: 2px;
+  --gap: 0rem;
+  --garbage-width: 0.9rem;
+  --cell-border-width: 2px;
+
+  position: relative;
+
+  display: grid;
+  grid-template-columns: auto auto auto;
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    'hold board next'
+    'stats board next'
+    'stats board more-stat';
+
+  gap: var(--gap);
+
+  user-select: none;
+}
+
+.game-container .board-top {
+  position: absolute;
+  /* Top is calculated with JS since it is dynamic */
+  /* Left: hold width + gap + garbage + hold border + board left border */
+  left: calc(
+    6 * var(--cell-size) + var(--gap) + var(--garbage-width) + 2 *
+      var(--border-width)
+  );
+
+  display: grid;
+  grid-template-columns: repeat(10, var(--cell-size));
+}
+
+.game-container .garbage {
+  position: absolute;
+  /* Left: hold width + border */
+  left: calc(6 * var(--cell-size) + 1 * var(--border-width) + var(--gap));
+  bottom: 0;
+  width: var(--garbage-width);
+
+  border-bottom-left-radius: var(--border-radius);
+  overflow: hidden;
+
+  display: grid;
+}
+
+.game-container .garbage::after {
+  position: absolute;
+  z-index: 1;
+
+  content: '';
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: calc(20 * var(--cell-size));
+  border-left: var(--border-width) solid var(--text-color);
+  border-bottom: var(--border-width) solid var(--text-color);
+  border-bottom-left-radius: var(--border-radius);
+}
+
+.game-container .garbage .garbage-cell {
+  height: var(--cell-size);
+  width: 100%;
+}
+
+.game-container .garbage .garbage-cell.uncharged {
+  background-color: #f2d74c;
+}
+
+.game-container .garbage .garbage-cell.charged {
+  background-color: #65dbc8;
+}
+
+.game-container .hold {
+  grid-area: hold;
+  aspect-ratio: 2 / 1;
+  padding: var(--cell-size);
+  margin-right: var(--garbage-width);
+
+  display: grid;
+  grid-template-columns: repeat(4, var(--cell-size));
+
+  border: var(--border-width) solid var(--text-color);
+  border-right: none;
+  border-bottom-left-radius: var(--border-radius);
+  border-top-left-radius: var(--border-radius);
+}
+
+.game-container .board {
+  grid-area: board;
+
+  display: grid;
+  grid-template-columns: repeat(10, var(--cell-size));
+  grid-template-rows: repeat(20, var(--cell-size));
+
+  border: var(--border-width) solid var(--text-color);
+  border-top: none;
+  border-bottom-right-radius: var(--border-radius);
+
+  overflow: hidden;
+}
+
+.game-container .next {
+  aspect-ratio: 8 / 3;
+  grid-area: next;
+  padding: var(--cell-size);
+
+  display: grid;
+  grid-template-columns: repeat(4, var(--cell-size));
+
+  border: var(--border-width) solid var(--text-color);
+  border-left: none;
+  border-bottom-right-radius: var(--border-radius);
+  border-top-right-radius: var(--border-radius);
+}
+
+.game-container .stats {
+  grid-area: stats;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* align-items: center; */
+  gap: 1rem;
+}
+
+.game-container .more-stat {
+  grid-area: more-stat;
+}
+
+.game-container .cell {
+  width: var(--cell-size);
+  height: var(--cell-size);
+}
+
+.game-container .board .cell {
+  border: 0.1px solid #77777733;
+}
+
+.game-container .cell.ghost {
+  background-color: #434343;
+  border: none;
+}
+
+.game-container .cell.o {
+  background-color: #f2d74c;
+  border: none;
+}
+
+.game-container .cell.i {
+  background-color: #65dbc8;
+  border: none;
+}
+
+.game-container .cell.l {
+  background-color: #eda93f;
+  border: none;
+}
+
+.game-container .cell.j {
+  background-color: #3358dd;
+  border: none;
+}
+
+.game-container .cell.s {
+  background-color: #7acd44;
+  border: none;
+}
+
+.game-container .cell.t {
+  background-color: #c132d0;
+  border: none;
+}
+
+.game-container .cell.z {
+  background-color: #d83a28;
+  border: none;
+}
+
+.game-container .cell.g {
+  background-color: #e6e6e6;
+  border: none;
+}
+
+.game-container .cell.hg {
+  border: var(--cell-border-width) solid #e6e6e6;
+}
+
+.game-container .cell.ho {
+  border: var(--cell-border-width) solid #f2d74c;
+}
+
+.game-container .cell.hi {
+  border: var(--cell-border-width) solid #65dbc8;
+}
+
+.game-container .cell.hl {
+  border: var(--cell-border-width) solid #eda93f;
+}
+
+.game-container .cell.hj {
+  border: var(--cell-border-width) solid #3358dd;
+}
+
+.game-container .cell.hs {
+  border: var(--cell-border-width) solid #7acd44;
+}
+
+.game-container .cell.ht {
+  border: var(--cell-border-width) solid #c132d0;
+}
+
+.game-container .cell.hz {
+  border: var(--cell-border-width) solid #d83a28;
+}
+
+.blind {
+  opacity: 0;
+  transition: 0.2s ease-out;
+}

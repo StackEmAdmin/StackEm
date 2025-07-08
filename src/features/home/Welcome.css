@@ -1,0 +1,165 @@
+.welcome-page-container {
+  min-height: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.welcome-page-container .welcome-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.welcome-page-container .welcome-container h1 {
+  font-size: 4rem;
+}
+
+.welcome-page-container .welcome-container .play-button {
+  --border-width: 1px;
+
+  cursor: pointer;
+  position: relative;
+  /* z-index: 1; */
+
+  background-color: var(--color);
+  border-radius: var(--border-radius);
+  font-size: 1.5rem;
+  font-weight: bold;
+  width: fit-content;
+  height: 4rem;
+  padding: 1rem;
+  padding-left: 2rem;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.welcome-page-container .welcome-container .play-button::after {
+  position: absolute;
+  content: '';
+  top: calc(-1 * var(--border-width));
+  left: calc(-1 * var(--border-width));
+  z-index: -1;
+  width: calc(100% + var(--border-width) * 2);
+  height: calc(100% + var(--border-width) * 2);
+  background: var(--card-border-color);
+  border-radius: var(--border-radius);
+}
+
+.welcome-page-container .welcome-container .play-button:hover::after {
+  background: linear-gradient(
+    66deg,
+    var(--accent-color),
+    var(--accent-color),
+    var(--card-border-color-hover),
+    var(--card-border-color-hover),
+    var(--card-border-color-hover)
+  );
+  background-size: 300% 300%;
+  background-position: 0 50%;
+  animation: moveGradient 3s ease infinite;
+}
+
+/* 
+  Button Arrow animation
+*/
+
+.welcome-page-container .welcome-container .play-button svg {
+  height: 1.4rem;
+  width: 1.4rem;
+}
+
+.welcome-page-container
+  .welcome-container
+  .play-button:hover
+  svg
+  path.arrow-fixed {
+  animation: arrow-svg-fixed-anim 3s cubic-bezier(0.2, 1, 0.3, 1) infinite;
+}
+
+.welcome-page-container .welcome-container .play-button:hover svg path.arrow {
+  animation: arrow-svg-anim 3s cubic-bezier(0.2, 1, 0.3, 1) infinite;
+}
+
+@media screen and (min-width: 768px) {
+  .welcome-page-container .welcome-container {
+    font-size: 2rem;
+  }
+}
+
+@keyframes moveGradient {
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes arrow-svg-anim {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+    fill: var(--accent-color);
+  }
+  2.5% {
+    transform: translateX(-0.6rem);
+  }
+  49.99% {
+    transform: translateX(6rem);
+    opacity: 0;
+  }
+  50% {
+    fill: var(--text-color);
+    opacity: 1;
+    transform: translateX(0);
+  }
+  52.5% {
+    transform: translateX(-0.6rem);
+  }
+  70% {
+    fill: var(--text-color);
+  }
+  100% {
+    transform: translateX(6rem);
+    opacity: 0;
+    fill: var(--accent-color);
+  }
+}
+
+@keyframes arrow-svg-fixed-anim {
+  0% {
+    fill: var(--accent-color);
+  }
+  2.5% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.4;
+  }
+  49.99% {
+    opacity: 1;
+  }
+  50% {
+    fill: var(--text-color);
+    opacity: 1;
+  }
+  52.5% {
+    opacity: 0;
+  }
+  60% {
+    opacity: 0.4;
+  }
+  70% {
+    fill: var(--text-color);
+  }
+  100% {
+    opacity: 1;
+    fill: var(--accent-color);
+  }
+}

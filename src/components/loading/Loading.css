@@ -1,0 +1,139 @@
+.loading-container {
+  --w: 6rem;
+  --h: 7rem;
+  --xspace: calc(var(--w) / 2);
+  --yspace: calc(var(--h) / 4 - 1rem / 16);
+  --speed: 2s;
+
+  padding: 2rem;
+  border: 1px solid var(--card-border-color);
+  border-radius: var(--border-radius);
+
+  background: var(--card-color);
+}
+
+.loading-container:hover {
+  border: 1px solid var(--accent-color);
+}
+
+.loading-container:active {
+  border: 1px solid var(--card-border-color-hover);
+}
+
+.loading-container .piece {
+  position: relative;
+  width: calc(var(--w) * 2.5);
+  height: calc(var(--h) * 1.44);
+}
+
+.loading-container .piece .p svg path.inner {
+  transition: fill ease 0.3s;
+}
+
+.loading-container .piece.white .p svg path.inner {
+  fill: var(--white);
+}
+
+.loading-container .piece.o .p svg path.inner {
+  fill: var(--o);
+}
+
+.loading-container .piece.i .p svg path.inner {
+  fill: var(--i);
+}
+
+.loading-container .piece.l .p svg path.inner {
+  fill: var(--l);
+}
+
+.loading-container .piece.j .p svg path.inner {
+  fill: var(--j);
+}
+
+.loading-container .piece.s .p svg path.inner {
+  fill: var(--s);
+}
+
+.loading-container .piece.t .p svg path.inner {
+  fill: var(--t);
+}
+
+.loading-container .piece.z .p svg path.inner {
+  fill: var(--z);
+}
+
+.loading-container .piece .p {
+  width: var(--w);
+  height: var(--h);
+  position: absolute;
+  transition: all ease 0.3s;
+  background: url('data:image/svg+xml;utf-8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 612 684"%3E%3Cpath fill="%23010101" d="M305.7 0L0 170.9v342.3L305.7 684 612 513.2V170.9L305.7 0z"/%3E%3Cpath fill="%23fff" d="M305.7 80.1l-233.6 131 233.6 131 234.2-131-234.2-131"/%3E%3C/svg%3E')
+    no-repeat top center;
+}
+
+.loading-container .piece .p-1 {
+  animation: p1 var(--speed) ease-out infinite;
+}
+
+.loading-container .piece .p-2 {
+  animation: p2 var(--speed) ease-out infinite;
+}
+
+.loading-container .piece .p-3 {
+  animation: p3 var(--speed) ease-out infinite;
+  z-index: 2;
+}
+
+.loading-container .piece .p-4 {
+  animation: p4 var(--speed) ease-out infinite;
+}
+
+@keyframes p1 {
+  0%,
+  40% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(var(--xspace), var(--yspace));
+  }
+  60%,
+  100% {
+    transform: translate(calc(var(--xspace) * 2), 0);
+  }
+}
+
+@keyframes p2 {
+  0%,
+  20% {
+    transform: translate(calc(var(--xspace) * 2), 0px);
+  }
+  40%,
+  100% {
+    transform: translate(calc(var(--xspace) * 3), var(--yspace));
+  }
+}
+
+@keyframes p3 {
+  0% {
+    transform: translate(calc(var(--xspace) * 3), var(--yspace));
+  }
+  20%,
+  60% {
+    transform: translate(calc(var(--xspace) * 2), calc(var(--yspace) * 2));
+  }
+  90%,
+  100% {
+    transform: translate(var(--xspace), var(--yspace));
+  }
+}
+
+@keyframes p4 {
+  0%,
+  60% {
+    transform: translate(var(--xspace), var(--yspace));
+  }
+  90%,
+  100% {
+    transform: translate(0, 0);
+  }
+}
