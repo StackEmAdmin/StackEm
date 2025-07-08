@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import GameMenu from './GameMenu';
 import MapMenu, { loader } from './mapmenu/MapMenu';
-import DesignMenu, { action } from './designMenu/DesignMenu';
+import DesignMenu, { action } from './designmenu/DesignMenu';
 import SoloMenu from './solomenu/SoloMenu';
 import PracticeMenu from './practicemenu/PracticeMenu';
 import SettingsMenu from './settingsmenu/SettingsMenu';
