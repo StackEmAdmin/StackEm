@@ -60,6 +60,59 @@ function initPressed(keybinds, modKeybinds) {
 }
 
 /**
+ * Migrates an old object to a new object.
+ * If a key exists in both objects, the value from the old object
+ * is used. Otherwise, the value from the new object is used.
+ *
+ * If a key in the old object does not exist in the new object, it is ignored.
+ *
+ * @param {Object} oldObj - The old object to migrate.
+ * @param {Object} newObj - The new object to migrate to.
+ * @returns {Object} - The migrated object.
+ */
+function migrateObj(oldObj, newObj) {
+  let migratedObj = {};
+
+  for (const key in newObj) {
+    if (oldObj[key]) {
+      migratedObj[key] = oldObj[key];
+    } else {
+      migratedObj[key] = newObj[key];
+    }
+  }
+
+  return migratedObj;
+}
+
+/**
+ * Migrates old keybinds to new keybinds.
+ * If a command doesn't exist in keybind, it is added.
+ * If a command exists in keybind and not in DEFAULT_KEYBINDS, it is removed.
+ *
+ * main purposes:
+ *  - Adds new commands to keybinds on updates.
+ *  - (Validate and) sanitize keybinds.
+ *
+ * @param {Object} keybinds - The old keybinds to migrate.
+ * @returns {Object} - The migrated keybinds.
+ */
+function migrateKeybinds(keybinds) {
+  return migrateObj(keybinds, DEFAULT_KEYBINDS);
+}
+
+/**
+ * Migrates old modifier keybinds to new modifier keybinds.
+ * If a command doesn't exist in modKeybinds, it is added.
+ * If a command exists in modKeybinds and not in DEFAULT_MOD_KEYBINDS, it is removed.
+ *
+ * @param {Object} modKeybinds - The old modifier keybinds to migrate.
+ * @returns {Object} - The migrated modifier keybinds.
+ */
+function migrateModKeybinds(modKeybinds) {
+  return migrateObj(modKeybinds, DEFAULT_MOD_KEYBINDS);
+}
+
+/**
  * Loads user keybinds from local storage and returns an object with the loaded
  * keybinds, modifier keybinds, and an initialized pressed object.
  *
@@ -73,9 +126,13 @@ function loadKeybinds() {
     let modKeybinds = JSON.parse(localStorage.getItem(LS_MOD_KEYBINDS));
     if (!keybinds) {
       keybinds = DEFAULT_KEYBINDS;
+    } else {
+      keybinds = migrateKeybinds(keybinds);
     }
     if (!modKeybinds) {
       modKeybinds = DEFAULT_MOD_KEYBINDS;
+    } else {
+      modKeybinds = migrateModKeybinds(modKeybinds);
     }
     return {
       keybinds,

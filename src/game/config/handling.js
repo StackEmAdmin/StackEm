@@ -16,18 +16,21 @@ const MAX_SRR = 100;
 /**
  * Loads user handling settings from local storage.
  *
- * @return {Object} An object with the user's handling settings, or the default
- *     settings if an error occurs.
+ * @return {Object} An object with the user's handling settings, fallback to default settings.
  * @property {number} DAS - Delayed Auto Shift (DAS) in milliseconds.
  * @property {number} ARR - Auto Repeat Rate (ARR) in milliseconds.
  * @property {number} SRR - Soft Repeat Rate (SRR) in milliseconds.
  */
 function loadHandling() {
   try {
+    const DAS = parseInt(localStorage.getItem(LS_DAS));
+    const ARR = parseInt(localStorage.getItem(LS_ARR));
+    const SRR = parseInt(localStorage.getItem(LS_SRR));
+
     return {
-      DAS: parseInt(localStorage.getItem(LS_DAS)) || DEFAULT_DAS,
-      ARR: parseInt(localStorage.getItem(LS_ARR)) || DEFAULT_ARR,
-      SRR: parseInt(localStorage.getItem(LS_SRR)) || DEFAULT_SRR,
+      DAS: validDAS(DAS) ? DAS : DEFAULT_DAS,
+      ARR: validARR(ARR) ? ARR : DEFAULT_ARR,
+      SRR: validSRR(SRR) ? SRR : DEFAULT_SRR,
     };
   } catch (e) {
     console.warn('Failed to load user handling: ', e);
@@ -46,7 +49,6 @@ function loadHandling() {
  * @param {number} ARR - Auto Repeat Rate (ARR) in milliseconds.
  * @param {number} SRR - Soft Repeat Rate (SRR) in milliseconds.
  */
-
 function saveHandling(DAS, ARR, SRR) {
   try {
     if (!validateHandling(DAS, ARR, SRR)) {
@@ -96,21 +98,21 @@ function saveSRR(SRR) {
 }
 
 function validDAS(DAS) {
-  if (DAS < MIN_DAS || DAS > MAX_DAS) {
+  if (isNaN(DAS) || DAS < MIN_DAS || DAS > MAX_DAS) {
     return false;
   }
   return true;
 }
 
 function validARR(ARR) {
-  if (ARR < MIN_ARR || ARR > MAX_ARR) {
+  if (isNaN(ARR) || ARR < MIN_ARR || ARR > MAX_ARR) {
     return false;
   }
   return true;
 }
 
 function validSRR(SRR) {
-  if (SRR < MIN_SRR || SRR > MAX_SRR) {
+  if (isNaN(SRR) || SRR < MIN_SRR || SRR > MAX_SRR) {
     return false;
   }
   return true;
