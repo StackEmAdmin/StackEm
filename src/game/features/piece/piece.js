@@ -204,7 +204,33 @@ function newPiece(type, rot = 0, x = 4, y = 21) {
     x,
     y,
     span: pieceSpans[type][rot],
+    gravityTimeRef: -1,
+    gravityTimeLandRef: 0,
   };
+}
+
+/**
+ * Assigns a gravity reference time to the given piece object.
+ *
+ * @function stamp
+ * @param {Object} piece - The piece object with properties: type, rot, x, y, span.
+ * @param {number} time - The time to set as the gravity reference.
+ * @returns {Object} A new piece object with the gravity reference time assigned.
+ */
+function stamp(piece, time) {
+  return { ...piece, gravityTimeRef: time };
+}
+
+/**
+ * Assigns a landing reference time to the given piece object.
+ *
+ * @function stampLand
+ * @param {Object} piece - The piece object with properties: type, rot, x, y, span.
+ * @param {number} time - The time to set as the landing reference.
+ * @returns {Object} A new piece object with the landing reference time assigned.
+ */
+function stampLand(piece, time) {
+  return { ...piece, gravityTimeLandRef: time };
 }
 
 /**
@@ -464,6 +490,8 @@ function calculateTypeFromGrid(g) {
 }
 
 const pieceLib = {
+  stamp,
+  stampLand,
   left,
   right,
   down,

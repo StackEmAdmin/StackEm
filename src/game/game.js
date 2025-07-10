@@ -1,5 +1,6 @@
 import newBoard, { boardLib } from './features/board/board';
 import newQueue, { queueLib } from './features/queue/queue';
+import newGravity, { gravityLib } from './features/gravity/gravity';
 import { pieceLib } from './features/piece/piece';
 import newRules, { rulesLib } from './features/rules/rules';
 
@@ -9,10 +10,16 @@ import newRules, { rulesLib } from './features/rules/rules';
  * @param {Object} [options] - The options for creating a new game.
  * @param {number} [options.rows=26] - The number of rows in the game board. Default is 26.
  * @param {number} [options.cols=10] - The number of columns in the game board. Default is 10.
- * @param {string} [options.kick='srsPlus'] - The kick table to be used for rotation systems. Default is 'srsPlus'.
- * @param {string} [options.attack='guideline'] - The attack table to be used for attacking mechanics. Default is 'guideline'.
+ * @param {string} [options.kick='srsPlus'] - The kick table to be used for rotation systems.
+ * @param {string} [options.attack='tsOne'] - The attack table to be used for attacking mechanics.
  * @param {string} [options.spins='tSpin'] - The spin detection system to be used. Default is 'tSpin'.
- * @param {number} [options.queueSeed=undefined] - The seed for the queue. Default is undefined. *
+ * @param {number} [options.gravity=0.016666666666666666] - The gravity system to be used. Default is 1/60.
+ * @param {number} [options.gravityLock=500] - The time in milliseconds before a piece locks in place. Default is 500.
+ * @param {number} [options.gravityLockCap=5000] - The maximum time in milliseconds before a piece locks in place. Default is 5000.
+ * @param {number} [options.gravityLockPenalty=1000] - The penalty in milliseconds added to gravity lock time after a piece state goes from landed to unlanded. Default is 1000.
+ * @param {number} [options.gravityAcc=0] - The acceleration in cells per frame per frame of gravity. Default is 0.
+ * @param {number} [options.gravityAccDelay=0] - The delay in frames before gravity acceleration kicks in. Default is 0.
+ * @param {number} [options.queueSeed=undefined] - The seed for the queue. Default is undefined.
  * @returns {Object} - The new game state object.
  */
 function newGame({
@@ -22,6 +29,12 @@ function newGame({
   kick = 'srsPlus',
   attack = 'tsOne',
   spins = 'tSpin',
+  gravity = 0.016666666666666666,
+  gravityLock = 500,
+  gravityLockCap = 5000,
+  gravityLockPenalty = 1000,
+  gravityAcc = 0,
+  gravityAccDelay = 0,
   queueSeed = undefined,
 } = {}) {
   const config = {
@@ -30,6 +43,12 @@ function newGame({
     kick,
     attack,
     spins,
+    gravity,
+    gravityLock,
+    gravityLockCap,
+    gravityLockPenalty,
+    gravityAcc,
+    gravityAccDelay,
     queueSeed,
   };
 
@@ -46,12 +65,57 @@ function newGame({
     board: newBoard(rows, cols),
     queue: newQueue(queueSeed, startTime),
     rules: newRules(kick, attack, spins),
+    gravity: newGravity(
+      gravity,
+      gravityLock,
+      gravityLockCap,
+      gravityLockPenalty,
+      gravityAcc,
+      gravityAccDelay
+    ),
   };
 }
 
 function update(game, currentTime) {
-  // TODO: update gravity, update garbage, ...
-  return game;
+  // TODO: update garbage
+  return updateGravity(game, currentTime);
+}
+
+function updateGravity(game, currentTime) {
+  const hasLanded = (piece) => boardLib.hasLanded(game.board, piece);
+
+  if (
+    gravityLib.shouldLock(
+      game.gravity,
+      game.queue.pieces[0],
+      hasLanded,
+      currentTime
+    )
+  ) {
+    return dropHelper(game, currentTime);
+  }
+
+  const updatedPiece = gravityLib.update(
+    game.gravity,
+    game.queue.pieces[0],
+    hasLanded,
+    game.startTime,
+    currentTime
+  );
+
+  // No change (not affected by gravity)
+  if (updatedPiece === game.queue.pieces[0]) {
+    return game;
+  }
+
+  const nextQueue = queueLib.updateNextPiece(game.queue, updatedPiece);
+
+  // If piece gets shifted by gravity, then twist type must be reset.
+  return {
+    ...game,
+    queue: nextQueue,
+    twist: '',
+  };
 }
 
 function reset(game, currentTime) {
@@ -59,11 +123,74 @@ function reset(game, currentTime) {
   return nextGame;
 }
 
-function shiftIfLegal(game, action, currentTime) {
+/**
+ * Updates the gravity reference time for a piece.
+ * Shifts kicked piece down if affected by gravity.
+ * Returns a new piece object with the gravity reference time updated.
+ *
+ * @function gravityStamper
+ * @param {Object} game - The game state object.
+ * @param {Object} updatedPiece - The piece object.
+ * @param {number} currentTime - The current time.
+ * @param {boolean} kicked - Indicates if the piece was kicked.
+ * @returns {Object} A new piece object with the gravity reference time updated.
+ */
+function gravityStamper(game, updatedPiece, currentTime, kicked = false) {
+  let nextPiece = updatedPiece;
+  const hasLanded = (piece) => boardLib.hasLanded(game.board, piece);
+  const wasOnFloor = hasLanded(queueLib.nextPiece(game.queue));
+
+  // Landed pieces affected by gravity 1g or greater when kicked.
+  if (
+    kicked &&
+    wasOnFloor &&
+    gravityLib.getGravity(game.gravity, game.startTime, currentTime) >= 1 &&
+    !hasLanded(nextPiece)
+  ) {
+    nextPiece = pieceLib.down(nextPiece);
+  }
+
+  const currentlyOnFloor = hasLanded(nextPiece);
+
+  if (currentlyOnFloor || (wasOnFloor && !currentlyOnFloor)) {
+    nextPiece = pieceLib.stamp(nextPiece, currentTime);
+  }
+
+  if (wasOnFloor && currentlyOnFloor) {
+    const newStampLand =
+      nextPiece.gravityTimeLandRef +
+      (currentTime - updatedPiece.gravityTimeRef);
+    nextPiece = pieceLib.stampLand(nextPiece, newStampLand);
+  } else if (wasOnFloor && !currentlyOnFloor) {
+    const newStampLand =
+      nextPiece.gravityTimeLandRef +
+      game.gravity.lockPenalty +
+      (currentTime - updatedPiece.gravityTimeRef);
+    nextPiece = pieceLib.stampLand(nextPiece, newStampLand);
+  }
+
+  return nextPiece;
+}
+
+function shiftIfLegal(game, action, currentTime, stampPiece = false) {
   let shiftedPiece = action(queueLib.nextPiece(game.queue));
   // Illegal move, no change
   if (!boardLib.isLegal(game.board, shiftedPiece)) {
     return game;
+  }
+
+  // Update gravity reference
+  shiftedPiece = gravityStamper(game, shiftedPiece, currentTime);
+  // Check 20g gravity
+  shiftedPiece = gravityLib.twentyG(
+    game.gravity,
+    shiftedPiece,
+    (piece) => boardLib.hasLanded(game.board, piece),
+    game.startTime,
+    currentTime
+  );
+  if (stampPiece) {
+    shiftedPiece = pieceLib.stamp(shiftedPiece, currentTime);
   }
 
   const nextQueue = queueLib.updateNextPiece(game.queue, shiftedPiece);
@@ -108,7 +235,7 @@ function right(game, currentTime) {
  * If the move is not legal, the game state remains unchanged.
  */
 function softDrop(game, currentTime) {
-  return shiftIfLegal(game, pieceLib.down, currentTime);
+  return shiftIfLegal(game, pieceLib.down, currentTime, true);
 }
 
 /**
@@ -240,6 +367,7 @@ function rotateAndKick(game, action, currentTime) {
     return game;
   }
 
+  kickedPiece = gravityStamper(game, kickedPiece, currentTime, true);
   const nextQueue = queueLib.updateNextPiece(game.queue, kickedPiece);
 
   // Captures both a spin maneuver (t spin, mini or other)
@@ -370,6 +498,10 @@ function calculateWhileLegalInfSoftDrop(gameBoard, currentPiece, action) {
  * the game state remains unchanged.
  */
 function DAS(game, action, infSoftDrop, currentTime) {
+  if (gravityLib.getGravity(game.gravity, game.startTime, currentTime) >= 20) {
+    infSoftDrop = true;
+  }
+
   const originalPiece = queueLib.nextPiece(game.queue);
   let updatedPiece = infSoftDrop
     ? calculateWhileLegalInfSoftDrop(game.board, originalPiece, action)
@@ -380,6 +512,8 @@ function DAS(game, action, infSoftDrop, currentTime) {
     return game;
   }
 
+  // Gravity reference, update when landing or unlanding
+  updatedPiece = gravityStamper(game, updatedPiece, currentTime);
   const nextQueue = queueLib.updateNextPiece(game.queue, updatedPiece);
 
   return {
@@ -511,6 +645,18 @@ function dropHelper(game, currentTime) {
   let nextQueue = queueLib.place(game.queue, currentTime);
   let nextBoard = boardLib.place(game.board, droppedPiece);
 
+  // Check 20g gravity
+  const twentyGPiece = gravityLib.twentyG(
+    game.gravity,
+    nextQueue.pieces[0],
+    (piece) => boardLib.hasLanded(nextBoard, piece),
+    game.startTime,
+    currentTime
+  );
+  if (twentyGPiece !== nextQueue.pieces[0]) {
+    nextQueue = queueLib.updateNextPiece(nextQueue, twentyGPiece);
+  }
+
   // 2 Clear Lines
   const {
     lineClears,
@@ -571,6 +717,18 @@ function sendAttack(attacks, currentTime) {
  */
 function hold(game, currentTime) {
   let nextQueue = queueLib.hold(game.queue, currentTime);
+
+  // Check 20g gravity
+  const twentyGPiece = gravityLib.twentyG(
+    game.gravity,
+    nextQueue.pieces[0],
+    (piece) => boardLib.hasLanded(game.board, piece),
+    game.startTime,
+    currentTime
+  );
+  if (twentyGPiece !== nextQueue.pieces[0]) {
+    nextQueue = queueLib.updateNextPiece(nextQueue, twentyGPiece);
+  }
 
   return nextQueue === game.queue
     ? game

@@ -22,6 +22,8 @@ function newQueue(seed, startTime) {
   };
 
   let nextQueue = addPieces(emptyQ);
+  const spawnedPiece = pieceLib.stamp(nextQueue.pieces[0], startTime);
+  nextQueue = updateNextPiece(nextQueue, spawnedPiece);
 
   return nextQueue;
 }
@@ -94,6 +96,7 @@ function nextPiece(queue) {
 function removeNextPiece(queue, currentTime) {
   // Remove first piece (original array unaffected)
   const nextPieces = queue.pieces.slice(1);
+  nextPieces[0] = pieceLib.stamp(nextPieces[0], currentTime);
   return addPiecesIfNeeded({
     ...queue,
     pieces: nextPieces,
@@ -115,6 +118,7 @@ function removeNextPiece(queue, currentTime) {
  */
 function place(queue, currentTime) {
   const nextPieces = queue.pieces.slice(1);
+  nextPieces[0] = pieceLib.stamp(nextPieces[0], currentTime);
 
   return addPiecesIfNeeded({
     ...queue,
@@ -143,7 +147,7 @@ function hold(queue, currentTime) {
   // Swap with hold
   const prevHold = queue.hold;
   const nextPieces = queue.pieces.slice(0);
-  nextPieces[0] = prevHold;
+  nextPieces[0] = pieceLib.stamp(prevHold, currentTime);
 
   return {
     ...queue,
