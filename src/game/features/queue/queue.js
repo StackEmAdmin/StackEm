@@ -176,11 +176,35 @@ function updateNextPiece(queue, updatedPiece) {
   };
 }
 
+/**
+ * Restamps the next piece in the queue with the given current time.
+ *
+ * @function restampNextPiece
+ * @param {Object} queue - The queue object.
+ * @param {number} currentTime - The current time to stamp the next piece with.
+ * @param {boolean} respawn - If true, the next piece will be a respawned.
+ * @returns {Object} The updated game queue object with the next piece restamped.
+ *  The original queue object is not modified.
+ */
+function restampNextPiece(queue, currentTime, respawn = false) {
+  const nextPieces = queue.pieces.slice(0);
+  if (respawn) {
+    nextPieces[0] = pieceLib.stamp(newPiece(nextPieces[0].type), currentTime);
+  } else {
+    nextPieces[0] = pieceLib.stamp(nextPieces[0], currentTime);
+  }
+  return {
+    ...queue,
+    pieces: nextPieces,
+  };
+}
+
 const queueLib = {
   nextPiece,
   hold,
   place,
   updateNextPiece,
+  restampNextPiece,
 };
 
 export { newQueue as default, queueLib };

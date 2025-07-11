@@ -17,6 +17,7 @@ import './GameComponent.css';
 function GameComponent() {
   const config = {
     startTime: performance.now(),
+    enableUndo: true,
   };
 
   const { keybinds, modKeybinds, pressed } = loadKeybinds();

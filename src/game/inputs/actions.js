@@ -112,6 +112,27 @@ function modActionFromKey(key, pressed, modKeybinds, modEnabled, currentTime) {
 }
 
 /**
+ * Determines whether the current actions queue includes any game flow actions.
+ *
+ * Game flow actions are defined as actions that affect the game state by undoing
+ * or redoing moves. This function checks if any such actions exist within the
+ * provided actions array.
+ *
+ * @param {Array} actions - The array of actions to be checked.
+ * @returns {boolean} - True if any game flow action exists, otherwise false.
+ */
+function gameFlowAction(actions) {
+  return actions.some((a) => {
+    return (
+      a.action === 'undoMove' ||
+      a.action === 'undo' ||
+      a.action === 'redoMove' ||
+      a.action === 'redo'
+    );
+  });
+}
+
+/**
  * Converts a key press into an array of actions to be added to the current actions queue.
  *
  * If the key is a modifier key, the function will return an array containing the
@@ -142,6 +163,11 @@ function getActions(
   SRR,
   currentTime
 ) {
+  // Don't add actions if undoing or redoing
+  if (gameFlowAction(actionsQ.current)) {
+    return [];
+  }
+
   const modActions = modActionFromKey(
     key,
     pressed,
@@ -164,6 +190,7 @@ function getActions(
     SRR,
     currentTime
   );
+
   return actions;
 }
 
@@ -399,6 +426,11 @@ function applyReleaseActions(
         currentTime
       );
     }
+  }
+
+  // Only apply release modifier actions to undo/redo actions
+  if (!gameFlowAction(actionsQ.current)) {
+    return;
   }
 
   for (const action in modKeybinds) {

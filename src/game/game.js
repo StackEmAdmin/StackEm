@@ -2,6 +2,7 @@ import newBoard, { boardLib } from './features/board/board';
 import newQueue, { queueLib } from './features/queue/queue';
 import newGravity, { gravityLib } from './features/gravity/gravity';
 import { pieceLib } from './features/piece/piece';
+import newUR, { URLib } from './features/undoredo/undoredo';
 import newRules, { rulesLib } from './features/rules/rules';
 
 /**
@@ -20,6 +21,7 @@ import newRules, { rulesLib } from './features/rules/rules';
  * @param {number} [options.gravityAcc=0] - The acceleration in cells per frame per frame of gravity. Default is 0.
  * @param {number} [options.gravityAccDelay=0] - The delay in frames before gravity acceleration kicks in. Default is 0.
  * @param {number} [options.queueSeed=undefined] - The seed for the queue. Default is undefined.
+ * @param {boolean} [options.enableUndo=false] - Whether to enable undo and redo.
  * @returns {Object} - The new game state object.
  */
 function newGame({
@@ -36,6 +38,7 @@ function newGame({
   gravityAcc = 0,
   gravityAccDelay = 0,
   queueSeed = undefined,
+  enableUndo = false,
 } = {}) {
   const config = {
     rows,
@@ -50,10 +53,12 @@ function newGame({
     gravityAcc,
     gravityAccDelay,
     queueSeed,
+    enableUndo,
   };
 
   return {
     config,
+    UR: newUR(enableUndo),
     startTime,
     end: null,
     over: false,
@@ -120,6 +125,9 @@ function updateGravity(game, currentTime) {
 
 function reset(game, currentTime) {
   const nextGame = newGame(game.config);
+  // Save game in undo/redo (UR) stack
+  const nextUR = URLib.save(game.UR, game);
+  nextGame.UR = nextUR;
   return nextGame;
 }
 
@@ -197,6 +205,7 @@ function shiftIfLegal(game, action, currentTime, stampPiece = false) {
 
   return {
     ...game,
+    UR: URLib.save(game.UR, game),
     twist: '',
     queue: nextQueue,
   };
@@ -374,6 +383,7 @@ function rotateAndKick(game, action, currentTime) {
   // OR a no spin maneuver (spinType === "")
   return {
     ...game,
+    UR: URLib.save(game.UR, game),
     queue: nextQueue,
     twist: twistType,
   };
@@ -518,6 +528,7 @@ function DAS(game, action, infSoftDrop, currentTime) {
 
   return {
     ...game,
+    UR: URLib.save(game.UR, game),
     twist: '',
     queue: nextQueue,
   };
@@ -694,6 +705,7 @@ function dropHelper(game, currentTime) {
     b2b: nextB2B,
     board: nextBoard,
     queue: nextQueue,
+    UR: URLib.save(game.UR, game),
   };
 }
 
@@ -734,9 +746,213 @@ function hold(game, currentTime) {
     ? game
     : {
         ...game,
+        UR: URLib.save(game.UR, game),
         twist: '',
         queue: nextQueue,
       };
+}
+
+function undo(game, currentTime) {
+  const { state: nextGame, UR: nextUR } = URLib.undo(game.UR, game);
+
+  if (!nextGame || nextGame === game) {
+    return game;
+  }
+
+  const nextQueue = queueLib.restampNextPiece(nextGame.queue, currentTime);
+
+  return {
+    ...nextGame,
+    queue: nextQueue,
+    UR: nextUR,
+  };
+}
+
+function redo(game, currentTime) {
+  const { state: nextGame, UR: nextUR } = URLib.redo(game.UR, game);
+
+  if (!nextGame || nextGame === game) {
+    return game;
+  }
+
+  const nextQueue = queueLib.restampNextPiece(nextGame.queue, currentTime);
+
+  return {
+    ...nextGame,
+    queue: nextQueue,
+    UR: nextUR,
+  };
+}
+
+function undoReset(game, currentTime) {
+  // Assumes game.numPieces = 0 and player placed >1 piece after reset
+  // could be improved by not relying on assumptions but practical... (Why would you reset if you didn't place anything, mess up already?)
+
+  // Try resetting
+  const resetState = undo(game);
+  if (resetState.numPieces === 0) {
+    return game;
+  }
+
+  // If player placed > 0 pieces after reset, might as well respawn piece
+  if (resetState.numPieces > 0) {
+    return undoToPieceRespawn(resetState, currentTime);
+  }
+
+  return resetState;
+}
+
+function undoPieceZeroRespawn(game, currentTime) {
+  // Undo until before we hit a reset point (or run out of moves)
+  const { state: nextGame, UR: nextUR } = URLib.undoUntil(
+    game.UR,
+    game,
+    (gameToCheck) => gameToCheck.numPieces !== 0,
+    true
+  );
+
+  if (nextGame === game) {
+    return game;
+  }
+
+  // Ran out of moves
+  if (!nextGame) {
+    const nextQueue = queueLib.restampNextPiece(game.queue, currentTime, true);
+    return {
+      ...game,
+      queue: nextQueue,
+      UR: nextUR,
+    };
+  }
+
+  // Hit a reset point respawn and restamp (gravity reference) piece
+
+  const nextQueue = queueLib.restampNextPiece(
+    nextGame.queue,
+    currentTime,
+    true
+  );
+
+  return {
+    ...nextGame,
+    queue: nextQueue,
+    UR: nextUR,
+  };
+}
+
+function undoUntilZeroPieces(game) {
+  // Undo until player has 0 pieces
+  const { state: nextGame, UR: nextUR } = URLib.undoUntil(
+    game.UR,
+    game,
+    (gameToCheck) => gameToCheck.numPieces === 0
+  );
+
+  if (!nextGame || nextGame === game) {
+    return game;
+  }
+
+  return {
+    ...nextGame,
+    UR: nextUR,
+  };
+}
+
+function undoToPieceRespawn(game, currentTime, undoDrop = false) {
+  // Assumption:
+  //   game.numPieces >= 2 (undoOnDrop true)
+  //   game.numPieces >= 1 (undoOnDrop false)
+
+  const piecesToCheck = game.numPieces - 1 - (undoDrop ? 1 : 0);
+  const drop = (gameToCheck) => gameToCheck.numPieces === piecesToCheck;
+
+  // Undo until a piece is dropped, and retrieve the state before the condition is met
+  const { state: nextGame, UR: nextUR } = URLib.undoUntil(
+    game.UR,
+    game,
+    drop,
+    true
+  );
+
+  if (!nextGame || nextGame === game) {
+    return game;
+  }
+
+  const nextQueue = queueLib.restampNextPiece(
+    nextGame.queue,
+    currentTime,
+    true
+  );
+
+  return {
+    ...nextGame,
+    queue: nextQueue,
+    UR: nextUR,
+  };
+}
+
+/**
+ * Undo a piece drop until piece's respawn point.
+ * Also undoes effect on gravity by restamping piece.
+ *
+ * @param {Object} game - The game state object.
+ * @returns {Object} - The updated game state object.
+ */
+function undoOnDrop(game, currentTime) {
+  // FIXME: Edge case: undo on reset on 0 pieces doesn't work.
+  //   state 1: new game
+  //   state 2: move piece (don't drop)
+  //   state 3: reset, provides a new game (separate from state 1)
+  //   state 4: undo. Goes to state 1 instead of state 3.
+
+  if (game.numPieces === 0) {
+    // If player reset game, undo that
+    // If not, undo until piece respawns
+    const resetState = undoReset(game, currentTime);
+    return resetState !== game
+      ? resetState
+      : undoPieceZeroRespawn(game, currentTime);
+  }
+
+  if (game.numPieces === 1) {
+    return undoPieceZeroRespawn(undoUntilZeroPieces(game), currentTime);
+  }
+
+  // Respawn piece
+  return undoToPieceRespawn(game, currentTime, true);
+}
+
+/**
+ * Redoes the game state until the number of pieces is one more than the current.
+ * If the redo is a reset (i.e., the number of pieces is 0), redoes that instead.
+ * @param {Object} game - The game state object.
+ * @returns {Object} - The updated game state object.
+ */
+function redoOnDrop(game, currentTime) {
+  // Check if redo is a reset
+  //   Caused by player placed pieces, reset, undo to reset, then redoing reset
+  //   Improve functionality by not making assumption on number of pieces
+  if (game.numPieces > 0) {
+    const resetState = redo(game);
+    if (resetState.numPieces === 0) {
+      return resetState;
+    }
+  }
+
+  const drop = (gameToCheck) => gameToCheck.numPieces === game.numPieces + 1;
+  const { state: nextGame, UR: nextUR } = URLib.redoUntil(game.UR, game, drop);
+
+  if (!nextGame || nextGame === game) {
+    return game;
+  }
+
+  const nextQueue = queueLib.restampNextPiece(nextGame.queue, currentTime);
+
+  return {
+    ...nextGame,
+    queue: nextQueue,
+    UR: nextUR,
+  };
 }
 
 const controller = {
@@ -755,6 +971,10 @@ const controller = {
   rotateCCW,
   rotate180,
   hold,
+  undo,
+  redo,
+  undoOnDrop,
+  redoOnDrop,
 };
 
 export { newGame as default, controller };

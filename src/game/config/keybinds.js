@@ -16,6 +16,10 @@ const DEFAULT_KEYBINDS = {
 // Modifiers activated by pressing all keys in order.
 const DEFAULT_MOD_KEYBINDS = {
   reset: ['r'],
+  undoMove: ['control', 'shift', 'z'],
+  redoMove: ['control', 'shift', 'y'],
+  undo: ['control', 'z'],
+  redo: ['control', 'y'],
 };
 
 /**

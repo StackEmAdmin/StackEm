@@ -32,6 +32,10 @@ const commandNameMap = {
   rotate180: 'Rotate 180',
   hold: 'Hold',
   reset: 'Reset',
+  undoMove: 'Undo Move',
+  redoMove: 'Redo Move',
+  undo: 'Undo Drop',
+  redo: 'Redo Drop',
 };
 
 function getKeyName(key) {

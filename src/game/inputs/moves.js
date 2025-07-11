@@ -30,6 +30,10 @@ const actionMap = {
 
 const modMap = {
   reset: controller.reset,
+  undo: controller.undoOnDrop,
+  redo: controller.redoOnDrop,
+  undoMove: controller.undo,
+  redoMove: controller.redo,
 };
 
 /**
