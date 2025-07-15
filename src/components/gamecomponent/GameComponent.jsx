@@ -30,6 +30,7 @@ function GameComponent() {
   const lastTimeRef = useRef(null);
   const accumulatorRef = useRef(0);
   const animationRef = useRef(null);
+  const workerRef = useRef(null);
 
   useEffect(() => {
     const keyDown = (ev) =>
@@ -129,6 +130,55 @@ function GameComponent() {
 
     animationRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationRef.current);
+  }, []);
+
+  // Run gameLoop in the background
+  useEffect(() => {
+    workerRef.current = new Worker(
+      new URL('../../game/workers/gameLoopWorker.js', import.meta.url),
+      { type: 'module' }
+    );
+
+    // Animate without rendering
+    const animate = (currentTime) => {
+      if (lastTimeRef.current === null) {
+        lastTimeRef.current = currentTime;
+        return;
+      }
+
+      const deltaTime = currentTime - lastTimeRef.current;
+      lastTimeRef.current = currentTime;
+      accumulatorRef.current += deltaTime;
+      const { game: updatedGame, accumulator: newAccumulator } = engineUpdate(
+        gameRef.current,
+        actionsRef,
+        accumulatorRef.current,
+        currentTime
+      );
+      gameRef.current = updatedGame;
+      accumulatorRef.current = newAccumulator;
+    };
+
+    workerRef.current.onmessage = (e) => {
+      if (e.data.type === 'tick') {
+        animate(performance.now());
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        workerRef.current.postMessage({ type: 'start' });
+      } else {
+        workerRef.current.postMessage({ type: 'stop' });
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      workerRef.current.terminate();
+    };
   }, []);
 
   return (
