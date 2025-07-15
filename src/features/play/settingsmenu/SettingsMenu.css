@@ -90,6 +90,7 @@
   width: 4rem;
   padding: 0.3rem 0.5rem;
   border-radius: var(--border-radius);
+  border: 1px solid var(--card-border-color);
 
   display: flex;
   text-align: end;
