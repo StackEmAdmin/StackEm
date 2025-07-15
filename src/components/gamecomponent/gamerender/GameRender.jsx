@@ -10,9 +10,9 @@ function calcRowColFromRect(cellRect, boardRect, rows, offSet) {
     row:
       rows -
       1 -
-      Math.floor((cellRect.top - boardRect.top) / cellRect.height) +
+      Math.round((cellRect.top - boardRect.top) / cellRect.height) +
       offSet,
-    col: Math.floor((cellRect.left - boardRect.left) / cellRect.width),
+    col: Math.round((cellRect.left - boardRect.left) / cellRect.width),
   };
 }
 
