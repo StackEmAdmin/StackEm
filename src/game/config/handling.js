@@ -7,11 +7,11 @@ const DEFAULT_ARR = 0;
 const DEFAULT_SRR = 0;
 
 const MIN_ARR = 0;
-const MAX_ARR = 100;
-const MIN_DAS = 10;
+const MAX_ARR = 500;
+const MIN_DAS = 16;
 const MAX_DAS = 500;
 const MIN_SRR = 0;
-const MAX_SRR = 100;
+const MAX_SRR = 500;
 
 /**
  * Loads user handling settings from local storage.
