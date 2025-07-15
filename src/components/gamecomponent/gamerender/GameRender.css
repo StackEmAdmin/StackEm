@@ -6,6 +6,7 @@
   --cell-border-width: 2px;
 
   position: relative;
+  height: calc(26 * var(--cell-size));
 
   display: grid;
   grid-template-columns: auto auto auto;
@@ -14,6 +15,7 @@
     'hold board next'
     'stats board next'
     'stats board more-stat';
+  align-content: end;
 
   gap: var(--gap);
 
@@ -21,13 +23,20 @@
 }
 
 .game-container .board-top {
+  box-sizing: content-box;
+  width: calc(10 * var(--cell-size));
+
   position: absolute;
-  /* Top is calculated with JS since it is dynamic */
   /* Left: hold width + gap + garbage + hold border + board left border */
-  left: calc(
-    6 * var(--cell-size) + var(--gap) + var(--garbage-width) + 2 *
-      var(--border-width)
+  left: round(
+    nearest,
+    calc(
+      6 * var(--cell-size) + var(--gap) + var(--garbage-width) + 2 *
+        var(--border-width)
+    ),
+    0.5px
   );
+  bottom: calc(20 * var(--cell-size) + var(--border-width) - 1px);
 
   display: grid;
   grid-template-columns: repeat(10, var(--cell-size));
@@ -44,6 +53,7 @@
   overflow: hidden;
 
   display: grid;
+  justify-items: end;
 }
 
 .game-container .garbage::after {
@@ -54,7 +64,7 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  height: calc(20 * var(--cell-size));
+  height: calc(20 * var(--cell-size) - 1px);
   border-left: var(--border-width) solid var(--text-color);
   border-bottom: var(--border-width) solid var(--text-color);
   border-bottom-left-radius: var(--border-radius);
@@ -62,7 +72,7 @@
 
 .game-container .garbage .garbage-cell {
   height: var(--cell-size);
-  width: 100%;
+  width: calc(var(--garbage-width) - var(--border-width));
 }
 
 .game-container .garbage .garbage-cell.uncharged {
@@ -95,7 +105,7 @@
 .game-container .board {
   box-sizing: content-box;
   width: calc(10 * var(--cell-size));
-  height: calc(20 * var(--cell-size));
+  height: calc(20 * var(--cell-size) - 1px);
 
   grid-area: board;
 
@@ -233,7 +243,27 @@
   border: var(--cell-border-width) solid #d83a28;
 }
 
-.blind {
-  opacity: 0;
-  transition: 0.2s ease-out;
+/* Firefox style */
+.ff.game-container .board-top {
+  left: calc(
+    6 * var(--cell-size) + var(--gap) + var(--garbage-width) + 2 *
+      var(--border-width)
+  );
+
+  bottom: calc(20 * var(--cell-size) + var(--border-width));
+}
+
+.ff.game-container .board {
+  height: calc(20 * var(--cell-size));
+}
+
+.ff.game-container .garbage::after {
+  height: calc(20 * var(--cell-size));
+}
+
+@media screen and (min-width: 768px) {
+  .game-container {
+    height: auto;
+    align-content: normal;
+  }
 }

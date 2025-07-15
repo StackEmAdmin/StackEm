@@ -10,9 +10,9 @@ function calcRowColFromRect(cellRect, boardRect, rows, offSet) {
     row:
       rows -
       1 -
-      Math.floor((cellRect.top - boardRect.top) / cellRect.height) +
+      Math.round((cellRect.top - boardRect.top) / cellRect.height) +
       offSet,
-    col: Math.floor((cellRect.left - boardRect.left) / cellRect.width),
+    col: Math.round((cellRect.left - boardRect.left) / cellRect.width),
   };
 }
 
@@ -61,14 +61,7 @@ function GridTop({ grid, onMouseDown, onMouseOver }) {
   }, [onMouseDown, onMouseOver, numRows]);
 
   return (
-    <div
-      className="board-top"
-      style={{
-        aspectRatio: `${numCols} / ${numRows}`,
-        top: `calc(-${numRows} * var(--cell-size)`,
-      }}
-      ref={boardRef}
-    >
+    <div className="board-top" ref={boardRef}>
       <Cells grid={grid} />
     </div>
   );
@@ -336,8 +329,10 @@ function GameRender({ game, fillCell, clearCell, resetFillCell }) {
   const { b2b, combo, numPieces, numAttack, startTime, combatScore } =
     displayCalculate.stats(game);
 
+  const userAgentFF = navigator.userAgent.toLowerCase().includes('firefox');
+
   return (
-    <div className="game-container">
+    <div className={'game-container' + (userAgentFF ? ' ff' : '')}>
       <GridTop
         grid={gridTop}
         onMouseDown={onMouseDown(BOARD_HEIGHT)}
