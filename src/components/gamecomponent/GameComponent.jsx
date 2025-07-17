@@ -7,6 +7,9 @@ import {
   handleKeyDown,
   handleKeyUp,
   releaseKeys,
+  fillCell as fillCellClick,
+  resetFillCell as resetFillCellClick,
+  clearCell as clearCellClick,
 } from '../../game/inputs/inputs';
 import {
   update as engineUpdate,
@@ -185,9 +188,27 @@ function GameComponent() {
     <section className="section game">
       <GameRender
         game={displayGame}
-        fillCell={() => {}}
-        clearCell={() => {}}
-        resetFillCell={() => {}}
+        fillCell={(row, col) =>
+          fillCellClick(
+            pressedRef,
+            actionsRef,
+            modKeybinds,
+            row,
+            col,
+            performance.now()
+          )
+        }
+        clearCell={(row, col) =>
+          clearCellClick(
+            pressedRef,
+            actionsRef,
+            modKeybinds,
+            row,
+            col,
+            performance.now()
+          )
+        }
+        resetFillCell={() => resetFillCellClick(actionsRef, performance.now())}
       />
     </section>
   );

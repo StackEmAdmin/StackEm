@@ -20,6 +20,8 @@ import newRules, { rulesLib } from './features/rules/rules';
  * @param {number} [options.gravityLockPenalty=1000] - The penalty in milliseconds added to gravity lock time after a piece state goes from landed to unlanded. Default is 1000.
  * @param {number} [options.gravityAcc=0] - The acceleration in cells per frame per frame of gravity. Default is 0.
  * @param {number} [options.gravityAccDelay=0] - The delay in frames before gravity acceleration kicks in. Default is 0.
+ * @param {boolean} [options.highlight=false] - Whether to highlight clicked cells.
+ * @param {boolean} [options.autoColor=true] - Whether to automatically color filled cells based on its shape.
  * @param {number} [options.queueSeed=undefined] - The seed for the queue. Default is undefined.
  * @param {boolean} [options.enableUndo=false] - Whether to enable undo and redo.
  * @returns {Object} - The new game state object.
@@ -37,6 +39,8 @@ function newGame({
   gravityLockPenalty = 1000,
   gravityAcc = 0,
   gravityAccDelay = 0,
+  highlight = false,
+  autoColor = true,
   queueSeed = undefined,
   enableUndo = false,
 } = {}) {
@@ -52,12 +56,18 @@ function newGame({
     gravityLockPenalty,
     gravityAcc,
     gravityAccDelay,
+    highlight,
+    autoColor,
     queueSeed,
     enableUndo,
   };
 
   return {
     config,
+    highlight,
+    fillType: 'g',
+    autoColor,
+    autoColorCells: [],
     UR: newUR(enableUndo),
     startTime,
     end: null,
@@ -752,6 +762,239 @@ function hold(game, currentTime) {
       };
 }
 
+/**
+ * Toggles the highlight mode of the game.
+ *
+ * @param {Object} game - The game state object.
+ *
+ * @returns {Object} - The updated game state object with the updated highlight mode.
+ */
+function toggleHighlight(game, currentTime) {
+  return {
+    ...game,
+    UR: URLib.save(game.UR, game),
+    highlight: !game.highlight,
+  };
+}
+
+/**
+ * Sets the fill type of the game to the given type.
+ *
+ * @param {Object} game - The game state object.
+ * @param {string} nextFillType - The type to set the fill type to.
+ *
+ * @returns {Object} - The updated game state object with the updated fill type.
+ */
+function setFillType(game, nextFillType, currentTime) {
+  return {
+    ...game,
+    UR: URLib.save(game.UR, game),
+    fillType: nextFillType,
+  };
+}
+
+/**
+ * Fills a cell on the game board with a given type.
+ *
+ * @param {Object} game - The game state object.
+ * @param {number} row - The row of the cell to fill.
+ * @param {number} col - The column of the cell to fill.
+ * @param {string} type - The type of piece to fill the cell with.
+ * @param {boolean} [fillOnlyEmpty=true] - If true, only fills the cell if it is empty.
+ *
+ * @returns {Object} - The updated game state object.
+ * - If the cell is not filled (no change in `boardLib.fillCell`),
+ *   the function returns the original game state.
+ * - If the cell is filled (a new board returned from `boardLib.fillCell`),
+ *   the function returns a new game state with the updated board.
+ */
+function fillCell(game, row, col, currentTime, fillOnlyEmpty = true) {
+  const nextBoard = boardLib.fillCell(
+    game.board,
+    row,
+    col,
+    game.fillType,
+    game.highlight,
+    queueLib.nextPiece(game.queue),
+    fillOnlyEmpty
+  );
+
+  if (nextBoard === game.board) {
+    return game;
+  }
+
+  if (game.autoColor && game.fillType === 'g') {
+    return autoColor(game, nextBoard, { row, col, type: game.fillType });
+  }
+
+  return {
+    ...game,
+    UR: URLib.save(game.UR, game),
+    board: nextBoard,
+  };
+}
+
+/**
+ * Clears a cell on the game board.
+ *
+ * @param {Object} game - The game state object.
+ * @param {number} row - The row of the cell to clear.
+ * @param {number} col - The column of the cell to clear.
+ *
+ * @returns {Object} - The updated game state object.
+ * - If the cell is not cleared the function returns the original game state.
+ * - If the cell is cleared the function returns a new game state with the updated board.
+ *   If `autoColor` is true, the `autoColorCells` are reset to an empty array.
+ */
+function clearCell(game, row, col, currentTime) {
+  const nextBoard = boardLib.clearCell(game.board, row, col, game.highlight);
+
+  if (nextBoard === game.board) {
+    return game;
+  }
+
+  if (game.autoColor && game.autoColorCells.length > 0) {
+    // Reset autoColorCells
+    return {
+      ...game,
+      UR: URLib.save(game.UR, game),
+      board: nextBoard,
+      autoColorCells: [],
+    };
+  }
+
+  return {
+    ...game,
+    UR: URLib.save(game.UR, game),
+    board: nextBoard,
+  };
+}
+
+function autoColor(game, updatedBoard, cell) {
+  // A piece is made of 4 cells. don't autocolor when > 4
+  // Note the hard-coded value 3
+  //   - A cell is added to autoColorCells making length 4
+  if (game.autoColorCells.length > 3) {
+    return { ...game, UR: URLib.save(game.UR, game), board: updatedBoard };
+  }
+
+  const nextAutoColorCells = game.autoColorCells.slice();
+  nextAutoColorCells.push(cell);
+
+  // Not enough cells to identify a piece
+  if (nextAutoColorCells.length < 4) {
+    return {
+      ...game,
+      UR: URLib.save(game.UR, game),
+      board: updatedBoard,
+      autoColorCells: nextAutoColorCells,
+    };
+  }
+
+  const { success, type } = pieceLib.calculateTypeFromCells(nextAutoColorCells);
+
+  if (!success) {
+    return {
+      ...game,
+      UR: URLib.save(game.UR, game),
+      board: updatedBoard,
+      autoColorCells: nextAutoColorCells,
+    };
+  }
+
+  const nextBoard = boardLib.fillCells(
+    updatedBoard,
+    nextAutoColorCells,
+    type,
+    game.highlight
+  );
+
+  return {
+    ...game,
+    UR: URLib.save(game.UR, game),
+    board: nextBoard,
+    autoColorCells: [],
+  };
+}
+
+/**
+ * Resets the autoColorCells array if it is not empty.
+ * @param {Object} game - The game state object.
+ * @returns {Object} - The updated game state object if autoColorCells is not empty, otherwise the original game state.
+ */
+function resetFillCell(game, currentTime) {
+  return game.autoColorCells.length === 0
+    ? game
+    : { ...game, autoColorCells: [] };
+}
+
+/**
+ * Fills a row on the game board with a given type.
+ * If autoColor is enabled and there are cells in autoColorCells, clears autoColorCells.
+ * @param {Object} game - The game state object.
+ * @param {number} row - The row index of the cell to fill.
+ * @param {number} col - The column index of the cell to fill.
+ * @param {string} type - The type of piece to fill the row with.
+ * @returns {Object} - The updated game state object.
+ */
+function fillRow(game, row, col, currentTime) {
+  const nextBoard = boardLib.fillRow(
+    game.board,
+    row,
+    col,
+    game.fillType,
+    queueLib.nextPiece(game.queue)
+  );
+
+  if (nextBoard === game.board) {
+    return game;
+  }
+
+  if (game.autoColor && game.autoColorCells.length > 0) {
+    return {
+      ...game,
+      UR: URLib.save(game.UR, game),
+      board: nextBoard,
+      autoColorCells: [],
+    };
+  }
+
+  return {
+    ...game,
+    UR: URLib.save(game.UR, game),
+    board: nextBoard,
+  };
+}
+
+/**
+ * Clears a row on the game board.
+ * @param {Object} game - The game state object.
+ * @param {number} row - The row index of the row to clear.
+ * @returns {Object} - The updated game state object.
+ */
+function clearRow(game, row, col, currentTime) {
+  const nextBoard = boardLib.clearRow(game.board, row);
+
+  if (nextBoard === game.board) {
+    return game;
+  }
+
+  if (game.autoColor && game.autoColorCells.length > 0) {
+    return {
+      ...game,
+      UR: URLib.save(game.UR, game),
+      board: nextBoard,
+      autoColorCells: [],
+    };
+  }
+
+  return {
+    ...game,
+    UR: URLib.save(game.UR, game),
+    board: nextBoard,
+  };
+}
+
 function undo(game, currentTime) {
   const { state: nextGame, UR: nextUR } = URLib.undo(game.UR, game);
 
@@ -971,6 +1214,13 @@ const controller = {
   rotateCCW,
   rotate180,
   hold,
+  toggleHighlight,
+  setFillType,
+  fillCell,
+  clearCell,
+  resetFillCell,
+  fillRow,
+  clearRow,
   undo,
   redo,
   undoOnDrop,

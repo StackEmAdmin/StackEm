@@ -1,4 +1,10 @@
-import { getActions, applyReleaseActions } from './actions';
+import {
+  getActions,
+  applyReleaseActions,
+  fillCellAction,
+  resetFillCellAction,
+  clearCellAction,
+} from './actions';
 
 import { getMovesFromActions } from './moves';
 import { loadKeybinds } from '../config/keybinds';
@@ -154,6 +160,50 @@ function releaseKeys(
 }
 
 /**
+ * Enqueues a fill cell action to the current actions queue.
+ *
+ * @param {Object} pressed - A map of keys to their respective state.
+ * @param {Array.<Object>} actionsQ - The current queue of actions.
+ * @param {Object} modKeybinds - A map of action to the modifier keys that activate it.
+ * @param {number} row - The row index of the cell to be filled.
+ * @param {number} col - The column index of the cell to be filled.
+ * @param {number} currentTime - The time at which the action is being enqueued.
+ */
+
+function fillCell(pressed, actionsQ, modKeybinds, row, col, currentTime) {
+  actionsQ.current.push(
+    fillCellAction(pressed, modKeybinds, row, col, currentTime)
+  );
+}
+
+/**
+ * Resets the auto-color feature by pushing a resetFillCellAction into the
+ * current actions queue.
+ *
+ * @param {Array.<Object>} actionsQ - The current queue of actions.
+ * @param {number} currentTime - The time at which the action is being enqueued.
+ */
+function resetFillCell(actionsQ, currentTime) {
+  actionsQ.current.push(resetFillCellAction(currentTime));
+}
+
+/**
+ * Enqueues a clear cell action to the current actions queue.
+ *
+ * @param {Object} pressed - A map of keys to their respective state.
+ * @param {Array.<Object>} actionsQ - The current queue of actions.
+ * @param {Object} modKeybinds - A map of action to the modifier keys that activate it.
+ * @param {number} row - The row index of the cell to be cleared.
+ * @param {number} col - The column index of the cell to be cleared.
+ * @param {number} currentTime - The time at which the action is being enqueued.
+ */
+function clearCell(pressed, actionsQ, modKeybinds, row, col, currentTime) {
+  actionsQ.current.push(
+    clearCellAction(pressed, modKeybinds, row, col, currentTime)
+  );
+}
+
+/**
  * Converts a queue of actions into a queue of moves.
  *
  * @param {Array.<Object>} actionsQ - The queue of actions to be converted.
@@ -171,5 +221,8 @@ export {
   handleKeyDown,
   handleKeyUp,
   releaseKeys,
+  fillCell,
+  resetFillCell,
+  clearCell,
   getMoves,
 };

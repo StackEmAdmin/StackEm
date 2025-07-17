@@ -20,6 +20,16 @@ const DEFAULT_MOD_KEYBINDS = {
   redoMove: ['control', 'shift', 'y'],
   undo: ['control', 'z'],
   redo: ['control', 'y'],
+  setFillTypeO: ['alt', 'o'],
+  setFillTypeI: ['alt', 'i'],
+  setFillTypeL: ['alt', 'l'],
+  setFillTypeJ: ['alt', 'j'],
+  setFillTypeS: ['alt', 's'],
+  setFillTypeT: ['alt', 't'],
+  setFillTypeZ: ['alt', 'z'],
+  setFillTypeG: ['alt', 'g'],
+  toggleHighlight: ['alt', 'h'],
+  modifier: ['control'],
 };
 
 /**

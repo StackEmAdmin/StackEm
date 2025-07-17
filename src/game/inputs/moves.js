@@ -34,6 +34,18 @@ const modMap = {
   redo: controller.redoOnDrop,
   undoMove: controller.undo,
   redoMove: controller.redo,
+  toggleHighlight: controller.toggleHighlight,
+  fillCell: controller.fillCell,
+  fillRow: controller.fillRow,
+  resetFillCell: controller.resetFillCell,
+  clearCell: controller.clearCell,
+  clearRow: controller.clearRow,
+  ...Object.fromEntries(
+    ['o', 'i', 'l', 'j', 's', 't', 'z', 'g'].map((type) => [
+      `setFillType${type.toUpperCase()}`,
+      (g, time) => controller.setFillType(g, type, time),
+    ])
+  ),
 };
 
 /**
@@ -58,6 +70,23 @@ function copyActions(actions) {
 function modActionToMoves(a, currentTime) {
   if (!modMap[a.action]) {
     throw new Error(`Unknown modifier action: ${a.action}`);
+  }
+
+  if (
+    a.action === 'fillCell' ||
+    a.action === 'fillRow' ||
+    a.action === 'clearCell' ||
+    a.action === 'clearRow'
+  ) {
+    const move = {
+      name: a.action,
+      fn: (game) => modMap[a.action](game, a.row, a.col, a.time),
+      time: a.time,
+    };
+    return {
+      repeatAction: null,
+      moves: [move],
+    };
   }
 
   const move = {

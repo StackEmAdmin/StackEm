@@ -103,6 +103,9 @@ function modActionFromKey(key, pressed, modKeybinds, modEnabled, currentTime) {
   }
 
   for (const command in modKeybinds) {
+    if (command === 'modifier') {
+      continue;
+    }
     if (validModAction(key, pressed, currentTime, modKeybinds[command])) {
       return [{ time: currentTime, action: command, isMod: true }];
     }
@@ -203,6 +206,32 @@ function getActions(
  */
 function pressedActive(pressed, key) {
   return key !== '' && pressed.current[key].active;
+}
+
+/**
+ * Checks if all keys in the given keybind array are pressed in order based on time.
+ *
+ * @param {Object} pressed - The pressed object containing the current key state.
+ * @param {Array.<String>} keys - The array of keys to check.
+ * @returns {boolean} True if all keys are pressed in order, false otherwise.
+ */
+function pressedInOrder(pressed, keys) {
+  const lastVal = (arr, offSet = 0) => arr[arr.length - 1 - offSet];
+  // Checks keys are active and pressed in order based on time
+
+  let offSet = 0;
+  let prevKey = lastVal(keys, offSet);
+  let start = Infinity;
+  while (prevKey) {
+    const prevKeyTime = lastVal(pressed.current[prevKey].down);
+    if (!pressed.current[prevKey].active || prevKeyTime > start) {
+      return false;
+    }
+    offSet += 1;
+    prevKey = lastVal(keys, offSet);
+    start = prevKeyTime;
+  }
+  return true;
 }
 
 /**
@@ -446,4 +475,89 @@ function applyReleaseActions(
   }
 }
 
-export { getActions, applyReleaseActions };
+/**
+ * Creates an action to fill a cell or an entire row based on the modifier key state.
+ *
+ * If the modifier key is pressed, the action will be to fill the entire row.
+ * Otherwise, it will create an action to fill a single cell at the specified row and column.
+ *
+ * @param {Object} pressed - The pressed object containing the current key state.
+ * @param {Object} modKeybinds - A map of modifier command to the keybind array.
+ * @param {number} row - The row index of the cell to be filled.
+ * @param {number} col - The column index of the cell to be filled.
+ * @param {number} currentTime - The time at which the action is being enqueued.
+ * @returns {Object} An action to be added to the current actions queue.
+ */
+function fillCellAction(pressed, modKeybinds, row, col, currentTime) {
+  if (pressedInOrder(pressed, modKeybinds['modifier'])) {
+    return {
+      time: currentTime,
+      action: 'fillRow',
+      row: row,
+      col: col,
+      isMod: true,
+    };
+  }
+  return {
+    time: currentTime,
+    action: 'fillCell',
+    row: row,
+    col: col,
+    isMod: true,
+  };
+}
+
+/**
+ * Resets the auto-color feature by adding a resetFillCell action to the current
+ * actions queue.
+ *
+ * @param {number} currentTime - The time at which the action is being enqueued.
+ * @returns {Object} An action to be added to the current actions queue.
+ */
+function resetFillCellAction(currentTime) {
+  return {
+    time: currentTime,
+    action: 'resetFillCell',
+    isMod: true,
+  };
+}
+
+/**
+ * Creates an action to clear a cell or an entire row based on the modifier key state.
+ *
+ * If the modifier key is pressed in order, the action will be to clear the entire row.
+ * Otherwise, it will create an action to clear a single cell at the specified row and column.
+ *
+ * @param {Object} pressed - The pressed object containing the current key state.
+ * @param {Object} modKeybinds - A map of modifier command to the keybind array.
+ * @param {number} row - The row index of the cell to be cleared.
+ * @param {number} col - The column index of the cell to be cleared.
+ * @param {number} currentTime - The time at which the action is being enqueued.
+ * @returns {Object} An action object to be added to the current actions queue.
+ */
+function clearCellAction(pressed, modKeybinds, row, col, currentTime) {
+  if (pressedInOrder(pressed, modKeybinds['modifier'])) {
+    return {
+      time: currentTime,
+      action: 'clearRow',
+      row: row,
+      col: col,
+      isMod: true,
+    };
+  }
+  return {
+    time: currentTime,
+    action: 'clearCell',
+    row: row,
+    col: col,
+    isMod: true,
+  };
+}
+
+export {
+  getActions,
+  applyReleaseActions,
+  fillCellAction,
+  resetFillCellAction,
+  clearCellAction,
+};

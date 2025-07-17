@@ -36,6 +36,15 @@ const commandNameMap = {
   redoMove: 'Redo Move',
   undo: 'Undo Drop',
   redo: 'Redo Drop',
+  setFillTypeO: 'Set Fill Type O',
+  setFillTypeI: 'Set Fill Type I',
+  setFillTypeL: 'Set Fill Type L',
+  setFillTypeJ: 'Set Fill Type J',
+  setFillTypeS: 'Set Fill Type S',
+  setFillTypeT: 'Set Fill Type T',
+  setFillTypeZ: 'Set Fill Type Z',
+  setFillTypeG: 'Set Fill Type G',
+  toggleHighlight: 'Toggle Highlight',
 };
 
 function getKeyName(key) {
