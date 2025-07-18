@@ -29,6 +29,16 @@ const DEFAULT_MOD_KEYBINDS = {
   setFillTypeZ: ['alt', 'z'],
   setFillTypeG: ['alt', 'g'],
   toggleHighlight: ['alt', 'h'],
+  receiveGarbage1: ['alt', '1'],
+  receiveGarbage2: ['alt', '2'],
+  receiveGarbage3: ['alt', '3'],
+  receiveGarbage4: ['alt', '4'],
+  receiveGarbage5: ['alt', '5'],
+  receiveGarbage6: ['alt', '6'],
+  receiveGarbage7: ['alt', '7'],
+  receiveGarbage8: ['alt', '8'],
+  receiveGarbage9: ['alt', '9'],
+  receiveGarbage10: ['alt', '0'],
   modifier: ['control'],
 };
 

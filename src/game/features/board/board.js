@@ -466,6 +466,17 @@ function hasLanded(board, piece) {
   return !isLegal(board, pieceLib.down(piece));
 }
 
+function isLegalGrid(grid, piece) {
+  for (let i = 0; i < piece.span.length; i++) {
+    const row = piece.y + piece.span[i][1];
+    const col = piece.x + piece.span[i][0];
+    if (isGridOccupied(grid, row, col)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /**
  * Checks if a given position on the board is occupied or out of bounds.
  *
@@ -574,7 +585,6 @@ function clearLines(board) {
   // If there were 26 rows, (board.rows is 26), and 2 were removed,
   // Add back rows so there's 26 rows again
 
-  // Thinking ahead,
   // Garbage example:
   //   player was at line 20 (4w likely) and tanks 10 lines, which results in 30 rows
   // If there are 30 rows, (board.rows is 26), and 2 were removed,
@@ -592,6 +602,82 @@ function clearLines(board) {
   };
 }
 
+/**
+ * Receives and adds garbage lines to the board's grid.
+ *
+ * @function receiveGarbage
+ * @param {Object} board - The board object.
+ * @param {Array} board.grid - The 2D array representing the board grid.
+ * @param {number} board.cols - The number of columns in the board grid.
+ * @param {Object} garbage - The garbage object containing the garbage lines to be added.
+ * @param {number} garbage.amount - The number of garbage lines.
+ * @param {Array} garbage.hole - The position of the hole in each garbage line.
+ *
+ * @returns {Object} An object containing the updated board object.
+ * @returns {Array} board.grid - The updated 2D array representing the board grid with added garbage lines.
+ */
+function receiveGarbage(board, garbage, nextPiece) {
+  // Piece is shifted up if needed
+
+  const lines = [];
+  for (let i = 0; i < garbage.length; i++) {
+    lines.push(
+      ...createGarbageLines(board.cols, garbage[i].amount, garbage[i].hole)
+    );
+  }
+  return addLines(board, lines, nextPiece);
+}
+
+/**
+ * Adds the given lines to the board's grid.
+ *
+ * @param {Object} board - The board object.
+ * @param {Array} lines - The lines to be added to the board's grid.
+ *                        Each line is an array of strings representing the
+ *                        type of block in the grid, and the arrays represent
+ *                        the rows of the grid.
+ *
+ * @returns {Object} An object containing the updated board object.
+ * @returns {Array} board.grid - The updated 2D array representing the board grid.
+ */
+function addLines(board, lines, piece) {
+  const nextGrid = copyGrid(board);
+  let nextPiece = piece;
+
+  for (let i = 0; i < lines.length; i++) {
+    nextGrid.unshift(lines[i]);
+    if (piece && !isLegalGrid(nextGrid, piece)) {
+      nextPiece = pieceLib.up(nextPiece);
+    }
+  }
+  const nextBoard = { ...board, grid: nextGrid };
+  return { nextBoard, nextPiece };
+}
+
+/**
+ * Creates an array of arrays of strings representing garbage lines, with holes.
+ * The strings represent the type of block in the grid, and the arrays represent
+ * the rows of the grid.
+ *
+ * @param {number} cols - The number of columns in the grid.
+ * @param {number} amountLines - The number of lines to create.
+ * @param {number} hole - The column index where the hole should be placed
+ *
+ * @returns {Array} An array of arrays of strings, representing the garbage lines
+ *   with holes.
+ */
+
+function createGarbageLines(cols, amountLines, hole) {
+  const lines = Array.from({ length: amountLines }, () =>
+    Array(cols).fill('g')
+  );
+
+  for (let i = 0; i < lines.length; i++) {
+    lines[i][hole] = '';
+  }
+  return lines;
+}
+
 const boardLib = {
   place,
   fillCell,
@@ -603,6 +689,7 @@ const boardLib = {
   hasLanded,
   isOccupied,
   clearLines,
+  receiveGarbage,
   copyBoard,
 };
 

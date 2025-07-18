@@ -1,5 +1,6 @@
 import newBoard, { boardLib } from './features/board/board';
 import newQueue, { queueLib } from './features/queue/queue';
+import newGarbage, { garbageLib } from './features/garbage/garbage';
 import newGravity, { gravityLib } from './features/gravity/gravity';
 import { pieceLib } from './features/piece/piece';
 import newUR, { URLib } from './features/undoredo/undoredo';
@@ -20,6 +21,12 @@ import newRules, { rulesLib } from './features/rules/rules';
  * @param {number} [options.gravityLockPenalty=1000] - The penalty in milliseconds added to gravity lock time after a piece state goes from landed to unlanded. Default is 1000.
  * @param {number} [options.gravityAcc=0] - The acceleration in cells per frame per frame of gravity. Default is 0.
  * @param {number} [options.gravityAccDelay=0] - The delay in frames before gravity acceleration kicks in. Default is 0.
+ * @param {string} [options.garbageSpawn='drop'] - The garbage spawn system to be used.
+ * @param {boolean} [options.garbageComboBlock=true] - Whether combos delay garbage spawn.
+ * @param {number} [options.garbageChargeDelay=500] - The delay in ms before garbage is ready to spawn.
+ * @param {number} [options.garbageCap=8] - The maximum number of garbage lines to spawn at a time.
+ * @param {number} [options.garbageCheesiness=1] - The probability of garbage spawning in a different column.
+ * @param {number} [options.garbageSeed=undefined] - The RNG seed for the garbage spawn system.
  * @param {boolean} [options.highlight=false] - Whether to highlight clicked cells.
  * @param {boolean} [options.autoColor=true] - Whether to automatically color filled cells based on its shape.
  * @param {number} [options.queueSeed=undefined] - The seed for the queue. Default is undefined.
@@ -39,9 +46,15 @@ function newGame({
   gravityLockPenalty = 1000,
   gravityAcc = 0,
   gravityAccDelay = 0,
+  garbageSpawn = 'drop',
+  garbageComboBlock = true,
+  garbageChargeDelay = 500,
+  garbageCap = 8,
+  garbageCheesiness = 1,
   highlight = false,
   autoColor = true,
   queueSeed = undefined,
+  garbageSeed = undefined,
   enableUndo = false,
 } = {}) {
   const config = {
@@ -56,9 +69,15 @@ function newGame({
     gravityLockPenalty,
     gravityAcc,
     gravityAccDelay,
+    garbageSpawn,
+    garbageComboBlock,
+    garbageChargeDelay,
+    garbageCap,
+    garbageCheesiness,
     highlight,
     autoColor,
     queueSeed,
+    garbageSeed,
     enableUndo,
   };
 
@@ -88,12 +107,23 @@ function newGame({
       gravityAcc,
       gravityAccDelay
     ),
+    garbage: newGarbage(
+      garbageSeed,
+      cols,
+      garbageSpawn,
+      garbageComboBlock,
+      garbageCap,
+      garbageCheesiness,
+      garbageChargeDelay
+    ),
   };
 }
 
 function update(game, currentTime) {
-  // TODO: update garbage
-  return updateGravity(game, currentTime);
+  let nextGame = updateGravity(game, currentTime);
+  nextGame = updateGarbage(nextGame, currentTime);
+
+  return nextGame;
 }
 
 function updateGravity(game, currentTime) {
@@ -130,6 +160,69 @@ function updateGravity(game, currentTime) {
     ...game,
     queue: nextQueue,
     twist: '',
+  };
+}
+
+function updateGarbage(game, currentTime) {
+  const updatedGarbage = garbageLib.update(
+    game.garbage,
+    game.startTime,
+    currentTime
+  );
+
+  if (game.garbage.spawn === 'instant') {
+    return updateSpawnGarbage(game, updatedGarbage, currentTime);
+  }
+
+  return updatedGarbage === game.garbage
+    ? game
+    : { ...game, garbage: updatedGarbage };
+}
+
+function updateSpawnGarbage(game, garbage, currentTime) {
+  const { nextGarbage, chargedGarbage } = garbageLib.receive(
+    garbage,
+    false,
+    false
+  );
+
+  // No change in garbage (thus no garbage to spawn)
+  if (nextGarbage === game.garbage) {
+    return game;
+  }
+
+  // No garbage to spawn
+  if (!chargedGarbage) {
+    return { ...game, garbage: nextGarbage };
+  }
+
+  let { nextBoard, nextPiece } = boardLib.receiveGarbage(
+    game.board,
+    chargedGarbage,
+    game.queue.pieces[0],
+    currentTime
+  );
+
+  const nextGame = {
+    ...game,
+    board: nextBoard,
+    garbage: nextGarbage,
+  };
+
+  // Spawned garbage (and no change in nextPiece)
+  if (game.queue.pieces[0] === nextPiece) {
+    return nextGame;
+  }
+
+  nextPiece = gravityStamper(nextGame, nextPiece, currentTime);
+
+  // Spawned garbage and shifted nextPiece up
+  const nextQueue = queueLib.updateNextPiece(nextGame.queue, nextPiece);
+  return {
+    ...nextGame,
+    queue: nextQueue,
+    board: nextBoard,
+    garbage: nextGarbage,
   };
 }
 
@@ -626,7 +719,7 @@ function DASLeftInfSoftDrop(game, currentTime) {
 
 /**
  * Performs the drop operation on the current piece in the game.
- * Calls the dropHelper function which drops piece, clears lines, and calculates attacks.
+ * Calls the dropHelper function which drops piece, clears lines, calculates attacks, and receives garbage.
  *
  * @param {Object} game - The game state object.
  * @returns {Object} - The updated game state object.
@@ -656,6 +749,7 @@ function dropHelper(game, currentTime) {
   // 1. Drop Piece
   // 2. Clear lines
   // 3. Calculate attack (based on cleared lines)
+  // 4. Receive garbage
 
   // 1 Drop Piece - Soft drop piece all the way down then place
   const droppedPiece = calculateWhileLegal(
@@ -704,7 +798,54 @@ function dropHelper(game, currentTime) {
   const totalAttack = attacks.reduce((total, attack) => total + attack, 0);
   const nextNumAttack = game.numAttack + totalAttack;
 
-  sendAttack(totalAttack, currentTime);
+  // 4 Receive Garbage
+  let { nextGarbage, nextAttacks } = garbageLib.cancel(
+    game.garbage,
+    totalAttack,
+    attacks
+  );
+
+  const { nextGarbage: updatedGarbage, chargedGarbage } = garbageLib.receive(
+    nextGarbage,
+    nextCombo >= 0,
+    true
+  );
+  nextGarbage = updatedGarbage;
+
+  sendAttack(nextAttacks, currentTime);
+
+  // No change in garbage
+  if (nextGarbage === game.garbage) {
+    return {
+      ...game,
+      numPieces: game.numPieces + 1,
+      numAttack: nextNumAttack,
+      twist: '',
+      combo: nextCombo,
+      b2b: nextB2B,
+      board: nextBoard,
+      queue: nextQueue,
+      UR: URLib.save(game.UR, game),
+    };
+  }
+
+  // No garbage to spawn
+  if (!chargedGarbage) {
+    return {
+      ...game,
+      numPieces: game.numPieces + 1,
+      numAttack: nextNumAttack,
+      twist: '',
+      combo: nextCombo,
+      b2b: nextB2B,
+      board: nextBoard,
+      queue: nextQueue,
+      garbage: nextGarbage,
+      UR: URLib.save(game.UR, game),
+    };
+  }
+
+  ({ nextBoard } = boardLib.receiveGarbage(nextBoard, chargedGarbage));
 
   return {
     ...game,
@@ -715,6 +856,7 @@ function dropHelper(game, currentTime) {
     b2b: nextB2B,
     board: nextBoard,
     queue: nextQueue,
+    garbage: nextGarbage,
     UR: URLib.save(game.UR, game),
   };
 }
@@ -760,6 +902,23 @@ function hold(game, currentTime) {
         twist: '',
         queue: nextQueue,
       };
+}
+
+/**
+ * Adds the given amount of garbage lines to the game garbage queue.
+ *
+ * @param {Object} game - The game state object.
+ * @param {number} amount - The amount of garbage lines to add.
+ * @param {number} time - The current game time.
+ *
+ * @returns {Object} - The updated game state object with the updated garbage queue.
+ */
+function receiveGarbage(game, amount, time) {
+  return {
+    ...game,
+    UR: URLib.save(game.UR, game),
+    garbage: garbageLib.queue(game.garbage, amount, time),
+  };
 }
 
 /**
@@ -1214,6 +1373,7 @@ const controller = {
   rotateCCW,
   rotate180,
   hold,
+  receiveGarbage,
   toggleHighlight,
   setFillType,
   fillCell,

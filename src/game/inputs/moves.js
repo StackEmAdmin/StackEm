@@ -46,6 +46,12 @@ const modMap = {
       (g, time) => controller.setFillType(g, type, time),
     ])
   ),
+  ...Object.fromEntries(
+    Array.from({ length: 10 }, (_, i) => [
+      `receiveGarbage${i + 1}`,
+      (g, time) => controller.receiveGarbage(g, i + 1, time),
+    ])
+  ),
 };
 
 /**

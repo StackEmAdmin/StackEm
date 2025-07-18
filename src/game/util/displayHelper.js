@@ -22,14 +22,25 @@ function placeGhostPiece(board, piece) {
  * in the game garbage queue.
  *
  * @param {Object} game - The game object containing the garbage queue.
+ * @param {Array} game.garbage.queue - The game garbage queue containing
+ *   objects with properties `charged` (boolean) and `amount` (number).
  *
  * @returns {Object} An object with two properties: `uncharged` and `charged`.
  *   These properties contain the total amount of uncharged and charged
  *   garbage lines, respectively.
  */
 function calculateGarbageQueue(game) {
-  // TODO Implement garbage
-  return { uncharged: 0, charged: 0 };
+  return game.garbage.queue.reduce(
+    (acc, garbage) => {
+      if (garbage.charged) {
+        acc.charged += garbage.amount;
+      } else {
+        acc.uncharged += garbage.amount;
+      }
+      return acc;
+    },
+    { uncharged: 0, charged: 0 }
+  );
 }
 
 /**

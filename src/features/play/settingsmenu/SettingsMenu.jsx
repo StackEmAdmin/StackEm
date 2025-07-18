@@ -45,6 +45,16 @@ const commandNameMap = {
   setFillTypeZ: 'Set Fill Type Z',
   setFillTypeG: 'Set Fill Type G',
   toggleHighlight: 'Toggle Highlight',
+  receiveGarbage1: 'Receive 1 Garbage',
+  receiveGarbage2: 'Receive 2 Garbage',
+  receiveGarbage3: 'Receive 3 Garbage',
+  receiveGarbage4: 'Receive 4 Garbage',
+  receiveGarbage5: 'Receive 5 Garbage',
+  receiveGarbage6: 'Receive 6 Garbage',
+  receiveGarbage7: 'Receive 7 Garbage',
+  receiveGarbage8: 'Receive 8 Garbage',
+  receiveGarbage9: 'Receive 9 Garbage',
+  receiveGarbage10: 'Receive 10 Garbage',
 };
 
 function getKeyName(key) {
