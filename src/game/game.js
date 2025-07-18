@@ -26,6 +26,9 @@ import newRules, { rulesLib } from './features/rules/rules';
  * @param {number} [options.garbageChargeDelay=500] - The delay in ms before garbage is ready to spawn.
  * @param {number} [options.garbageCap=8] - The maximum number of garbage lines to spawn at a time.
  * @param {number} [options.garbageCheesiness=1] - The probability of garbage spawning in a different column.
+ * @param {boolean} [options.garbageModeAPS=false] - Whether Attack Per Second (APS) mode is enabled.
+ * @param {number} [options.garbageModeAPSAttack=0] - The number of garbage lines to receive.
+ * @param {number} [options.garbageModeAPSSecond=0] - The interval in seconds between APS garbage line additions.
  * @param {number} [options.garbageSeed=undefined] - The RNG seed for the garbage spawn system.
  * @param {boolean} [options.highlight=false] - Whether to highlight clicked cells.
  * @param {boolean} [options.autoColor=true] - Whether to automatically color filled cells based on its shape.
@@ -51,6 +54,9 @@ function newGame({
   garbageChargeDelay = 500,
   garbageCap = 8,
   garbageCheesiness = 1,
+  garbageModeAPS = false,
+  garbageModeAPSAttack = 0,
+  garbageModeAPSSecond = 0,
   highlight = false,
   autoColor = true,
   queueSeed = undefined,
@@ -74,6 +80,9 @@ function newGame({
     garbageChargeDelay,
     garbageCap,
     garbageCheesiness,
+    garbageModeAPS,
+    garbageModeAPSAttack,
+    garbageModeAPSSecond,
     highlight,
     autoColor,
     queueSeed,
@@ -114,7 +123,10 @@ function newGame({
       garbageComboBlock,
       garbageCap,
       garbageCheesiness,
-      garbageChargeDelay
+      garbageChargeDelay,
+      garbageModeAPS,
+      garbageModeAPSAttack,
+      garbageModeAPSSecond
     ),
   };
 }

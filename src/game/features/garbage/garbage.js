@@ -12,6 +12,9 @@ const MAX_GARBAGE_QUEUE_LENGTH = 1000;
  * @param {number} cap - The maximum number of garbage lines to spawn at once.
  * @param {number} cheesiness - The probability of garbage spawning in a different column.
  * @param {number} chargeDelay - The delay in ms before garbage is ready to spawn.
+ * @param {boolean} modeAPS - Whether to enable Attack Per Second (APS) mode.
+ * @param {number} modeAPSAttack - The number of garbage lines to receive in APS mode.
+ * @param {number} modeAPSSecond - The time in seconds before the next APS mode attack.
  *
  * @returns {Object} A new garbage object.
  */
@@ -22,7 +25,10 @@ function newGarbage(
   comboBlock,
   cap,
   cheesiness,
-  chargeDelay
+  chargeDelay,
+  modeAPS,
+  modeAPSAttack,
+  modeAPSSecond
 ) {
   return {
     cols,
@@ -34,6 +40,10 @@ function newGarbage(
     rng: newRNG(seed),
     queue: [],
     chargeDelay,
+    modeAPS,
+    modeAPSAttack,
+    modeAPSSecond,
+    modeAPSCounter: 0,
   };
 }
 
@@ -97,6 +107,35 @@ function queue(garbage, amountGarbage, currentTime) {
   };
 }
 
+function updateGarbageModeAPS(garbage, startTime, currentTime) {
+  // Calculate if it's time to receive Attack Per Second (APS) garbage
+  const timeElapsed = currentTime - startTime;
+  let timeForGarbage =
+    garbage.modeAPSSecond * 1000 * (garbage.modeAPSCounter + 1);
+
+  let nextGarbage = garbage;
+  while (timeElapsed >= timeForGarbage) {
+    const updatedGarbage = {
+      ...nextGarbage,
+      modeAPSCounter: nextGarbage.modeAPSCounter + 1,
+    };
+
+    const timeGarbage = startTime + timeForGarbage;
+    nextGarbage = queue(updatedGarbage, garbage.modeAPSAttack, timeGarbage);
+    timeForGarbage =
+      garbage.modeAPSSecond * 1000 * (nextGarbage.modeAPSCounter + 1);
+  }
+
+  return nextGarbage;
+}
+
+function updateGarbageMode(garbage, startTime, currentTime) {
+  if (garbage.modeAPS) {
+    return updateGarbageModeAPS(garbage, startTime, currentTime);
+  }
+  return garbage;
+}
+
 function updateGarbageQueue(garbage, currentTime) {
   if (garbage.queue.length === 0) {
     return garbage;
@@ -133,6 +172,7 @@ function updateGarbageQueue(garbage, currentTime) {
 
 /**
  * Updates the game garbage object, given the current time, start time of the game, and the game garbage object.
+ * Adds garbage to queue depending if a garbage mode is active
  * Charges garbage lines once charge delay has passed
  *
  * @param {Object} garbage - The game garbage object.
@@ -142,7 +182,9 @@ function updateGarbageQueue(garbage, currentTime) {
  * @returns {Object} The updated game garbage object.
  */
 function update(garbage, startTime, currentTime) {
-  return updateGarbageQueue(garbage, currentTime);
+  let nextGarbage = updateGarbageMode(garbage, startTime, currentTime);
+  nextGarbage = updateGarbageQueue(nextGarbage, currentTime);
+  return nextGarbage;
 }
 
 /**
