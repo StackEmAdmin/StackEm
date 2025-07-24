@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import GameRender from './gamerender/GameRender';
-import newGame from '../../game/game';
 import {
   loadKeybinds,
   loadHandling,
@@ -17,16 +16,10 @@ import {
 } from '../../game/core/engine';
 import './GameComponent.css';
 
-function GameComponent() {
-  const config = {
-    startTime: performance.now(),
-    enableUndo: true,
-  };
-
+function GameComponent({ gameRef }) {
   const { keybinds, modKeybinds, pressed } = loadKeybinds();
   const { DAS, ARR, SRR } = loadHandling();
   const modEnabled = true;
-  const gameRef = useRef(newGame(config));
   const [displayGame, setDisplayGame] = useState(gameRef.current);
   const pressedRef = useRef(pressed);
   const actionsRef = useRef([]);
@@ -133,7 +126,7 @@ function GameComponent() {
 
     animationRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationRef.current);
-  }, []);
+  }, [gameRef]);
 
   // Run gameLoop in the background
   useEffect(() => {

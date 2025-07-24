@@ -1,6 +1,8 @@
+import { useRef } from 'react';
 import { useLoaderData } from 'react-router-dom';
 import GameComponent from '../../components/gamecomponent/GameComponent';
 import { getMap } from '../../api/map';
+import newGame from '../../game/game';
 import './Design.css';
 
 async function loader({ params }) {
@@ -16,9 +18,15 @@ async function loader({ params }) {
 
 function Design() {
   const { map } = useLoaderData();
+
+  const config = {
+    enableUndo: true,
+  };
+
+  const gameRef = useRef(newGame(config));
   return (
     <div className="designer-container">
-      <GameComponent />
+      <GameComponent gameRef={gameRef} />
     </div>
   );
 }
