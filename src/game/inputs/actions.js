@@ -483,12 +483,24 @@ function applyReleaseActions(
  *
  * @param {Object} pressed - The pressed object containing the current key state.
  * @param {Object} modKeybinds - A map of modifier command to the keybind array.
+ * @param {boolean} modEnabled - Whether the modifier keybinds are enabled.
  * @param {number} row - The row index of the cell to be filled.
  * @param {number} col - The column index of the cell to be filled.
  * @param {number} currentTime - The time at which the action is being enqueued.
  * @returns {Object} An action to be added to the current actions queue.
  */
-function fillCellAction(pressed, modKeybinds, row, col, currentTime) {
+function fillCellAction(
+  pressed,
+  modKeybinds,
+  modEnabled,
+  row,
+  col,
+  currentTime
+) {
+  if (!modEnabled) {
+    return null;
+  }
+
   if (pressedInOrder(pressed, modKeybinds['modifier'])) {
     return {
       time: currentTime,
@@ -511,10 +523,14 @@ function fillCellAction(pressed, modKeybinds, row, col, currentTime) {
  * Resets the auto-color feature by adding a resetFillCell action to the current
  * actions queue.
  *
+ * @param {boolean} modEnabled - Whether the modifier keybinds are enabled.
  * @param {number} currentTime - The time at which the action is being enqueued.
  * @returns {Object} An action to be added to the current actions queue.
  */
-function resetFillCellAction(currentTime) {
+function resetFillCellAction(modEnabled, currentTime) {
+  if (!modEnabled) {
+    return null;
+  }
   return {
     time: currentTime,
     action: 'resetFillCell',
@@ -530,12 +546,23 @@ function resetFillCellAction(currentTime) {
  *
  * @param {Object} pressed - The pressed object containing the current key state.
  * @param {Object} modKeybinds - A map of modifier command to the keybind array.
+ * @param {boolean} modEnabled - Whether the modifier keybinds are enabled.
  * @param {number} row - The row index of the cell to be cleared.
  * @param {number} col - The column index of the cell to be cleared.
  * @param {number} currentTime - The time at which the action is being enqueued.
  * @returns {Object} An action object to be added to the current actions queue.
  */
-function clearCellAction(pressed, modKeybinds, row, col, currentTime) {
+function clearCellAction(
+  pressed,
+  modKeybinds,
+  modEnabled,
+  row,
+  col,
+  currentTime
+) {
+  if (!modEnabled) {
+    return null;
+  }
   if (pressedInOrder(pressed, modKeybinds['modifier'])) {
     return {
       time: currentTime,

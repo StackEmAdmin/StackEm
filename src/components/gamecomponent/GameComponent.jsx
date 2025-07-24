@@ -186,6 +186,7 @@ function GameComponent({ gameRef }) {
             pressedRef,
             actionsRef,
             modKeybinds,
+            modEnabled,
             row,
             col,
             performance.now()
@@ -196,12 +197,15 @@ function GameComponent({ gameRef }) {
             pressedRef,
             actionsRef,
             modKeybinds,
+            modEnabled,
             row,
             col,
             performance.now()
           )
         }
-        resetFillCell={() => resetFillCellClick(actionsRef, performance.now())}
+        resetFillCell={() =>
+          resetFillCellClick(actionsRef, modEnabled, performance.now())
+        }
       />
     </section>
   );

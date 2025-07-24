@@ -165,15 +165,33 @@ function releaseKeys(
  * @param {Object} pressed - A map of keys to their respective state.
  * @param {Array.<Object>} actionsQ - The current queue of actions.
  * @param {Object} modKeybinds - A map of action to the modifier keys that activate it.
+ * @param {boolean} modEnabled - Whether the modifier keybinds are enabled.
  * @param {number} row - The row index of the cell to be filled.
  * @param {number} col - The column index of the cell to be filled.
  * @param {number} currentTime - The time at which the action is being enqueued.
  */
 
-function fillCell(pressed, actionsQ, modKeybinds, row, col, currentTime) {
-  actionsQ.current.push(
-    fillCellAction(pressed, modKeybinds, row, col, currentTime)
+function fillCell(
+  pressed,
+  actionsQ,
+  modKeybinds,
+  modEnabled,
+  row,
+  col,
+  currentTime
+) {
+  const action = fillCellAction(
+    pressed,
+    modKeybinds,
+    modEnabled,
+    row,
+    col,
+    currentTime
   );
+  if (!action) {
+    return;
+  }
+  actionsQ.current.push(action);
 }
 
 /**
@@ -181,10 +199,15 @@ function fillCell(pressed, actionsQ, modKeybinds, row, col, currentTime) {
  * current actions queue.
  *
  * @param {Array.<Object>} actionsQ - The current queue of actions.
+ * @param {boolean} modEnabled - Whether the modifier keybinds are enabled.
  * @param {number} currentTime - The time at which the action is being enqueued.
  */
-function resetFillCell(actionsQ, currentTime) {
-  actionsQ.current.push(resetFillCellAction(currentTime));
+function resetFillCell(actionsQ, modEnabled, currentTime) {
+  const action = resetFillCellAction(modEnabled, currentTime);
+  if (!action) {
+    return;
+  }
+  actionsQ.current.push(action);
 }
 
 /**
@@ -193,14 +216,32 @@ function resetFillCell(actionsQ, currentTime) {
  * @param {Object} pressed - A map of keys to their respective state.
  * @param {Array.<Object>} actionsQ - The current queue of actions.
  * @param {Object} modKeybinds - A map of action to the modifier keys that activate it.
+ * @param {boolean} modEnabled - Whether the modifier keybinds are enabled.
  * @param {number} row - The row index of the cell to be cleared.
  * @param {number} col - The column index of the cell to be cleared.
  * @param {number} currentTime - The time at which the action is being enqueued.
  */
-function clearCell(pressed, actionsQ, modKeybinds, row, col, currentTime) {
-  actionsQ.current.push(
-    clearCellAction(pressed, modKeybinds, row, col, currentTime)
+function clearCell(
+  pressed,
+  actionsQ,
+  modKeybinds,
+  modEnabled,
+  row,
+  col,
+  currentTime
+) {
+  const action = clearCellAction(
+    pressed,
+    modKeybinds,
+    modEnabled,
+    row,
+    col,
+    currentTime
   );
+  if (!action) {
+    return;
+  }
+  actionsQ.current.push(action);
 }
 
 /**
