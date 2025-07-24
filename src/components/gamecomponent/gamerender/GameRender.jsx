@@ -61,7 +61,11 @@ function GridTop({ grid, onMouseDown, onMouseOver }) {
   }, [onMouseDown, onMouseOver, numRows]);
 
   return (
-    <div className="board-top" ref={boardRef}>
+    <div
+      className="board-top"
+      ref={boardRef}
+      onContextMenu={(ev) => ev.preventDefault()}
+    >
       <Cells grid={grid} />
     </div>
   );
@@ -87,7 +91,11 @@ function Grid({ grid, onMouseDown, onMouseOver }) {
   }, [onMouseDown, onMouseOver]);
 
   return (
-    <div className="board" ref={boardRef}>
+    <div
+      className="board"
+      ref={boardRef}
+      onContextMenu={(ev) => ev.preventDefault()}
+    >
       <Cells grid={grid} />
     </div>
   );
@@ -309,14 +317,9 @@ function GameRender({ game, fillCell, clearCell, resetFillCell }) {
       ev.preventDefault();
     };
 
-    // Prevent context menu from opening
-    const onContextMenu = (ev) => ev.preventDefault();
-
     window.addEventListener('mouseup', onMouseUp);
-    window.addEventListener('contextmenu', onContextMenu);
     return () => {
       window.removeEventListener('mouseup', onMouseUp);
-      window.removeEventListener('contextmenu', onContextMenu);
     };
   }, [resetFillCell]);
 
