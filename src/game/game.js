@@ -90,6 +90,24 @@ function newGame({
     enableUndo,
   };
 
+  // Populate rng seed in config
+  const initialQueue = newQueue(queueSeed, startTime);
+  config.queueSeed = initialQueue.rng.seed;
+
+  const initialGarbage = newGarbage(
+    garbageSeed,
+    cols,
+    garbageSpawn,
+    garbageComboBlock,
+    garbageCap,
+    garbageCheesiness,
+    garbageChargeDelay,
+    garbageModeAPS,
+    garbageModeAPSAttack,
+    garbageModeAPSSecond
+  );
+  config.garbageSeed = initialGarbage.rng.seed;
+
   return {
     config,
     highlight,
@@ -106,7 +124,7 @@ function newGame({
     numPieces: 0,
     numAttack: 0,
     board: newBoard(rows, cols),
-    queue: newQueue(queueSeed, startTime),
+    queue: initialQueue,
     rules: newRules(kick, attack, spins),
     gravity: newGravity(
       gravity,
@@ -116,18 +134,7 @@ function newGame({
       gravityAcc,
       gravityAccDelay
     ),
-    garbage: newGarbage(
-      garbageSeed,
-      cols,
-      garbageSpawn,
-      garbageComboBlock,
-      garbageCap,
-      garbageCheesiness,
-      garbageChargeDelay,
-      garbageModeAPS,
-      garbageModeAPSAttack,
-      garbageModeAPSSecond
-    ),
+    garbage: initialGarbage,
   };
 }
 
