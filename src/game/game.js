@@ -30,9 +30,11 @@ import newRules, { rulesLib } from './features/rules/rules';
  * @param {number} [options.garbageModeAPSAttack=0] - The number of garbage lines to receive.
  * @param {number} [options.garbageModeAPSSecond=0] - The interval in seconds between APS garbage line additions.
  * @param {number} [options.garbageSeed=undefined] - The RNG seed for the garbage spawn system.
+ * @param {boolean} [options.garbageNewSeedOnReset=true] - Whether to generate a new seed for the garbage spawn system when the game is reset.
  * @param {boolean} [options.highlight=false] - Whether to highlight clicked cells.
  * @param {boolean} [options.autoColor=true] - Whether to automatically color filled cells based on its shape.
  * @param {number} [options.queueSeed=undefined] - The seed for the queue. Default is undefined.
+ * @param {boolean} [options.queueNewSeedOnReset=true] - Whether to generate a new seed for the queue when the game is reset.
  * @param {boolean} [options.enableUndo=false] - Whether to enable undo and redo.
  * @returns {Object} - The new game state object.
  */
@@ -60,7 +62,9 @@ function newGame({
   highlight = false,
   autoColor = true,
   queueSeed = undefined,
+  queueNewSeedOnReset = true,
   garbageSeed = undefined,
+  garbageNewSeedOnReset = true,
   enableUndo = false,
 } = {}) {
   const config = {
@@ -86,7 +90,9 @@ function newGame({
     highlight,
     autoColor,
     queueSeed,
+    queueNewSeedOnReset,
     garbageSeed,
+    garbageNewSeedOnReset,
     enableUndo,
   };
 
@@ -246,7 +252,17 @@ function updateSpawnGarbage(game, garbage, currentTime) {
 }
 
 function reset(game, currentTime) {
-  const nextGame = newGame(game.config);
+  // New rng seed on reset if enabled
+  let nextConfig = { ...game.config };
+  if (nextConfig.queueNewSeedOnReset) {
+    nextConfig.queueSeed = undefined;
+  }
+  if (nextConfig.garbageNewSeedOnReset) {
+    nextConfig.garbageSeed = undefined;
+  }
+
+  const nextGame = newGame(nextConfig);
+
   // Save game in undo/redo (UR) stack
   const nextUR = URLib.save(game.UR, game);
   nextGame.UR = nextUR;
