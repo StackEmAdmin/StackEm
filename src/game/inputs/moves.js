@@ -357,9 +357,10 @@ function isRepeatAction(action) {
  *
  * @param {Array.<Object>} actions - The list of actions to be converted.
  * @param {number} currentTime - The time at which the actions are being converted.
+ * @param {boolean} extrapolate - Whether to extrapolate moves.
  * @returns {Object} An object containing the moves and repeat actions.
  */
-function actionsToMoves(actions, currentTime) {
+function actionsToMoves(actions, currentTime, extrapolate) {
   let moves = [];
   let repeatActions = [];
   for (const a of actions) {
@@ -394,6 +395,13 @@ function actionsToMoves(actions, currentTime) {
   moves = preMoves.concat(moves);
   repeatActions = preRepeatActions.concat(repeatActions);
 
+  // When extrapolating anticipate next frame instant ARR/SRR actions (preMoves)
+  // and apply them to the current frame for smoother gameplay.
+  // These moves will always be applied in the next (engine) frame
+  if (extrapolate) {
+    moves = moves.concat(preMoves);
+  }
+
   return { moves, repeatActions };
 }
 
@@ -406,11 +414,12 @@ function actionsToMoves(actions, currentTime) {
  *
  * @param {Array.<Object>} actionsQ - The queue of actions to be converted.
  * @param {number} currentTime - The time at which the actions are being converted.
+ * @param {boolean} extrapolate - Whether to extrapolate moves.
  * @returns {Object} An object containing the moves and the next actions to be
  *   applied.
  */
 
-function getMovesFromActions(actionsQ, currentTime) {
+function getMovesFromActions(actionsQ, currentTime, extrapolate = false) {
   if (actionsQ.current.length === 0) {
     return { moves: [], nextActions: actionsQ.current };
   }
@@ -432,7 +441,8 @@ function getMovesFromActions(actionsQ, currentTime) {
   try {
     const { moves, repeatActions } = actionsToMoves(
       actionsToApply,
-      currentTime
+      currentTime,
+      extrapolate
     );
     nextActions = nextActions.concat(repeatActions);
     return { moves, nextActions };

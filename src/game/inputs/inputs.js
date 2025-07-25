@@ -249,11 +249,12 @@ function clearCell(
  *
  * @param {Array.<Object>} actionsQ - The queue of actions to be converted.
  * @param {number} currentTime - The time at which the actions are being converted.
+ * @param {boolean} extrapolate - Whether to extrapolate moves.
  * @returns {Object} - An object containing the moves and any repeat actions that
  *   may still be active.
  */
-function getMoves(actionsQ, currentTime) {
-  return getMovesFromActions(actionsQ, currentTime);
+function getMoves(actionsQ, currentTime, extrapolate = false) {
+  return getMovesFromActions(actionsQ, currentTime, extrapolate);
 }
 
 export {

@@ -102,13 +102,13 @@ function update(game, actionsRef, accumulator, currentTime) {
  * @returns {Object} The updated game state.
  */
 function render(game, actionsRef, accumulator, currentTime) {
-  // Game is behind. Skip interpolation until update catches up.
+  // Game is behind. Skip extrapolation until update catches up.
   if (accumulator >= TIME_STEP) {
     return game;
   }
 
   // Extrapolate moves. Does not mutate actions or game state (instead new game state returned).
-  const { moves } = getMoves(actionsRef, currentTime);
+  const { moves } = getMoves(actionsRef, currentTime, true);
   let updatedGame = game;
   updatedGame = applyMoves(updatedGame, moves);
   return controller.update(updatedGame, currentTime);
