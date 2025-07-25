@@ -302,23 +302,22 @@ function calcInstActionName(actions, currentTime) {
 }
 
 /**
- * Converts post actions into moves for the game.
+ * Converts pre actions into moves for the game.
  *
- * This function processes a set of actions to determine any post moves that need
- * to be executed and any repeat actions that remain active. It uses the
- * `calcInstActionName` function to map actions to their corresponding move names
- * and retrieves the appropriate function from the `actionMap`.
+ * This function processes a set of actions to determine any moves that need
+ * to be executed and any repeat actions that remain active.
+ * These are instant ARR/SRR actions including DASLeft, DASRight, and infSoftDrop
  *
  * @param {Array.<Object>} actions - The list of actions to convert.
  * @param {number} currentTime - The current time in milliseconds.
- * @returns {Object} An object containing the post moves to execute and any active repeat actions.
+ * @returns {Object} An object containing the moves to execute and any active repeat actions.
  * @throws {Error} Throws an error if the action name is unknown.
  */
-function postActionsToMoves(actions, currentTime) {
+function preActionsToMoves(actions, currentTime) {
   const { name, repeatActions } = calcInstActionName(actions, currentTime);
 
   if (!name) {
-    return { postMoves: [], repeatActions };
+    return { preMoves: [], repeatActions };
   }
 
   const fn = actionMap[name];
@@ -333,7 +332,7 @@ function postActionsToMoves(actions, currentTime) {
   };
 
   return {
-    postMoves: [move],
+    preMoves: [move],
     repeatActions,
   };
 }
@@ -388,12 +387,12 @@ function actionsToMoves(actions, currentTime) {
   // Sort moves by time
   moves.sort((a, b) => a.time - b.time);
 
-  const { postMoves, repeatActions: postRepeatActions } = postActionsToMoves(
+  const { preMoves, repeatActions: preRepeatActions } = preActionsToMoves(
     actions,
     currentTime
   );
-  moves = moves.concat(postMoves);
-  repeatActions = repeatActions.concat(postRepeatActions);
+  moves = preMoves.concat(moves);
+  repeatActions = preRepeatActions.concat(repeatActions);
 
   return { moves, repeatActions };
 }
