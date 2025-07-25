@@ -242,10 +242,11 @@ function calcInstActionName(actions, currentTime) {
 
   for (const a of actions) {
     // Check delay is 0, and is an instant action (and stop time hasn't passed)
+    // If stopTime = currentTime, stopped in current frame and captured in stoppedInstaActionsToMove
     if (
       a.delay !== 0 ||
       !instaActionNameMap[a.action] ||
-      (a.stopTime && a.stopTime < currentTime)
+      (a.stopTime && a.stopTime <= currentTime)
     ) {
       continue;
     }
