@@ -1226,7 +1226,7 @@ function undoReset(game, currentTime) {
   // could be improved by not relying on assumptions but practical... (Why would you reset if you didn't place anything, mess up already?)
 
   // Try resetting
-  const resetState = undo(game);
+  const resetState = undo(game, currentTime);
   if (resetState.numPieces === 0) {
     return game;
   }
