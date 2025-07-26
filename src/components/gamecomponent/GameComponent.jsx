@@ -200,6 +200,10 @@ function GameComponent({ gameRef, pubSubRef }) {
     };
   }, [gameRef]);
 
+  useEffect(() => {
+    sectionEleRef.current.focus();
+  }, []);
+
   return (
     <section className="section game" ref={sectionEleRef} tabIndex={0}>
       <GameRender
