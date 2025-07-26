@@ -19,7 +19,7 @@ import newRules, { rulesLib } from './features/rules/rules';
  * @param {number} [options.gravityLock=500] - The time in milliseconds before a piece locks in place. Default is 500.
  * @param {number} [options.gravityLockCap=5000] - The maximum time in milliseconds before a piece locks in place. Default is 5000.
  * @param {number} [options.gravityLockPenalty=1000] - The penalty in milliseconds added to gravity lock time after a piece state goes from landed to unlanded. Default is 1000.
- * @param {number} [options.gravityAcc=0] - The acceleration in cells per frame per frame of gravity. Default is 0.
+ * @param {number} [options.gravityAcc=0] - The acceleration in cells per frame for gravity.
  * @param {number} [options.gravityAccDelay=0] - The delay in frames before gravity acceleration kicks in. Default is 0.
  * @param {string} [options.garbageSpawn='drop'] - The garbage spawn system to be used.
  * @param {boolean} [options.garbageComboBlock=true] - Whether combos delay garbage spawn.
@@ -28,7 +28,7 @@ import newRules, { rulesLib } from './features/rules/rules';
  * @param {number} [options.garbageCheesiness=1] - The probability of garbage spawning in a different column.
  * @param {boolean} [options.garbageModeAPS=false] - Whether Attack Per Second (APS) mode is enabled.
  * @param {number} [options.garbageModeAPSAttack=0] - The number of garbage lines to receive.
- * @param {number} [options.garbageModeAPSSecond=0] - The interval in seconds between APS garbage line additions.
+ * @param {number} [options.garbageModeAPSSecond=1] - The interval in seconds between APS garbage line additions.
  * @param {number} [options.garbageSeed=undefined] - The RNG seed for the garbage spawn system.
  * @param {boolean} [options.garbageNewSeedOnReset=true] - Whether to generate a new seed for the garbage spawn system when the game is reset.
  * @param {boolean} [options.highlight=false] - Whether to highlight clicked cells.
@@ -58,7 +58,7 @@ function newGame({
   garbageCheesiness = 1,
   garbageModeAPS = false,
   garbageModeAPSAttack = 0,
-  garbageModeAPSSecond = 0,
+  garbageModeAPSSecond = 1,
   highlight = false,
   autoColor = true,
   queueSeed = undefined,
@@ -1467,6 +1467,142 @@ function redoOnDrop(game, currentTime) {
   };
 }
 
+/**
+ * Modifies the gravity configuration of the game.
+ * If the specified property already has the given value, the game state is returned unchanged.
+ * Otherwise, updates the game's configuration with the new value for the specified property
+ * and recalculates gravity settings.
+ *
+ * @param {Object} game - The game state object.
+ * @param {string} property - The configuration property to modify.
+ * @param {number} value - The new value for the specified property.
+ * @returns {Object} - The updated game state object with modified gravity configuration.
+ */
+function modifyGravity(game, property, value, currentTime) {
+  // No such property
+  if (game.config[property] === undefined) {
+    return game;
+  }
+
+  // Already has the value
+  if (game.config[property] === value) {
+    return game;
+  }
+
+  const nextConfig = { ...game.config, [property]: value };
+  const nextGravity = newGravity(
+    nextConfig.gravity,
+    nextConfig.gravityLock,
+    nextConfig.gravityLockCap,
+    nextConfig.gravityLockPenalty,
+    nextConfig.gravityAcc,
+    nextConfig.gravityAccDelay
+  );
+
+  const nextQueue = queueLib.restampNextPiece(game.queue, currentTime);
+
+  return {
+    ...game,
+    config: nextConfig,
+    gravity: nextGravity,
+    queue: nextQueue,
+    UR: URLib.save(game.UR, game),
+  };
+}
+
+/**
+ * Modifies the queue configuration of the game.
+ * If the specified property already has the given value, the game state is returned unchanged.
+ * Otherwise, updates the game's configuration with the new value for the specified property
+ * and recalculates queue settings.
+ *
+ * @param {Object} game - The game state object.
+ * @param {string} property - The configuration property to modify.
+ * @param {any} value - The new value for the specified property.
+ * @param {number} currentTime - The current time in milliseconds.
+ * @returns {Object} - The updated game state object with modified queue configuration.
+ */
+function modifyQueue(game, property, value, currentTime) {
+  if (property === 'queueHold') {
+    const nextQueue = queueLib.setHold(game.queue, value, currentTime);
+    return { ...game, queue: nextQueue, UR: URLib.save(game.UR, game) };
+  }
+
+  if (property === 'queueNext') {
+    const nextQueue = queueLib.setNext(game.queue, value, currentTime);
+    return { ...game, queue: nextQueue, UR: URLib.save(game.UR, game) };
+  }
+
+  if (property === 'queueSeed') {
+    const nextConfig = { ...game.config, [property]: value };
+    const nextQueue = queueLib.setSeed(game.queue, nextConfig.queueSeed);
+    return {
+      ...game,
+      config: nextConfig,
+      queue: nextQueue,
+      UR: URLib.save(game.UR, game),
+    };
+  }
+
+  if (property === 'queueNewSeedOnReset') {
+    const nextConfig = { ...game.config, [property]: value };
+    return { ...game, config: nextConfig, UR: URLib.save(game.UR, game) };
+  }
+
+  return game;
+}
+
+/**
+ * Modifies the garbage configuration of the game.
+ * If the specified property already has the given value, the game state is returned unchanged.
+ * Otherwise, updates the game's configuration with the new value for the specified property
+ * and recalculates garbage settings.
+ *
+ * @param {Object} game - The game state object.
+ * @param {string} property - The configuration property to modify.
+ * @param {any} value - The new value for the specified property.
+ * @param {number} currentTime - The current time in milliseconds.
+ * @returns {Object} - The updated game state object with modified garbage configuration.
+ */
+function modifyGarbage(game, property, value, currentTime) {
+  if (game.config[property] === undefined || game.config[property] === value) {
+    return game;
+  }
+
+  const nextConfig = { ...game.config, [property]: value };
+
+  if (property === 'garbageNewSeedOnReset') {
+    return { ...game, config: nextConfig, UR: URLib.save(game.UR, game) };
+  }
+
+  const propMap = {
+    garbageSeed: 'seed',
+    garbageComboBlock: 'comboBlock',
+    garbageSpawn: 'spawn',
+    garbageChargeDelay: 'chargeDelay',
+    garbageCap: 'cap',
+    garbageCheesiness: 'cheesiness',
+    garbageModeAPS: 'modeAPS',
+    garbageModeAPSAttack: 'modeAPSAttack',
+    garbageModeAPSSecond: 'modeAPSSecond',
+  };
+
+  const nextGarbage = garbageLib.modifyProp(
+    game.garbage,
+    propMap[property],
+    value,
+    game.startTime,
+    currentTime
+  );
+
+  return {
+    ...game,
+    config: nextConfig,
+    garbage: nextGarbage,
+    UR: URLib.save(game.UR, game),
+  };
+}
+
 const controller = {
   update,
   reset,
@@ -1497,4 +1633,10 @@ const controller = {
   redoOnDrop,
 };
 
-export { newGame as default, controller };
+const modifyConfig = {
+  gravity: modifyGravity,
+  queue: modifyQueue,
+  garbage: modifyGarbage,
+};
+
+export { newGame as default, controller, modifyConfig };

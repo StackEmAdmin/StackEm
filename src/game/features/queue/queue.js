@@ -28,15 +28,15 @@ function newQueue(seed, startTime) {
   return nextQueue;
 }
 
-function addPiecesIfNeeded(queue) {
+function addPiecesIfNeeded(queue, updateRNG = true) {
   // 1 active piece + 5 preview pieces
   if (queue.pieces.length < 6) {
-    return addPieces(queue);
+    return addPieces(queue, updateRNG);
   }
   return queue;
 }
 
-function addPieces(queue) {
+function addPieces(queue, updateRNG = true) {
   const { arr: shuffledTypes, nextRNG } = shuffle(
     ['o', 'i', 'l', 'j', 's', 't', 'z'],
     queue.rng
@@ -48,9 +48,16 @@ function addPieces(queue) {
 
   shuffledTypes.forEach((type) => nextPieces.push(newPiece(type)));
 
+  if (updateRNG) {
+    return {
+      ...queue,
+      rng: nextRNG,
+      pieces: nextPieces,
+    };
+  }
+
   return {
     ...queue,
-    rng: nextRNG,
     pieces: nextPieces,
   };
 }
@@ -199,12 +206,88 @@ function restampNextPiece(queue, currentTime, respawn = false) {
   };
 }
 
+/**
+ * Sets the hold piece in the queue to the given type.
+ * If none provided, the hold is cleared.
+ *
+ * @function setHold
+ * @param {Object} queue - The queue object.
+ * @param {string} holdType - The type of the hold piece to set.
+ * @returns {Object} The updated game queue object with the hold piece set.
+ */
+function setHold(queue, holdType) {
+  if (holdType === queue.hold.type) {
+    return queue;
+  }
+
+  if (holdType === '') {
+    return {
+      ...queue,
+      held: false,
+      hold: '',
+    };
+  }
+
+  return {
+    ...queue,
+    held: false,
+    hold: newPiece(holdType),
+  };
+}
+
+/**
+ * Sets the next pieces in the queue to the given types.
+ *
+ * @param {Object} queue - The queue object.
+ * @param {string} nextTypes - The types of the next pieces to set.
+ * @param {number} currentTime - The current time to stamp the first next piece with.
+ * @returns {Object} The updated game queue object with the next pieces set.
+ */
+function setNext(queue, nextTypes, currentTime) {
+  if (nextTypes.length === 0) {
+    return queue;
+  }
+
+  // Prepend new pieces
+  const nextTypeArr = nextTypes.split('');
+  const nextPieces = nextTypeArr.map((type) => newPiece(type));
+  nextPieces[0] = pieceLib.stamp(nextPieces[0], currentTime);
+
+  // When adding new pieces don't update RNG
+  // So that when user changes next pieces,
+  // next ones added (if needed) are consistent
+  return addPiecesIfNeeded(
+    {
+      ...queue,
+      pieces: nextPieces,
+    },
+    false
+  );
+}
+
+/**
+ * Sets the seed for the random number generator.
+ *
+ * @param {Object} queue - The queue object.
+ * @param {number} seed - The seed for the random number generator.
+ * @returns {Object} The updated queue with the new seed.
+ */
+function setSeed(queue, seed) {
+  return {
+    ...queue,
+    rng: newRNG(seed),
+  };
+}
+
 const queueLib = {
   nextPiece,
   hold,
   place,
   updateNextPiece,
   restampNextPiece,
+  setHold,
+  setNext,
+  setSeed,
 };
 
 export { newQueue as default, queueLib };

@@ -1,0 +1,291 @@
+.parent-resize-target {
+  --resize-handle-width: 5px;
+  --toggle-settings-button-size: 12rem;
+}
+
+.game-settings-menu-container {
+  position: absolute;
+  z-index: 2;
+  bottom: 0;
+  right: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  min-height: fit-content;
+  width: 100%;
+
+  transition: transform 0.5s ease-in-out;
+  transform: translateY(100%);
+}
+
+.game-settings-menu-container.hide {
+  position: fixed;
+}
+
+.game-settings-menu-container.show {
+  transform: translateY(0);
+}
+
+.game-settings-menu-container .resize-handle {
+  position: relative;
+  z-index: 2;
+
+  flex: none;
+
+  height: var(--resize-handle-width);
+  width: 100%;
+  border-bottom: 1px solid var(--text-color-dim);
+
+  cursor: row-resize;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+.game-settings-menu-container .resize-handle:hover {
+  border-top: 1px solid var(--text-color-dim);
+}
+
+.game-settings-menu-container .resize-handle:active {
+  border-bottom: 1px solid var(--text-color);
+  border-top: 1px solid var(--text-color);
+}
+
+.parent-resize-target {
+  position: relative;
+  min-height: 10rem;
+  max-height: calc(100vh - 0.25 * var(--toggle-settings-button-size));
+}
+
+.game-settings-menu-container .resize-target {
+  position: relative;
+  z-index: 3;
+  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  background-color: var(--color);
+  width: 100%;
+  max-height: calc(100vh - 0.25 * var(--toggle-settings-button-size));
+  min-height: 10rem;
+}
+
+/* Prevent scroll bar when animating */
+html #root:has(.game-settings-menu-container.show.animate) {
+  overflow: hidden;
+}
+
+.game-settings-menu-container.show .resize-target,
+.game-settings-menu-container.hide.animate .resize-target {
+  display: flex;
+}
+
+.game-settings-menu-container.hide .resize-target {
+  display: none;
+}
+
+.game-settings-menu-container .toggle-settings-button {
+  cursor: pointer;
+
+  position: absolute;
+  z-index: 1;
+  right: calc(50% - var(--toggle-settings-button-size) / 2);
+  top: calc(
+    -0.25 * var(--toggle-settings-button-size) + var(--resize-handle-width)
+  );
+  border-radius: 50%;
+
+  width: var(--toggle-settings-button-size);
+  height: var(--toggle-settings-button-size);
+  padding: 1rem;
+
+  background-color: var(--color-lighter);
+
+  transition: transform ease 0.3s, opacity ease 1s 0.2s;
+  transform: rotate(90deg);
+  opacity: 0.1;
+
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  animation: peak-up 1.5s 2 alternate;
+}
+
+.game-settings-menu-container .toggle-settings-button:hover {
+  transform: rotate(90deg)
+    translateX(calc(-0.25 * var(--toggle-settings-button-size)));
+  opacity: 1;
+  transition: transform ease 0.3s, opacity ease 0.5s;
+}
+
+.game-settings-menu-container.show .toggle-settings-button {
+  transform: rotate(90deg);
+  opacity: 1;
+}
+
+.game-settings-menu-container .toggle-settings-button .chevron-left,
+.game-settings-menu-container .toggle-settings-button .cog {
+  height: 2rem;
+  color: var(--text-color);
+}
+
+.game-settings-menu-container .toggle-settings-button .chevron-left {
+  transition: transform ease 0.3s;
+}
+
+.game-settings-menu-container.show .toggle-settings-button .chevron-left {
+  transform: scale(-1);
+}
+
+.game-settings-menu-container .toggle-settings-button .cog {
+  transition: transform ease 1s;
+  animation: peak-cog 1.5s 2 alternate;
+}
+
+.game-settings-menu-container .toggle-settings-button:hover .cog {
+  transform: rotate(270deg);
+}
+
+.game-settings-menu-container .resize-target .dock-icon {
+  cursor: pointer;
+  min-width: 3rem;
+  min-height: 3rem;
+  margin-left: auto;
+  margin-top: 1rem;
+  margin-right: 1rem;
+
+  border-radius: var(--border-radius);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.game-settings-menu-container .resize-target .dock-icon:hover {
+  background-color: var(--color-light);
+}
+
+.game-settings-menu-container .resize-target .dock-icon:hover svg {
+  color: var(--accent-color);
+}
+
+.game-settings-menu-container .resize-target .dock-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--text-color);
+}
+
+.game-settings-menu-container .resize-target .dock-icon:active {
+  background-color: var(--color-lighter);
+}
+
+.game-settings-menu-container .resize-target .dock-icon:active svg {
+  color: var(--text-color);
+}
+
+/* On a wider screen, show menu from the right instead of from the bottom */
+@media screen and (min-width: 768px) {
+  .game-settings-menu-container {
+    width: fit-content;
+    height: 100%;
+    transform: translateX(100%);
+
+    flex-direction: row;
+  }
+
+  .game-settings-menu-container .resize-handle {
+    cursor: col-resize;
+    height: 100%;
+    width: var(--resize-handle-width);
+    border-right: 1px solid var(--text-color-dim);
+    border-top: none;
+    border-bottom: none;
+  }
+
+  .game-settings-menu-container .resize-handle:hover {
+    border-left: 1px solid var(--text-color-dim);
+    border-top: none;
+    border-bottom: none;
+  }
+
+  .game-settings-menu-container .resize-handle:active {
+    border-right: 1px solid var(--text-color);
+    border-left: 1px solid var(--text-color);
+    border-top: none;
+    border-bottom: none;
+  }
+
+  .parent-resize-target {
+    max-height: none;
+    min-width: 10rem;
+    max-width: calc(100vw - 0.25 * var(--toggle-settings-button-size));
+  }
+
+  .game-settings-menu-container .resize-target {
+    height: 100%;
+    max-height: none;
+    min-width: 10rem;
+    max-width: calc(100vw - 0.25 * var(--toggle-settings-button-size));
+  }
+
+  .game-settings-menu-container .toggle-settings-button {
+    top: calc(50% - var(--toggle-settings-button-size) / 2);
+    left: calc(
+      -0.25 * var(--toggle-settings-button-size) + var(--resize-handle-width)
+    );
+
+    transform: none;
+    animation: peak-left 1.5s 2 alternate;
+  }
+
+  .game-settings-menu-container .toggle-settings-button:hover {
+    transform: translateX(calc(-0.25 * var(--toggle-settings-button-size)));
+    opacity: 1;
+  }
+
+  .game-settings-menu-container.show .toggle-settings-button {
+    transform: none;
+  }
+}
+
+@keyframes peak-up {
+  0% {
+    opacity: 0.1;
+    transform: rotate(90deg);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(calc(-0.25 * var(--toggle-settings-button-size)))
+      rotate(90deg);
+  }
+}
+
+@keyframes peak-left {
+  0% {
+    opacity: 0.1;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(calc(-0.25 * var(--toggle-settings-button-size)));
+  }
+}
+
+@keyframes peak-cog {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(270deg);
+  }
+}

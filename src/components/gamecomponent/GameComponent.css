@@ -3,3 +3,9 @@ section.game {
   place-items: center;
   height: 100%;
 }
+
+@media screen and (min-width: 768px) {
+  section.game {
+    height: 100%;
+  }
+}

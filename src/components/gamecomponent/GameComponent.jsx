@@ -17,7 +17,7 @@ import {
 } from '../../game/core/engine';
 import './GameComponent.css';
 
-function GameComponent({ gameRef }) {
+function GameComponent({ gameRef, pubSubRef }) {
   const { keybinds, modKeybinds, pressed } = loadKeybinds();
   const { DAS, ARR, SRR } = loadHandling();
   const modEnabled = true;
@@ -28,6 +28,7 @@ function GameComponent({ gameRef }) {
   const accumulatorRef = useRef(0);
   const animationRef = useRef(null);
   const workerRef = useRef(null);
+  const sectionEleRef = useRef(null);
 
   useEffect(() => {
     const keyDown = (ev) =>
@@ -84,19 +85,26 @@ function GameComponent({ gameRef }) {
       );
     };
 
-    window.addEventListener('keydown', keyDown);
-    window.addEventListener('keyup', keyUp);
+    const sectionEle = sectionEleRef.current;
+
+    sectionEle.addEventListener('keydown', keyDown);
+    sectionEle.addEventListener('keyup', keyUp);
+    sectionEle.addEventListener('blur', onBlur);
     document.addEventListener('visibilitychange', visChange);
-    window.addEventListener('blur', onBlur);
     return () => {
-      window.removeEventListener('keydown', keyDown);
-      window.removeEventListener('keyup', keyUp);
+      sectionEle.removeEventListener('keydown', keyDown);
+      sectionEle.removeEventListener('keyup', keyUp);
+      sectionEle.removeEventListener('blur', onBlur);
       document.removeEventListener('visibilitychange', visChange);
-      window.removeEventListener('blur', onBlur);
     };
   }, []);
 
   useEffect(() => {
+    const publishExists =
+      pubSubRef &&
+      pubSubRef.current &&
+      typeof pubSubRef.current.publish === 'function';
+
     const animate = (currentTime) => {
       if (lastTimeRef.current === null) {
         lastTimeRef.current = currentTime;
@@ -107,19 +115,23 @@ function GameComponent({ gameRef }) {
       const deltaTime = currentTime - lastTimeRef.current;
       lastTimeRef.current = currentTime;
       accumulatorRef.current += deltaTime;
-      const { game: updatedGame, accumulator: newAccumulator } = engineUpdate(
+      let { game: updatedGame, accumulator: newAccumulator } = engineUpdate(
         gameRef.current,
         actionsRef,
         accumulatorRef.current,
         currentTime
       );
-      gameRef.current = updatedGame;
       accumulatorRef.current = newAccumulator;
 
-      if (gameRef.current.over) {
-        gameRef.current = controller.reset(gameRef.current, currentTime, false);
+      if (updatedGame.over) {
+        updatedGame = controller.reset(gameRef.current, currentTime, false);
       }
 
+      if (publishExists && updatedGame !== gameRef.current) {
+        pubSubRef.current.publish(updatedGame);
+      }
+
+      gameRef.current = updatedGame;
       const updatedDisplayGame = engineRender(
         gameRef.current,
         actionsRef,
@@ -132,7 +144,7 @@ function GameComponent({ gameRef }) {
 
     animationRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationRef.current);
-  }, [gameRef]);
+  }, [gameRef, pubSubRef]);
 
   // Run gameLoop in the background
   useEffect(() => {
@@ -181,10 +193,10 @@ function GameComponent({ gameRef }) {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       workerRef.current.terminate();
     };
-  }, []);
+  }, [gameRef]);
 
   return (
-    <section className="section game">
+    <section className="section game" ref={sectionEleRef} tabIndex={0}>
       <GameRender
         game={displayGame}
         fillCell={(row, col) =>

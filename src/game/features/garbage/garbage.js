@@ -328,11 +328,48 @@ function receive(garbage, isCombo, isDrop) {
   return { nextGarbage, chargedGarbage };
 }
 
+/**
+ * Modifies a property of the garbage object.
+ * Updated APS counter when mode is modified.
+ *
+ * @param {Object} garbage - The game garbage object.
+ * @param {string} prop - The property to modify.
+ * @param {any} value - The new value for the specified property.
+ * @param {number} startTime - The start time of the game in milliseconds.
+ * @param {number} currentTime - The current time in milliseconds.
+ *
+ * @returns {Object} The updated game garbage object with modified property.
+ */
+function modifyProp(garbage, prop, value, startTime, currentTime) {
+  if (prop === 'seed') {
+    return { ...garbage, rng: newRNG(value) };
+  }
+
+  if (
+    prop === 'modeAPS' ||
+    prop === 'modeAPSSecond' ||
+    prop === 'modeAPSAttack'
+  ) {
+    const nextGarbage = { ...garbage, [prop]: value };
+    // Calculate counter so that APS starts now (instead of x minutes ago)
+    const timeElapsed = currentTime - startTime;
+    const counter = Math.floor(
+      timeElapsed / (nextGarbage.modeAPSSecond * 1000)
+    );
+    nextGarbage.modeAPSCounter = counter;
+    console.log('counter, prop, value', counter, prop, value);
+    return nextGarbage;
+  }
+
+  return { ...garbage, [prop]: value };
+}
+
 const garbageLib = {
   update,
   cancel,
   queue,
   receive,
+  modifyProp,
 };
 
 export { newGarbage as default, garbageLib };
