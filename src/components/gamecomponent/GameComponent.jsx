@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import GameRender from './gamerender/GameRender';
+import { controller } from '../../game/game';
 import {
   loadKeybinds,
   loadHandling,
@@ -114,6 +115,11 @@ function GameComponent({ gameRef }) {
       );
       gameRef.current = updatedGame;
       accumulatorRef.current = newAccumulator;
+
+      if (gameRef.current.over) {
+        gameRef.current = controller.reset(gameRef.current, currentTime, false);
+      }
+
       const updatedDisplayGame = engineRender(
         gameRef.current,
         actionsRef,

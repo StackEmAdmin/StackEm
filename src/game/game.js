@@ -122,7 +122,7 @@ function newGame({
     autoColorCells: [],
     UR: newUR(enableUndo),
     startTime,
-    end: null,
+    endTime: null,
     over: false,
     combo: -1,
     b2b: -1,
@@ -243,15 +243,28 @@ function updateSpawnGarbage(game, garbage, currentTime) {
 
   // Spawned garbage and shifted nextPiece up
   const nextQueue = queueLib.updateNextPiece(nextGame.queue, nextPiece);
-  return {
-    ...nextGame,
-    queue: nextQueue,
-    board: nextBoard,
-    garbage: nextGarbage,
-  };
+  return calculateGameOver(
+    {
+      ...nextGame,
+      queue: nextQueue,
+      board: nextBoard,
+      garbage: nextGarbage,
+    },
+    currentTime
+  );
 }
 
-function reset(game, currentTime) {
+/**
+ * Resets the game state to its initial state.
+ * New random number generator seeds are generated if enabled in the game config.
+ * The game state is saved in the undo/redo stack if `save` is true.
+ *
+ * @param {Object} game - The game state object.
+ * @param {number} currentTime - The current time.
+ * @param {boolean} [save=true] - Whether to save the game state in the undo/redo stack.
+ * @returns {Object} The new game state object.
+ */
+function reset(game, currentTime, save = true) {
   // New rng seed on reset if enabled
   let nextConfig = { ...game.config };
   if (nextConfig.queueNewSeedOnReset) {
@@ -261,10 +274,10 @@ function reset(game, currentTime) {
     nextConfig.garbageSeed = undefined;
   }
 
+  // Save game in undo/redo (UR) stack (if desired)
   const nextGame = newGame(nextConfig);
+  const nextUR = save ? URLib.save(game.UR, game) : game.UR;
 
-  // Save game in undo/redo (UR) stack
-  const nextUR = URLib.save(game.UR, game);
   nextGame.UR = nextUR;
   return nextGame;
 }
@@ -785,6 +798,7 @@ function dropHelper(game, currentTime) {
   // 2. Clear lines
   // 3. Calculate attack (based on cleared lines)
   // 4. Receive garbage
+  // 5. Calculate game over
 
   // 1 Drop Piece - Soft drop piece all the way down then place
   const droppedPiece = calculateWhileLegal(
@@ -849,9 +863,10 @@ function dropHelper(game, currentTime) {
 
   sendAttack(nextAttacks, currentTime);
 
+  let nextGame;
   // No change in garbage
   if (nextGarbage === game.garbage) {
-    return {
+    nextGame = {
       ...game,
       numPieces: game.numPieces + 1,
       numAttack: nextNumAttack,
@@ -862,11 +877,23 @@ function dropHelper(game, currentTime) {
       queue: nextQueue,
       UR: URLib.save(game.UR, game),
     };
-  }
-
-  // No garbage to spawn
-  if (!chargedGarbage) {
-    return {
+  } else if (!chargedGarbage) {
+    // No garbage to spawn
+    nextGame = {
+      ...game,
+      numPieces: game.numPieces + 1,
+      numAttack: nextNumAttack,
+      twist: '',
+      combo: nextCombo,
+      b2b: nextB2B,
+      board: nextBoard,
+      queue: nextQueue,
+      garbage: nextGarbage,
+      UR: URLib.save(game.UR, game),
+    };
+  } else {
+    ({ nextBoard } = boardLib.receiveGarbage(nextBoard, chargedGarbage));
+    nextGame = {
       ...game,
       numPieces: game.numPieces + 1,
       numAttack: nextNumAttack,
@@ -880,20 +907,45 @@ function dropHelper(game, currentTime) {
     };
   }
 
-  ({ nextBoard } = boardLib.receiveGarbage(nextBoard, chargedGarbage));
+  // 5. Check game over
+  return calculateGameOver(nextGame, currentTime);
+}
 
-  return {
-    ...game,
-    numPieces: game.numPieces + 1,
-    numAttack: nextNumAttack,
-    twist: '',
-    combo: nextCombo,
-    b2b: nextB2B,
-    board: nextBoard,
-    queue: nextQueue,
-    garbage: nextGarbage,
-    UR: URLib.save(game.UR, game),
-  };
+/**
+ * Determines if the game is over based on the current game state and updates the game state accordingly.
+ * Game is over when piece in queue spawns on top of an occupied spot, or,
+ * game is over when current piece's height position is three times above the defined board height.
+ *
+ * @param {Object} game - The current game state object.
+ * @param {number} currentTime - The current time.
+ *
+ * @returns {Object} - The updated game state object. If the game is over, the `over` property is set to true
+ * and the `endTime` is recorded as the current time.
+ */
+function calculateGameOver(game, currentTime) {
+  if (game.over) {
+    return game;
+  }
+
+  // Next piece in queue spawns on top of occupied spot
+  if (!boardLib.isLegal(game.board, queueLib.nextPiece(game.queue))) {
+    return {
+      ...game,
+      over: true,
+      endTime: currentTime,
+    };
+  }
+
+  // Piece height position is 3x above board defined height (from instant garbage spawn)
+  if (queueLib.nextPiece(game.queue).y >= game.config.rows * 3) {
+    return {
+      ...game,
+      over: true,
+      endTime: currentTime,
+    };
+  }
+
+  return game;
 }
 
 function sendAttack(attacks, currentTime) {
@@ -1189,7 +1241,15 @@ function clearRow(game, row, col, currentTime) {
   };
 }
 
-function undo(game, currentTime) {
+/**
+ * Undoes the last action in the game, updating the game state and queue.
+ *
+ * @param {Object} game - The game state object.
+ * @param {number} currentTime - The current time in milliseconds.
+ * @param {number} counter - The number of undo attempts made for game over. Max attempts is 2.
+ * @returns {Object} - The updated game state object.
+ */
+function undo(game, currentTime, counter = 0) {
   const { state: nextGame, UR: nextUR } = URLib.undo(game.UR, game);
 
   if (!nextGame || nextGame === game) {
@@ -1197,12 +1257,18 @@ function undo(game, currentTime) {
   }
 
   const nextQueue = queueLib.restampNextPiece(nextGame.queue, currentTime);
-
-  return {
+  const undoState = {
     ...nextGame,
     queue: nextQueue,
     UR: nextUR,
   };
+
+  // If game is over, attempt undo to a not-game-over state a total of 2 times
+  if (undoState.over && counter < 2) {
+    return undo(undoState, currentTime, counter + 1);
+  }
+
+  return undoState;
 }
 
 function redo(game, currentTime) {
@@ -1333,30 +1399,39 @@ function undoToPieceRespawn(game, currentTime, undoDrop = false) {
  * Also undoes effect on gravity by restamping piece.
  *
  * @param {Object} game - The game state object.
+ * @param {number} currentTime - The current time in milliseconds.
+ * @param {number} counter - The number of undo attempts made for game over. Max attempts is 2.
  * @returns {Object} - The updated game state object.
  */
-function undoOnDrop(game, currentTime) {
+function undoOnDrop(game, currentTime, counter = 0) {
   // FIXME: Edge case: undo on reset on 0 pieces doesn't work.
   //   state 1: new game
   //   state 2: move piece (don't drop)
   //   state 3: reset, provides a new game (separate from state 1)
   //   state 4: undo. Goes to state 1 instead of state 3.
 
+  let undoState;
+
   if (game.numPieces === 0) {
     // If player reset game, undo that
     // If not, undo until piece respawns
     const resetState = undoReset(game, currentTime);
-    return resetState !== game
-      ? resetState
-      : undoPieceZeroRespawn(game, currentTime);
+    undoState =
+      resetState !== game
+        ? resetState
+        : undoPieceZeroRespawn(game, currentTime);
+  } else if (game.numPieces === 1) {
+    undoState = undoPieceZeroRespawn(undoUntilZeroPieces(game), currentTime);
+  } else {
+    undoState = undoToPieceRespawn(game, currentTime, true);
   }
 
-  if (game.numPieces === 1) {
-    return undoPieceZeroRespawn(undoUntilZeroPieces(game), currentTime);
+  // If game is over, attempt undo to a not-game-over state a total of 2 times
+  if (undoState.over && counter < 2) {
+    return undoOnDrop(undoState, currentTime, counter + 1);
   }
 
-  // Respawn piece
-  return undoToPieceRespawn(game, currentTime, true);
+  return undoState;
 }
 
 /**
