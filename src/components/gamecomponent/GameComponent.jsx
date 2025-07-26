@@ -163,12 +163,17 @@ function GameComponent({ gameRef, pubSubRef }) {
       const deltaTime = currentTime - lastTimeRef.current;
       lastTimeRef.current = currentTime;
       accumulatorRef.current += deltaTime;
-      const { game: updatedGame, accumulator: newAccumulator } = engineUpdate(
+      let { game: updatedGame, accumulator: newAccumulator } = engineUpdate(
         gameRef.current,
         actionsRef,
         accumulatorRef.current,
         currentTime
       );
+
+      if (updatedGame.over) {
+        updatedGame = controller.reset(gameRef.current, currentTime, false);
+      }
+
       gameRef.current = updatedGame;
       accumulatorRef.current = newAccumulator;
     };
