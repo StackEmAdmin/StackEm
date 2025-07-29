@@ -75,24 +75,26 @@ function createHole(rng, cols, cheesiness, prevHole) {
   return { nextHole, nextRNG };
 }
 
+/**
+ * Adds a specified amount of garbage lines to the garbage queue.
+ *
+ * @param {Object} garbage - The game garbage object containing the queue and other properties.
+ * @param {number} amountGarbage - The number of garbage lines to add to the queue.
+ * @param {number} currentTime - The current timestamp indicating when the garbage was queued.
+ *
+ * @returns {Object} The updated garbage object with the modified queue.
+ */
 function queue(garbage, amountGarbage, currentTime) {
   if (garbage.queue.length > MAX_GARBAGE_QUEUE_LENGTH || amountGarbage <= 0) {
     return garbage;
   }
-
-  const { nextHole, nextRNG } = createHole(
-    garbage.rng,
-    garbage.cols,
-    garbage.cheesiness,
-    garbage.prevHole
-  );
 
   // Charged attacks are ready to spawn on next piece drop
   // Add garbage to end of queue (FIFO)
   const nextQueue = [
     ...garbage.queue,
     {
-      hole: nextHole,
+      hole: undefined,
       amount: amountGarbage,
       charged: garbage.chargeDelay === 0 ? true : false,
       time: currentTime,
@@ -101,9 +103,7 @@ function queue(garbage, amountGarbage, currentTime) {
 
   return {
     ...garbage,
-    rng: nextRNG,
     queue: nextQueue,
-    prevHole: nextHole,
   };
 }
 
@@ -299,22 +299,53 @@ function receive(garbage, isCombo, isDrop) {
     remainingLines = MAX_INSTANT_GARBAGE_CAP;
   }
 
+  // Generate garbage hole at spawn time
+  let nextHole = garbage.prevHole;
+  let nextRNG = garbage.rng;
+  let chargedLines = null;
+  const createChargedLines = (hole, rng, lines) => {
+    // Hole is already set
+    if (typeof lines.hole === 'number') {
+      return { nextHole: lines.hole, nextRNG: rng, chargedLines: lines };
+    }
+
+    const { nextHole, nextRNG } = createHole(
+      rng,
+      garbage.cols,
+      garbage.cheesiness,
+      hole
+    );
+    const chargedLines = { ...lines, hole: nextHole };
+    return { nextHole, nextRNG, chargedLines };
+  };
+
   while (remainingLines > 0 && nextQueue.length > 0 && nextQueue[0].charged) {
     const lines = nextQueue.shift();
     if (lines.amount <= remainingLines) {
-      chargedGarbage.push(lines);
+      ({ nextHole, nextRNG, chargedLines } = createChargedLines(
+        nextHole,
+        nextRNG,
+        lines
+      ));
+      chargedGarbage.push(chargedLines);
       remainingLines -= lines.amount;
     } else {
+      ({ nextHole, nextRNG, chargedLines } = createChargedLines(
+        nextHole,
+        nextRNG,
+        lines
+      ));
+
       // Ex: lines.amount 10 and remainingLine 1
       // Add that one line to chargedGarbage
       // Add 9 remaining lines to queue (Remove 1)
-      const chargedLines = cancelFromLines(
-        lines,
-        lines.amount - remainingLines
+      const remainingChargedLines = cancelFromLines(
+        chargedLines,
+        chargedLines.amount - remainingLines
       );
-      const queueLines = cancelFromLines(lines, remainingLines);
+      const queueLines = cancelFromLines(chargedLines, remainingLines);
 
-      chargedGarbage.push(chargedLines);
+      chargedGarbage.push(remainingChargedLines);
       nextQueue.unshift(queueLines);
       remainingLines = 0;
     }
@@ -323,6 +354,8 @@ function receive(garbage, isCombo, isDrop) {
   const nextGarbage = {
     ...garbage,
     queue: nextQueue,
+    rng: nextRNG,
+    prevHole: nextHole,
   };
 
   return { nextGarbage, chargedGarbage };
