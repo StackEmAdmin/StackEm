@@ -40,8 +40,6 @@ function MapSearch() {
     navigation.location &&
     new URLSearchParams(navigation.location.search).has('q');
 
-  console.log(query, q, type);
-
   useEffect(() => {
     // user controls input and handled in loader (no need for ref)
     document.getElementById('map-search-input').value = q;

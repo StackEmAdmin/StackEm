@@ -25,6 +25,17 @@ function newGrid(rows, cols) {
   return Array.from({ length: rows }, () => Array(cols).fill(''));
 }
 
+/**
+ * Creates a deep copy of the given board object.
+ *
+ * @function copyBoard
+ * @param {Object} board - The board object to be copied.
+ * @param {Array} board.grid - The 2D array representing the board grid.
+ * @param {number} board.rows - The number of rows in the board grid.
+ * @param {number} board.cols - The number of columns in the board grid.
+ *
+ * @returns {Object} A new board object with a copied grid.
+ */
 function copyBoard(board) {
   return {
     ...board,
@@ -175,7 +186,6 @@ function filterHighlight(str, inverse = false) {
  * If the cell is already filled with the specified type, no changes are made.
  * The function returns the updated board object with the modified grid.
  */
-
 function fillCell(
   board,
   row,
@@ -261,7 +271,6 @@ function removeHighlightCell(board, row, col) {
  * If the cell is already empty, no changes are made and the function returns the same board object.
  * The function returns an object containing a boolean indicating if the cell was cleared and the updated board object with the modified grid.
  */
-
 function clearCell(board, row, col, highlight) {
   if (!board.grid[row]) {
     return board;

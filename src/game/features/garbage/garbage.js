@@ -47,6 +47,16 @@ function newGarbage(
   };
 }
 
+/**
+ * Creates a new hole in the garbage line row.
+ *
+ * @param {Object} rng - The random number generator object.
+ * @param {number} cols - The number of columns in the board.
+ * @param {number} cheesiness - The probability of garbage spawning in a different column.
+ * @param {number} prevHole - The previous hole is used to decide whether to generate a new one or to reuse it.
+ *
+ * @returns {Object} An object containing the new hole and the updated random number generator.
+ */
 function createHole(rng, cols, cheesiness, prevHole) {
   // First time creating a hole
   if (prevHole === -1) {
@@ -390,7 +400,6 @@ function modifyProp(garbage, prop, value, startTime, currentTime) {
       timeElapsed / (nextGarbage.modeAPSSecond * 1000)
     );
     nextGarbage.modeAPSCounter = counter;
-    console.log('counter, prop, value', counter, prop, value);
     return nextGarbage;
   }
 

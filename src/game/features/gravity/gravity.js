@@ -12,14 +12,13 @@ import { pieceLib } from '../piece/piece';
  *
  * Note: values of 20g or higher infinite soft drops piece.
  *
- * @param {number} g - The initial speed in frames at which pieces fall.
+ * @param {number} g - The initial speed in units per frames at which pieces fall.
  * @param {number} lock - The amount of time in ms before a piece drops into place once on floor. Provide negative value to prevent locking.
  * @param {number} lockCap - The maximum amount of time in ms a piece is allowed on floor before dropping into place.
- * @param {number} lockPenalty - The amount of time in ms a piece is penalized for moving from landing state to unlanding state.
+ * @param {number} lockPenalty - The amount of time in ms a piece is penalized for moving from landed state to unlanded state.
  * @param {number} acc - The amount by which gravity is increased every second.
  * @param {number} accDelay - The amount of time in ms before acc is applied to gravity.
  * @returns {Object} An object with the given properties.
- *
  */
 function newGravity(g, lock, lockCap, lockPenalty, acc, accDelay) {
   return {
@@ -76,6 +75,21 @@ function twentyG(gravity, piece, hasLanded, startTime, currentTime) {
   return nextPiece;
 }
 
+/**
+ * Updates the position of a piece based on the game gravity and current time.
+ * Handles gravity range from zero to high gravity (20g).
+ * If a piece has landed, it returns the piece without changes.
+ * For 20g gravity, the piece is soft-dropped until landing.
+ * For other gravity values, it utilizes time to move the piece down
+ * and updates the piece position accordingly.
+ *
+ * @param {Object} gravity - The game gravity object.
+ * @param {Object} piece - The piece object with properties: type, rot, x, y, span.
+ * @param {function} hasLanded - A function that returns true if the piece is on the floor or another piece.
+ * @param {number} startTime - The start time of the game in milliseconds.
+ * @param {number} currentTime - The current time in milliseconds.
+ * @returns {Object} The updated piece object.
+ */
 function update(gravity, piece, hasLanded, startTime, currentTime) {
   if (hasLanded(piece)) {
     return piece;
@@ -121,6 +135,19 @@ function update(gravity, piece, hasLanded, startTime, currentTime) {
   return nextPiece;
 }
 
+/**
+ * Returns true if the piece should lock based on the game gravity and current time.
+ * Piece should only lock when there's something beneath it.
+ * Disabled when lock is negative.
+ * Lock piece when lock amount of time has passed.
+ * Lock piece when LockCap amount of time has passed.
+ *
+ * @param {Object} gravity - The game gravity object.
+ * @param {Object} piece - The piece object with properties: type, rot, x, y, span.
+ * @param {function} hasLanded - A function that returns true if the piece is on the floor or another piece.
+ * @param {number} currentTime - The current time in milliseconds.
+ * @returns {boolean} True if the piece should lock, false otherwise.
+ */
 function shouldLock(gravity, piece, hasLanded, currentTime) {
   // Piece should only lock when there's something beneath it.
   // Disabled when lock is negative.

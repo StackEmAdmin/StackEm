@@ -2,6 +2,15 @@ import newAttack, { attackLib } from './attack/attack';
 import newKick from './kick/kick';
 import newSpins, { spinLib } from './spins/spins';
 
+/**
+ * Creates a new set of game rules by initializing kick, attack, and spin configurations.
+ *
+ * @param {Object} kick - The kick system.
+ * @param {Object} attack - The attack system.
+ * @param {Object} spin - The spin detection system.
+ *
+ * @returns {Object} - An object containing the initialized kick, attack, and spin rules.
+ */
 function newRules(kick, attack, spin) {
   return {
     kick: newKick(kick),
@@ -42,7 +51,6 @@ function calculateAttacks(rules, info) {
  *
  * @returns {string} - Depending on maneuver performed, returns 'spin', 'mini', or ''.
  */
-
 function getSpinInfo(
   rules,
   board,

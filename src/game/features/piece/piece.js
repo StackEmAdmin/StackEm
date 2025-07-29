@@ -249,14 +249,35 @@ function left(piece) {
   return { ...piece, x: piece.x - 1 };
 }
 
+/**
+ * Moves the given piece one unit to the right.
+ *
+ * @function right
+ * @param {Object} piece - The piece object with properties: type, rot, x, y, span.
+ * @returns {Object} A new piece object with the updated x-coordinate.
+ */
 function right(piece) {
   return { ...piece, x: piece.x + 1 };
 }
 
+/**
+ * Moves the given piece one unit downward.
+ *
+ * @function down
+ * @param {Object} piece - The piece object with properties: type, rot, x, y, span.
+ * @returns {Object} A new piece object with the updated y-coordinate.
+ */
 function down(piece) {
   return { ...piece, y: piece.y - 1 };
 }
 
+/**
+ * Moves the given piece one unit upward.
+ *
+ * @function up
+ * @param {Object} piece - The piece object with properties: type, rot, x, y, span.
+ * @returns {Object} A new piece object with the updated y-coordinate.
+ */
 function up(piece) {
   return { ...piece, y: piece.y + 1 };
 }
@@ -283,6 +304,13 @@ function rotateCW(piece) {
   };
 }
 
+/**
+ * Rotates the piece 180 degrees and a new span is calculated.
+ *
+ * @function rotate180
+ * @param {Object} piece - The piece object with properties: type, rot, x, y, span.
+ * @returns {Object} A new piece object with the updated rotation and span.
+ */
 function rotate180(piece) {
   const newRot = (piece.rot + 2) % 4;
   return {
@@ -292,6 +320,13 @@ function rotate180(piece) {
   };
 }
 
+/**
+ * Rotates the piece 90 degrees counter-clockwise.
+ *
+ * @function rotateCCW
+ * @param {Object} piece - The piece object with properties: type, rot, x, y, span.
+ * @returns {Object} A new piece object with the updated rotation and span.
+ */
 function rotateCCW(piece) {
   const newRot = (piece.rot + 3) % 4;
   return {
@@ -319,6 +354,15 @@ function copy(piece) {
   return { ...piece };
 }
 
+/**
+ * Kicks the given piece the specified amount.
+ *
+ * @function kick
+ * @param {Object} piece - The piece object with properties: type, rot, x, y, span.
+ * @param {number} kickX - The amount to kick the x-coordinate.
+ * @param {number} kickY - The amount to kick the y-coordinate.
+ * @returns {Object} A new piece object with the updated coordinates.
+ */
 function kick(piece, kickX, kickY) {
   return {
     ...piece,
@@ -357,6 +401,13 @@ function subGrid(piece) {
   return subGrid;
 }
 
+/**
+ * Creates a ghost version of the given piece.
+ *
+ * @function createGhost
+ * @param {Object} piece - The piece object with properties: type, rot, x, y, span.
+ * @returns {Object} A new piece object with the same properties as the input piece, but with type 'ghost'.
+ */
 function createGhost(piece) {
   return {
     ...piece,

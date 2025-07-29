@@ -190,6 +190,17 @@ function undoUntil(UR, currentState, condition, beforeConditionMet = false) {
   };
 }
 
+/**
+ * Redoes the game state until the given condition is met.
+ *
+ * @param {Object} UR - The current state of the undo/redo system.
+ * @param {Object} currentState - The current state of the game.
+ * @param {function} condition - A function that takes a state and returns a boolean.
+ * @param {boolean} beforeConditionMet - If true, the state immediately before the condition is met is returned. Otherwise, the state after the condition is met is returned. Defaults to `false`.
+ * @returns {Object} An object with two properties: state and UR.
+ *   - state: The state of the game after redoing until the condition is met, or null if no states are available.
+ *   - UR: An updated state of the undo/redo system.
+ */
 function redoUntil(UR, currentState, condition, beforeConditionMet = false) {
   if (!UR.enabled) {
     return { state: null, UR };

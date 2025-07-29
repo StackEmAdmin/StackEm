@@ -10,30 +10,30 @@ import newRules, { rulesLib } from './features/rules/rules';
  * Creates a new game state object.
  *
  * @param {Object} [options] - The options for creating a new game.
- * @param {number} [options.rows=26] - The number of rows in the game board. Default is 26.
- * @param {number} [options.cols=10] - The number of columns in the game board. Default is 10.
- * @param {string} [options.kick='srsPlus'] - The kick table to be used for rotation systems.
- * @param {string} [options.attack='tsOne'] - The attack table to be used for attacking mechanics.
- * @param {string} [options.spins='tSpin'] - The spin detection system to be used. Default is 'tSpin'.
- * @param {number} [options.gravity=0.016666666666666666] - The gravity system to be used. Default is 1/60.
- * @param {number} [options.gravityLock=500] - The time in milliseconds before a piece locks in place. Default is 500.
- * @param {number} [options.gravityLockCap=5000] - The maximum time in milliseconds before a piece locks in place. Default is 5000.
- * @param {number} [options.gravityLockPenalty=1000] - The penalty in milliseconds added to gravity lock time after a piece state goes from landed to unlanded. Default is 1000.
- * @param {number} [options.gravityAcc=0] - The acceleration in cells per frame for gravity.
- * @param {number} [options.gravityAccDelay=0] - The delay in frames before gravity acceleration kicks in. Default is 0.
- * @param {string} [options.garbageSpawn='drop'] - The garbage spawn system to be used.
- * @param {boolean} [options.garbageComboBlock=true] - Whether combos delay garbage spawn.
+ * @param {number} [options.rows=26] - The number of rows in the game board.
+ * @param {number} [options.cols=10] - The number of columns in the game board.
+ * @param {string} [options.kick='srsPlus'] - The rotation system.
+ * @param {string} [options.attack='tsOne'] - The attack system.
+ * @param {string} [options.spins='tSpin'] - The spin detection system.
+ * @param {number} [options.gravity=0.016666666666666666] - The initial speed in units per frames at which pieces fall.
+ * @param {number} [options.gravityLock=500] - The amount of time in ms before a piece drops into place once on floor. Provide negative value to prevent locking.
+ * @param {number} [options.gravityLockCap=5000] -  The maximum amount of time in ms a piece is allowed on floor before dropping into place.
+ * @param {number} [options.gravityLockPenalty=1000] - The amount of time in ms a piece is penalized for moving from landed state to unlanded state.
+ * @param {number} [options.gravityAcc=0] - The amount by which gravity is increased every second.
+ * @param {number} [options.gravityAccDelay=0] - The amount of time in ms before acc is applied to gravity.
+ * @param {string} [options.garbageSpawn='drop'] - The spawn mode. Either 'drop' or 'instant'.
+ * @param {boolean} [options.garbageComboBlock=true] - Whether combos prevent garbage spawn.
  * @param {number} [options.garbageChargeDelay=500] - The delay in ms before garbage is ready to spawn.
- * @param {number} [options.garbageCap=8] - The maximum number of garbage lines to spawn at a time.
+ * @param {number} [options.garbageCap=8] - The maximum number of garbage lines to spawn at once.
  * @param {number} [options.garbageCheesiness=1] - The probability of garbage spawning in a different column.
- * @param {boolean} [options.garbageModeAPS=false] - Whether Attack Per Second (APS) mode is enabled.
- * @param {number} [options.garbageModeAPSAttack=0] - The number of garbage lines to receive.
- * @param {number} [options.garbageModeAPSSecond=1] - The interval in seconds between APS garbage line additions.
+ * @param {boolean} [options.garbageModeAPS=false] - Whether to enable Attack Per Second (APS) mode.
+ * @param {number} [options.garbageModeAPSAttack=0] - The number of garbage lines to receive in APS mode.
+ * @param {number} [options.garbageModeAPSSecond=1] - The time in seconds before the next APS mode attack.
  * @param {number} [options.garbageSeed=undefined] - The RNG seed for the garbage spawn system.
  * @param {boolean} [options.garbageNewSeedOnReset=true] - Whether to generate a new seed for the garbage spawn system when the game is reset.
- * @param {boolean} [options.highlight=false] - Whether to highlight clicked cells.
- * @param {boolean} [options.autoColor=true] - Whether to automatically color filled cells based on its shape.
- * @param {number} [options.queueSeed=undefined] - The seed for the queue. Default is undefined.
+ * @param {boolean} [options.highlight=false] - Whether to highlight filled cells.
+ * @param {boolean} [options.autoColor=true] - Whether to automatically color filled cells if a piece is detected.
+ * @param {number} [options.queueSeed=undefined] - The RNG seed for the queue.
  * @param {boolean} [options.queueNewSeedOnReset=true] - Whether to generate a new seed for the queue when the game is reset.
  * @param {boolean} [options.enableUndo=false] - Whether to enable undo and redo.
  * @returns {Object} - The new game state object.
@@ -144,6 +144,15 @@ function newGame({
   };
 }
 
+/**
+ * Updates the game state given the current time.
+ * Updates gravity and garbage.
+ *
+ * @param {Object} game - The current game state.
+ * @param {number} currentTime - The current time in milliseconds.
+ *
+ * @returns {Object} - The updated game state.
+ */
 function update(game, currentTime) {
   let nextGame = updateGravity(game, currentTime);
   nextGame = updateGarbage(nextGame, currentTime);
@@ -257,7 +266,6 @@ function updateSpawnGarbage(game, garbage, currentTime) {
 /**
  * Resets the game state to its initial state.
  * New random number generator seeds are generated if enabled in the game config.
- * The game state is saved in the undo/redo stack if `save` is true.
  *
  * @param {Object} game - The game state object.
  * @param {number} currentTime - The current time.
@@ -1271,6 +1279,13 @@ function undo(game, currentTime, counter = 0) {
   return undoState;
 }
 
+/**
+ * Redoes the last undone action in the game, updating the game state and queue.
+ *
+ * @param {Object} game - The current game state object.
+ * @param {number} currentTime - The current time in milliseconds.
+ * @returns {Object} - The updated game state object after redoing the action.
+ */
 function redo(game, currentTime) {
   const { state: nextGame, UR: nextUR } = URLib.redo(game.UR, game);
 

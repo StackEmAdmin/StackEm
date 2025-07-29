@@ -134,6 +134,19 @@ function place(queue, currentTime) {
   });
 }
 
+/**
+ * Performs the hold operation on the queue. If no piece is currently held,
+ * the next piece is moved to the hold queue and the queue state is updated.
+ * If a piece is already held, it swaps the held piece with the next piece.
+ *
+ * @param {Object} queue - The queue object.
+ * @param {boolean} queue.held - Indicates if a piece is currently held.
+ * @param {string} queue.hold - The currently held piece.
+ * @param {Array.<Object>} queue.pieces - The upcoming pieces for the game.
+ * @param {number} currentTime - The current time to stamp the piece with.
+ *
+ * @returns {Object} - The updated queue object after the hold operation.
+ */
 function hold(queue, currentTime) {
   // No change if already held piecce
   if (queue.held) {
