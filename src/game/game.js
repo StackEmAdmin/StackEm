@@ -936,8 +936,8 @@ function calculateGameOver(game, currentTime) {
     };
   }
 
-  // Piece height position is 3x above board defined height (from instant garbage spawn)
-  if (queueLib.nextPiece(game.queue).y >= game.config.rows * 3) {
+  // Piece height position is 1.33x above board defined height (from instant garbage spawn)
+  if (queueLib.nextPiece(game.queue).y >= game.config.rows * 1.33) {
     return {
       ...game,
       over: true,
