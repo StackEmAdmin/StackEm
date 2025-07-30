@@ -6,7 +6,42 @@ import str from '../../util/str';
 
 import './GameSettingsMenuForm.css';
 
-function ConfigurationMenu() {
+function ConfigurationMenu({ gameRef, game }) {
+  const getSpin = (game) => game.config.spins;
+
+  const [spins, setSpins] = useState({
+    value: getSpin(gameRef.current),
+    name: 'spins',
+    error: false,
+  });
+
+  useEffect(() => {
+    const setValIfBlurred = (state, val) => {
+      if (state.focus || state.error) {
+        return state;
+      }
+      return { ...state, value: val, error: false };
+    };
+
+    setSpins((state) => setValIfBlurred(state, getSpin(gameRef.current)));
+  }, [gameRef, game]);
+
+  const onChangeSpins = (val, setState) => {
+    setState((state) => {
+      if (val !== '' && validate[state.name](val)) {
+        gameRef.current = modifyConfig.rules(
+          gameRef.current,
+          state.name,
+          val,
+          performance.now()
+        );
+        return { ...state, value: val, error: false };
+      }
+
+      return { ...state, error: true };
+    });
+  };
+
   return (
     <>
       <label htmlFor="kick-option">Rotation System</label>
@@ -17,13 +52,19 @@ function ConfigurationMenu() {
       >
         <option value="srsPlus">SRS+</option>
       </select>
-      <label htmlFor="spin-option">Spin Detection</label>
+      <label htmlFor="spins-option">Spin Detection</label>
       <select
         className="--global-hover-focus-active-border"
-        name="spin-option"
-        id="spin-option"
+        name="spins-option"
+        id="spins-option"
+        value={spins.value}
+        onChange={(e) => onChangeSpins(e.target.value, setSpins)}
       >
-        <option value="tSpin">T-Spin</option>
+        {c.SPINS_OPTIONS.map((option) => (
+          <option key={option} value={option}>
+            {c.SPINS_NAME[option]}
+          </option>
+        ))}
       </select>
       <label htmlFor="attack-option">Attack System</label>
       <select

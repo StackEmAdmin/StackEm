@@ -1,4 +1,5 @@
 import tSpin from './tSpin.js';
+import all from './all.js';
 
 /**
  * Creates a new instance of spin maneuvers allowed based on the specified mode.
@@ -31,6 +32,10 @@ function getSpinInfo(
   kickTableName,
   kickNum
 ) {
+  if (system === 'none') {
+    return '';
+  }
+
   if (system === 'tSpin') {
     return tSpin.getSpinInfo(
       board,
@@ -40,6 +45,28 @@ function getSpinInfo(
       kickNum
     );
   }
+
+  if (
+    system === 'allSpin' ||
+    system === 'allMini' ||
+    system === 'allSpin+' ||
+    system === 'allMini+'
+  ) {
+    const type = system === 'allSpin' ? 'spin' : 'mini';
+    const plus = system === 'allSpin+' || system === 'allMini+';
+
+    return all.getSpinInfo(
+      board,
+      piece,
+      prevRotation,
+      kickTableName,
+      kickNum,
+      type,
+      plus
+    );
+  }
+
+  return '';
 }
 
 const spinLib = {

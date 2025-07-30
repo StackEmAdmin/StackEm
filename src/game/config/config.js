@@ -4,6 +4,10 @@ function validRange(val, min, max) {
   return val >= min && val <= max;
 }
 
+function validSpins(val) {
+  return typeof val === c.SPINS_TYPE && c.SPINS_OPTIONS.includes(val);
+}
+
 function validGravity(val) {
   return (
     typeof val === c.GRAVITY_TYPE &&
@@ -126,6 +130,7 @@ function validGarbageModeAPSSecond(val) {
 }
 
 const validate = {
+  spins: validSpins,
   gravity: validGravity,
   gravityLock: validGravityLock,
   gravityLockCap: validGravityLockCap,
@@ -147,6 +152,7 @@ const validate = {
 };
 
 const defaults = {
+  spins: c.SPINS_DEFAULT,
   gravity: c.GRAVITY_DEFAULT,
   gravityLock: c.GRAVITY_LOCK_DEFAULT,
   gravityLockCap: c.GRAVITY_LOCK_CAP_DEFAULT,

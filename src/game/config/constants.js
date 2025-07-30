@@ -1,4 +1,24 @@
 const c = {
+  // Spin Detection System Settings
+  SPINS_TYPE: 'string',
+  SPINS_OPTIONS: [
+    'tSpin',
+    'allSpin',
+    'allMini+',
+    'allSpin+',
+    'allMini',
+    'none',
+  ],
+  SPINS_NAME: {
+    tSpin: 'T-Spin',
+    allSpin: 'All-Spin',
+    'allMini+': 'All-Mini+',
+    'allSpin+': 'All-Spin+',
+    allMini: 'All-Mini',
+    none: 'None',
+  },
+  SPINS_DEFAULT: 'tSpin',
+
   // Gravity Settings
   GRAVITY_TYPE: 'number',
   GRAVITY_MIN: 0,

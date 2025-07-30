@@ -1496,6 +1496,39 @@ function redoOnDrop(game, currentTime) {
 }
 
 /**
+ * Modifies the rules configuration of the game.
+ * If the specified property already has the given value, the game state is returned unchanged.
+ * Otherwise, updates the game's configuration with the new value for the specified property
+ * and recalculates rules settings.
+ *
+ * @param {Object} game - The game state object.
+ * @param {string} property - The configuration property to modify.
+ * @param {any} value - The new value for the specified property.
+ * @param {number} currentTime - The current time in milliseconds.
+ * @returns {Object} - The updated game state object with modified rules configuration.
+ */
+function modifyRules(game, property, value, currentTime) {
+  // No such property or already has the value
+  if (game.config[property] === undefined || game.config[property] === value) {
+    return game;
+  }
+
+  const nextConfig = { ...game.config, [property]: value };
+  const nextRules = newRules(
+    nextConfig.kick,
+    nextConfig.attack,
+    nextConfig.spins
+  );
+
+  return {
+    ...game,
+    config: nextConfig,
+    rules: nextRules,
+    UR: URLib.save(game.UR, game),
+  };
+}
+
+/**
  * Modifies the gravity configuration of the game.
  * If the specified property already has the given value, the game state is returned unchanged.
  * Otherwise, updates the game's configuration with the new value for the specified property
@@ -1664,6 +1697,7 @@ const controller = {
 };
 
 const modifyConfig = {
+  rules: modifyRules,
   gravity: modifyGravity,
   queue: modifyQueue,
   garbage: modifyGarbage,
