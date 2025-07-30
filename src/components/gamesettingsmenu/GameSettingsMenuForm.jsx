@@ -986,7 +986,7 @@ function GameSettingsMenuForm({ gameRef, pubSubRef, show }) {
         <select
           name="game-settings-options"
           id="game-settings-options"
-          className="--global-hover-focus-active-border"
+          className="--global-hover-focus-active-border main"
           value={activeMenu}
           onChange={(ev) => setActiveMenu(ev.target.value)}
         >
