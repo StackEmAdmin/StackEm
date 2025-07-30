@@ -11,7 +11,9 @@ const MAX_GARBAGE_QUEUE_LENGTH = 1000;
  * @param {boolean} comboBlock - Whether combos prevent garbage spawn.
  * @param {number} cap - The maximum number of garbage lines to spawn at once.
  * @param {number} cheesiness - The probability of garbage spawning in a different column.
+ * @param {string} charge - The mode garbage charges. Either 'delay' or 'piece'.
  * @param {number} chargeDelay - The delay in ms before garbage is ready to spawn.
+ * @param {number} chargePieces - The number of pieces to drop before garbage is ready to spawn.
  * @param {boolean} modeAPS - Whether to enable Attack Per Second (APS) mode.
  * @param {number} modeAPSAttack - The number of garbage lines to receive in APS mode.
  * @param {number} modeAPSSecond - The time in seconds before the next APS mode attack.
@@ -25,7 +27,9 @@ function newGarbage(
   comboBlock,
   cap,
   cheesiness,
+  charge,
   chargeDelay,
+  chargePieces,
   modeAPS,
   modeAPSAttack,
   modeAPSSecond
@@ -39,7 +43,9 @@ function newGarbage(
     prevHole: -1,
     rng: newRNG(seed),
     queue: [],
+    charge,
     chargeDelay,
+    chargePieces,
     modeAPS,
     modeAPSAttack,
     modeAPSSecond,
@@ -100,14 +106,22 @@ function queue(garbage, amountGarbage, currentTime) {
   }
 
   // Charged attacks are ready to spawn on next piece drop
+  let charged = false;
+  if (garbage.charge === 'delay' && garbage.chargeDelay <= 0) {
+    charged = true;
+  } else if (garbage.charge === 'piece' && garbage.chargePieces <= 0) {
+    charged = true;
+  }
+
   // Add garbage to end of queue (FIFO)
   const nextQueue = [
     ...garbage.queue,
     {
       hole: undefined,
       amount: amountGarbage,
-      charged: garbage.chargeDelay === 0 ? true : false,
+      charged: charged,
       time: currentTime,
+      pieces: 0,
     },
   ];
 
@@ -147,12 +161,12 @@ function updateGarbageMode(garbage, startTime, currentTime) {
 }
 
 function updateGarbageQueue(garbage, currentTime) {
-  if (garbage.queue.length === 0) {
+  if (garbage.queue.length === 0 || garbage.charge !== 'delay') {
     return garbage;
   }
 
   // Charge garbage lines once garbage charge delay has passed
-  let changed = false;
+  let updated = false;
   const nextQueue = garbage.queue.map((garbageLines) => {
     if (garbageLines.charged) {
       return garbageLines;
@@ -160,7 +174,7 @@ function updateGarbageQueue(garbage, currentTime) {
 
     const timeElapsed = currentTime - garbageLines.time;
     if (timeElapsed >= garbage.chargeDelay) {
-      changed = true;
+      updated = true;
       return {
         ...garbageLines,
         charged: true,
@@ -170,7 +184,7 @@ function updateGarbageQueue(garbage, currentTime) {
     return garbageLines;
   });
 
-  if (!changed) {
+  if (!updated) {
     return garbage;
   }
 
@@ -270,6 +284,50 @@ function cancelFromLines(lines, amount) {
   return {
     ...lines,
     amount: lines.amount - amount,
+  };
+}
+
+/**
+ * When garbage charge mode is set to piece, charges garbage depending on the number of pieces dropped.
+ * Call this function when a piece is dropped.
+ *
+ * @param {Object} garbage - The game garbage object containing the queue.
+ *
+ * @returns {Object} An object containing the updated game garbage object with the modified queue.
+ */
+function chargePieceDrop(garbage) {
+  if (garbage.queue.length === 0 || garbage.charge !== 'piece') {
+    return garbage;
+  }
+
+  let updated = false;
+  const nextQueue = garbage.queue.map((garbageLines) => {
+    if (garbageLines.charged) {
+      return garbageLines;
+    }
+
+    updated = true;
+    if (garbageLines.pieces + 1 >= garbage.chargePieces) {
+      return {
+        ...garbageLines,
+        pieces: garbageLines.pieces + 1,
+        charged: true,
+      };
+    }
+
+    return {
+      ...garbageLines,
+      pieces: garbageLines.pieces + 1,
+    };
+  });
+
+  if (!updated) {
+    return garbage;
+  }
+
+  return {
+    ...garbage,
+    queue: nextQueue,
   };
 }
 
@@ -411,6 +469,7 @@ const garbageLib = {
   cancel,
   queue,
   receive,
+  chargePieceDrop,
   modifyProp,
 };
 

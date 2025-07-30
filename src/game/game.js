@@ -23,7 +23,9 @@ import newRules, { rulesLib } from './features/rules/rules';
  * @param {number} [options.gravityAccDelay=0] - The amount of time in ms before acc is applied to gravity.
  * @param {string} [options.garbageSpawn='drop'] - The spawn mode. Either 'drop' or 'instant'.
  * @param {boolean} [options.garbageComboBlock=true] - Whether combos prevent garbage spawn.
+ * @param {string} [options.garbageCharge] - The mode garbage charges. Either 'delay' or 'piece'.
  * @param {number} [options.garbageChargeDelay=500] - The delay in ms before garbage is ready to spawn.
+ * @param {number} [options.garbageChargePieces=1] - The number of pieces to drop before garbage is ready to spawn.
  * @param {number} [options.garbageCap=8] - The maximum number of garbage lines to spawn at once.
  * @param {number} [options.garbageCheesiness=1] - The probability of garbage spawning in a different column.
  * @param {boolean} [options.garbageModeAPS=false] - Whether to enable Attack Per Second (APS) mode.
@@ -53,7 +55,9 @@ function newGame({
   gravityAccDelay = 0,
   garbageSpawn = 'drop',
   garbageComboBlock = true,
+  garbageCharge = 'delay',
   garbageChargeDelay = 500,
+  garbageChargePieces = 1,
   garbageCap = 8,
   garbageCheesiness = 1,
   garbageModeAPS = false,
@@ -81,7 +85,9 @@ function newGame({
     gravityAccDelay,
     garbageSpawn,
     garbageComboBlock,
+    garbageCharge,
     garbageChargeDelay,
+    garbageChargePieces,
     garbageCap,
     garbageCheesiness,
     garbageModeAPS,
@@ -107,7 +113,9 @@ function newGame({
     garbageComboBlock,
     garbageCap,
     garbageCheesiness,
+    garbageCharge,
     garbageChargeDelay,
+    garbageChargePieces,
     garbageModeAPS,
     garbageModeAPSAttack,
     garbageModeAPSSecond
@@ -867,7 +875,8 @@ function dropHelper(game, currentTime) {
     nextCombo >= 0,
     true
   );
-  nextGarbage = updatedGarbage;
+
+  nextGarbage = garbageLib.chargePieceDrop(updatedGarbage);
 
   sendAttack(nextAttacks, currentTime);
 
@@ -1598,7 +1607,9 @@ function modifyGarbage(game, property, value, currentTime) {
     garbageSeed: 'seed',
     garbageComboBlock: 'comboBlock',
     garbageSpawn: 'spawn',
+    garbageCharge: 'charge',
     garbageChargeDelay: 'chargeDelay',
+    garbageChargePieces: 'chargePieces',
     garbageCap: 'cap',
     garbageCheesiness: 'cheesiness',
     garbageModeAPS: 'modeAPS',
