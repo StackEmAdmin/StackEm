@@ -989,14 +989,18 @@ function hold(game, currentTime) {
     nextQueue = queueLib.updateNextPiece(nextQueue, twentyGPiece);
   }
 
-  return nextQueue === game.queue
-    ? game
-    : {
-        ...game,
-        UR: URLib.save(game.UR, game),
-        twist: '',
-        queue: nextQueue,
-      };
+  let nextGame =
+    nextQueue === game.queue
+      ? game
+      : {
+          ...game,
+          UR: URLib.save(game.UR, game),
+          twist: '',
+          queue: nextQueue,
+        };
+
+  nextGame = calculateGameOver(nextGame, currentTime);
+  return nextGame;
 }
 
 /**
