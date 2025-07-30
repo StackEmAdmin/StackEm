@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import validate from '../../game/config/config';
 import c from '../../game/config/constants';
 import { modifyConfig } from '../../game/game';
+import str from '../../util/str';
 
 import './GameSettingsMenuForm.css';
 
@@ -454,7 +455,9 @@ function GarbageMenu({ gameRef, game }) {
   const getSeed = (game) => game.config.garbageSeed.toUpperCase();
   const getComboBlock = (game) => !!game.config.garbageComboBlock;
   const getGarbageSpawn = (game) => game.config.garbageSpawn;
+  const getGarbageCharge = (game) => game.config.garbageCharge;
   const getGarbageChargeDelay = (game) => game.config.garbageChargeDelay;
+  const getGarbageChargePieces = (game) => game.config.garbageChargePieces;
   const getGarbageCap = (game) => game.config.garbageCap;
   const getGarbageCheesiness = (game) => game.config.garbageCheesiness;
 
@@ -481,9 +484,22 @@ function GarbageMenu({ gameRef, game }) {
     error: false,
   });
 
+  const [charge, setCharge] = useState({
+    value: getGarbageCharge(gameRef.current),
+    name: 'garbageCharge',
+    error: false,
+  });
+
   const [chargeDelay, setChargeDelay] = useState({
     value: getGarbageChargeDelay(gameRef.current),
     name: 'garbageChargeDelay',
+    error: false,
+    focus: false,
+  });
+
+  const [chargePieces, setChargePieces] = useState({
+    value: getGarbageChargePieces(gameRef.current),
+    name: 'garbageChargePieces',
     error: false,
     focus: false,
   });
@@ -504,7 +520,7 @@ function GarbageMenu({ gameRef, game }) {
 
   useEffect(() => {
     const setValIfBlurred = (state, val) => {
-      // Don't change value when user is typing
+      // Don't change value when user is typing or on error
       if (state.focus || state.error) {
         return state;
       }
@@ -521,8 +537,14 @@ function GarbageMenu({ gameRef, game }) {
     setSpawn((state) =>
       setValIfBlurred(state, getGarbageSpawn(gameRef.current))
     );
+    setCharge((state) =>
+      setValIfBlurred(state, getGarbageCharge(gameRef.current))
+    );
     setChargeDelay((state) =>
       setValIfBlurred(state, getGarbageChargeDelay(gameRef.current))
+    );
+    setChargePieces((state) =>
+      setValIfBlurred(state, getGarbageChargePieces(gameRef.current))
     );
     setCap((state) => setValIfBlurred(state, getGarbageCap(gameRef.current)));
     setCheesiness((state) =>
@@ -586,6 +608,22 @@ function GarbageMenu({ gameRef, game }) {
   };
 
   const onChangeGarbageSpawn = (val, setState) => {
+    setState((state) => {
+      if (val !== '' && validate[state.name](val)) {
+        gameRef.current = modifyConfig.garbage(
+          gameRef.current,
+          state.name,
+          val,
+          performance.now()
+        );
+        return { ...state, value: val, error: false };
+      }
+
+      return { ...state, value: val, error: true };
+    });
+  };
+
+  const onChangeGarbageCharge = (val, setState) => {
     setState((state) => {
       if (val !== '' && validate[state.name](val)) {
         gameRef.current = modifyConfig.garbage(
@@ -694,23 +732,70 @@ function GarbageMenu({ gameRef, game }) {
         value={spawn.value}
         onChange={(e) => onChangeGarbageSpawn(e.target.value, setSpawn)}
       >
-        <option value="drop">Drop</option>
-        <option value="instant">Instant</option>
+        {c.GARBAGE_SPAWN_OPTIONS.map((option) => (
+          <option key={option} value={option}>
+            {str.capitalize(option)}
+          </option>
+        ))}
       </select>
-      <label htmlFor="garbage-menu-charge">Garbage Charge Delay</label>
-      <input
-        className={'--global-no-spinner' + (chargeDelay.error ? ' error' : '')}
-        type="text"
+      <label htmlFor="garbage-menu-charge">Garbage Charge</label>
+      <select
+        className="--global-hover-focus-active-border"
         name="garbage-charge"
         id="garbage-menu-charge"
-        aria-label="Garbage charge delay"
-        value={chargeDelay.value}
-        onFocus={() => setChargeDelay((state) => ({ ...state, focus: true }))}
-        onChange={(e) => onChange(e.target.value, setChargeDelay)}
-        onBlur={(e) =>
-          onBlur(e.target.value, setChargeDelay, getGarbageChargeDelay)
-        }
-      />
+        value={charge.value}
+        onChange={(e) => onChangeGarbageCharge(e.target.value, setCharge)}
+      >
+        {c.GARBAGE_CHARGE_OPTIONS.map((option) => (
+          <option key={option} value={option}>
+            {str.capitalize(option)}
+          </option>
+        ))}
+      </select>
+      {charge.value === 'delay' && (
+        <label htmlFor="garbage-menu-charge-delay">Garbage Charge Delay</label>
+      )}
+      {charge.value === 'delay' && (
+        <input
+          className={
+            '--global-no-spinner' + (chargeDelay.error ? ' error' : '')
+          }
+          type="text"
+          name="garbage-charge"
+          id="garbage-menu-charge-delay"
+          aria-label="Garbage charge delay"
+          value={chargeDelay.value}
+          onFocus={() => setChargeDelay((state) => ({ ...state, focus: true }))}
+          onChange={(e) => onChange(e.target.value, setChargeDelay)}
+          onBlur={(e) =>
+            onBlur(e.target.value, setChargeDelay, getGarbageChargeDelay)
+          }
+        />
+      )}
+      {charge.value === 'piece' && (
+        <label htmlFor="garbage-menu-charge-pieces">
+          Garbage Charge Pieces
+        </label>
+      )}
+      {charge.value === 'piece' && (
+        <input
+          className={
+            `--global-no-spinner` + (chargePieces.error ? ' error' : '')
+          }
+          type="text"
+          name="garbage-charge-pieces"
+          id="garbage-menu-charge-pieces"
+          aria-label="Garbage charge pieces"
+          value={chargePieces.value}
+          onFocus={() =>
+            setChargePieces((state) => ({ ...state, focus: true }))
+          }
+          onChange={(e) => onChange(e.target.value, setChargePieces)}
+          onBlur={(e) =>
+            onBlur(e.target.value, setChargePieces, getGarbageChargePieces)
+          }
+        />
+      )}
       <label htmlFor="garbage-menu-cap">Garbage Cap</label>
       <input
         className={'--global-no-spinner' + (cap.error ? ' error' : '')}

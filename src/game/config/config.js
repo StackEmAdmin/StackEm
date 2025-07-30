@@ -68,10 +68,24 @@ function validGarbageSpawn(val) {
   );
 }
 
+function validGarbageCharge(val) {
+  return (
+    typeof val === c.GARBAGE_CHARGE_TYPE &&
+    c.GARBAGE_CHARGE_OPTIONS.includes(val)
+  );
+}
+
 function validGarbageChargeDelay(val) {
   return (
     typeof val === c.GARBAGE_CHARGE_DELAY_TYPE &&
     validRange(val, c.GARBAGE_CHARGE_DELAY_MIN, c.GARBAGE_CHARGE_DELAY_MAX)
+  );
+}
+
+function validGarbageChargePieces(val) {
+  return (
+    typeof val === c.GARBAGE_CHARGE_PIECES_TYPE &&
+    validRange(val, c.GARBAGE_CHARGE_PIECES_MIN, c.GARBAGE_CHARGE_PIECES_MAX)
   );
 }
 
@@ -123,7 +137,9 @@ const validate = {
   queueNext: validQueueNext,
   garbageSeed: validGarbageSeed,
   garbageSpawn: validGarbageSpawn,
+  garbageCharge: validGarbageCharge,
   garbageChargeDelay: validGarbageChargeDelay,
+  garbageChargePieces: validGarbageChargePieces,
   garbageCap: validGarbageCap,
   garbageCheesiness: validGarbageCheesiness,
   garbageModeAPSAttack: validGarbageModeAPSAttack,
@@ -138,9 +154,13 @@ const defaults = {
   gravityAcc: c.GRAVITY_ACC_DEFAULT,
   gravityAccDelay: c.GRAVITY_ACC_DELAY_DEFAULT,
   garbageSpawn: c.GARBAGE_SPAWN_DEFAULT,
+  garbageCharge: c.GARBAGE_CHARGE_DEFAULT,
   garbageChargeDelay: c.GARBAGE_CHARGE_DELAY_DEFAULT,
+  garbageChargePieces: c.GARBAGE_CHARGE_PIECES_DEFAULT,
   garbageCap: c.GARBAGE_CAP_DEFAULT,
   garbageCheesiness: c.GARBAGE_CHEESINESS_DEFAULT,
+  garbageModeAPSAttack: c.GARBAGE_MODE_APS_ATTACK_DEFAULT,
+  garbageModeAPSSecond: c.GARBAGE_MODE_APS_SECOND_DEFAULT,
 };
 
 export { validate as default, defaults };
