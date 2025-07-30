@@ -81,6 +81,30 @@ function update(game, actionsRef, accumulator, currentTime) {
 }
 
 /**
+ * Determines whether extrapolation should be skipped based on the game and moves.
+ *
+ * @param {Object} game - The current state of the game.
+ * @param {Array.<Object>} moves - An array of move objects to be checked.
+ * @returns {boolean} True if extrapolation should be skipped, false otherwise.
+ */
+
+function skipExtrapolation(game, moves) {
+  if (moves.length === 0) {
+    return true;
+  }
+
+  // Prevent flash of different queue due to seed
+  if (
+    moves.some((move) => move.name === 'reset') &&
+    game.config.queueNewSeedOnReset
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Extrapolates the current game state from the actions queue and updates the
  * game state by calling the controller's update function.
  *
@@ -109,6 +133,10 @@ function render(game, actionsRef, accumulator, currentTime) {
 
   // Extrapolate moves. Does not mutate actions or game state (instead new game state returned).
   const { moves } = getMoves(actionsRef, currentTime, true);
+  if (skipExtrapolation(game, moves)) {
+    return game;
+  }
+
   let updatedGame = game;
   updatedGame = applyMoves(updatedGame, moves);
   return controller.update(updatedGame, currentTime);
