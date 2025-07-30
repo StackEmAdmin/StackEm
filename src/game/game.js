@@ -1464,7 +1464,7 @@ function redoOnDrop(game, currentTime) {
   //   Caused by player placed pieces, reset, undo to reset, then redoing reset
   //   Improve functionality by not making assumption on number of pieces
   if (game.numPieces > 0) {
-    const resetState = redo(game);
+    const resetState = redo(game, currentTime);
     if (resetState.numPieces === 0) {
       return resetState;
     }
