@@ -6,6 +6,15 @@ import str from '../../util/str';
 
 import './GameSettingsMenuForm.css';
 
+function set(setState, value) {
+  setState((state) => {
+    if (state.focus || state.error || state.value === value) {
+      return state;
+    }
+    return { ...state, value, error: false };
+  });
+}
+
 function focus(setState) {
   setState((state) => {
     if (state.focus) {
@@ -27,8 +36,23 @@ function toggle(setState, gameRef, update) {
   });
 }
 
-function blur(setState, gameVal, value, toNumber = false) {
+function blur(
+  setState,
+  gameVal,
+  value,
+  toNumber = false,
+  gameValOnEmpty = false
+) {
   setState((state) => {
+    if (gameValOnEmpty && value === '') {
+      return {
+        ...state,
+        value: gameVal,
+        error: false,
+        focus: false,
+      };
+    }
+
     const val = toNumber ? Number(value) : value;
     if (validate[state.name](val)) {
       return {
@@ -43,17 +67,72 @@ function blur(setState, gameVal, value, toNumber = false) {
   });
 }
 
+function blurSeed(setState, gameRef, update, gameValue, value, padAmount) {
+  setState((state) => {
+    if (value === '') {
+      return {
+        ...state,
+        value: gameValue,
+        error: false,
+        focus: false,
+      };
+    }
+
+    const paddedValue = value.padStart(padAmount, '0');
+    if (validate[state.name](paddedValue)) {
+      gameRef.current = update(
+        gameRef.current,
+        state.name,
+        paddedValue.toLowerCase(),
+        performance.now()
+      );
+      return {
+        ...state,
+        value: paddedValue.toUpperCase(),
+        error: false,
+        focus: false,
+      };
+    }
+
+    return { ...state, error: true, focus: false };
+  });
+}
+
+function changeSeed(setState, value, padAmount) {
+  setState((state) => {
+    if (state.value === value) {
+      return state;
+    }
+
+    if (value === '') {
+      return { ...state, value: value };
+    }
+
+    const paddedValue = value.padStart(padAmount, '0');
+    if (validate[state.name](paddedValue)) {
+      return { ...state, value: value, error: false };
+    }
+
+    return { ...state, value: value };
+  });
+}
+
 function changeUpdate(
   setState,
   gameRef,
   update,
   value,
   valueToLower = false,
-  valueToNumber = false
+  valueToNumber = false,
+  valueSkipEmpty = false
 ) {
   setState((state) => {
     if (state.value === value) {
       return state;
+    }
+
+    if (valueSkipEmpty && value === '') {
+      return { ...state, value: value };
     }
 
     const val = valueToLower
@@ -86,31 +165,8 @@ function ConfigurationMenu({ gameRef, game }) {
   });
 
   useEffect(() => {
-    const setValIfBlurred = (state, val) => {
-      if (state.focus || state.error) {
-        return state;
-      }
-      return { ...state, value: val, error: false };
-    };
-
-    setSpins((state) => setValIfBlurred(state, getSpin(gameRef.current)));
+    set(setSpins, getSpin(gameRef.current));
   }, [gameRef, game]);
-
-  const onChangeSpins = (val, setState) => {
-    setState((state) => {
-      if (val !== '' && validate[state.name](val)) {
-        gameRef.current = modifyConfig.rules(
-          gameRef.current,
-          state.name,
-          val,
-          performance.now()
-        );
-        return { ...state, value: val, error: false };
-      }
-
-      return { ...state, error: true };
-    });
-  };
 
   return (
     <>
@@ -128,7 +184,9 @@ function ConfigurationMenu({ gameRef, game }) {
         name="spins-option"
         id="spins-option"
         value={spins.value}
-        onChange={(e) => onChangeSpins(e.target.value, setSpins)}
+        onChange={(e) =>
+          changeUpdate(setSpins, gameRef, modifyConfig.rules, e.target.value)
+        }
       >
         {c.SPINS_OPTIONS.map((option) => (
           <option key={option} value={option}>
@@ -193,64 +251,13 @@ function GravityMenu({ gameRef, game }) {
     focus: false,
   });
 
-  const onChange = (val, setState) => {
-    setState((state) => {
-      // On valid value make change in game immediate
-      if (val !== '' && validate[state.name](Number(val))) {
-        gameRef.current = modifyConfig.gravity(
-          gameRef.current,
-          state.name,
-          Number(val),
-          performance.now()
-        );
-        return { ...state, value: val, error: false };
-      }
-
-      return { ...state, value: val };
-    });
-  };
-
-  const onBlur = (val, setState, getGameVal) => {
-    // Show error on blur
-    setState((state) => {
-      // Current value for empty string
-      if (val === '') {
-        return {
-          ...state,
-          value: getGameVal(gameRef.current),
-          error: false,
-          focus: false,
-        };
-      }
-
-      if (!validate[state.name](Number(val))) {
-        return { ...state, error: true, focus: false };
-      }
-      return { ...state, error: false, focus: false };
-    });
-  };
-
   useEffect(() => {
-    const setValIfBlurred = (state, val) => {
-      // Don't change value when user is typing
-      if (state.focus || state.error) {
-        return state;
-      }
-      return { ...state, value: val, error: false };
-    };
-
-    setGravity((state) => setValIfBlurred(state, getGravity(gameRef.current)));
-    setLock((state) => setValIfBlurred(state, getLock(gameRef.current)));
-    setLockCap((state) => setValIfBlurred(state, getLockCap(gameRef.current)));
-    setLockPenalty((state) =>
-      setValIfBlurred(state, getLockPenalty(gameRef.current))
-    );
-    setAcceleration((state) =>
-      setValIfBlurred(state, getAcceleration(gameRef.current))
-    );
-    setAccelerationDelay((state) =>
-      setValIfBlurred(state, getAccelerationDelay(gameRef.current))
-    );
+    set(setGravity, getGravity(gameRef.current));
+    set(setLock, getLock(gameRef.current));
+    set(setLockCap, getLockCap(gameRef.current));
+    set(setLockPenalty, getLockPenalty(gameRef.current));
+    set(setAcceleration, getAcceleration(gameRef.current));
+    set(setAccelerationDelay, getAccelerationDelay(gameRef.current));
   }, [gameRef, game]);
 
   return (
@@ -262,9 +269,27 @@ function GravityMenu({ gameRef, game }) {
         name="gravity"
         id="gravity-menu-gravity"
         aria-label="Gravity"
-        onFocus={() => setGravity((state) => ({ ...state, focus: true }))}
-        onBlur={(e) => onBlur(e.target.value, setGravity, getGravity)}
-        onChange={(e) => onChange(e.target.value, setGravity)}
+        onFocus={() => focus(setGravity)}
+        onBlur={(e) =>
+          blur(
+            setGravity,
+            getGravity(gameRef.current),
+            e.target.value,
+            true,
+            true
+          )
+        }
+        onChange={(e) =>
+          changeUpdate(
+            setGravity,
+            gameRef,
+            modifyConfig.gravity,
+            e.target.value,
+            false,
+            true,
+            true
+          )
+        }
         value={gravity.value}
       />
       <label htmlFor="gravity-menu-lock">Lock</label>
@@ -274,9 +299,21 @@ function GravityMenu({ gameRef, game }) {
         name="lock"
         id="gravity-menu-lock"
         aria-label="Gravity lock"
-        onFocus={() => setLock((state) => ({ ...state, focus: true }))}
-        onBlur={(e) => onBlur(e.target.value, setLock, getLock)}
-        onChange={(e) => onChange(e.target.value, setLock)}
+        onFocus={() => focus(setLock)}
+        onBlur={(e) =>
+          blur(setLock, getLock(gameRef.current), e.target.value, true, true)
+        }
+        onChange={(e) =>
+          changeUpdate(
+            setLock,
+            gameRef,
+            modifyConfig.gravity,
+            e.target.value,
+            false,
+            true,
+            true
+          )
+        }
         value={lock.value}
       />
       <label htmlFor="gravity-menu-lock-cap">Lock Cap</label>
@@ -286,9 +323,27 @@ function GravityMenu({ gameRef, game }) {
         name="lock-cap"
         id="gravity-menu-lock-cap"
         aria-label="Gravity lock cap"
-        onFocus={() => setLockCap((state) => ({ ...state, focus: true }))}
-        onBlur={(e) => onBlur(e.target.value, setLockCap, getLockCap)}
-        onChange={(e) => onChange(e.target.value, setLockCap)}
+        onFocus={() => focus(setLockCap)}
+        onBlur={(e) =>
+          blur(
+            setLockCap,
+            getLockCap(gameRef.current),
+            e.target.value,
+            true,
+            true
+          )
+        }
+        onChange={(e) =>
+          changeUpdate(
+            setLockCap,
+            gameRef,
+            modifyConfig.gravity,
+            e.target.value,
+            false,
+            true,
+            true
+          )
+        }
         value={lockCap.value}
       />
       <label htmlFor="gravity-menu-lock-penalty">Lock Penalty</label>
@@ -298,9 +353,27 @@ function GravityMenu({ gameRef, game }) {
         name="lock-penalty"
         id="gravity-menu-lock-penalty"
         aria-label="Gravity lock penalty"
-        onFocus={() => setLockPenalty((state) => ({ ...state, focus: true }))}
-        onBlur={(e) => onBlur(e.target.value, setLockPenalty, getLockPenalty)}
-        onChange={(e) => onChange(e.target.value, setLockPenalty)}
+        onFocus={() => focus(setLockPenalty)}
+        onBlur={(e) =>
+          blur(
+            setLockPenalty,
+            getLockPenalty(gameRef.current),
+            e.target.value,
+            true,
+            true
+          )
+        }
+        onChange={(e) =>
+          changeUpdate(
+            setLockPenalty,
+            gameRef,
+            modifyConfig.gravity,
+            e.target.value,
+            false,
+            true,
+            true
+          )
+        }
         value={lockPenalty.value}
       />
       <label htmlFor="gravity-menu-gravity-acc">Acceleration</label>
@@ -310,9 +383,27 @@ function GravityMenu({ gameRef, game }) {
         name="gravity-acc"
         id="gravity-menu-gravity-acc"
         aria-label="Gravity"
-        onFocus={() => setAcceleration((state) => ({ ...state, focus: true }))}
-        onBlur={(e) => onBlur(e.target.value, setAcceleration, getAcceleration)}
-        onChange={(e) => onChange(e.target.value, setAcceleration)}
+        onFocus={() => focus(setAcceleration)}
+        onBlur={(e) =>
+          blur(
+            setAcceleration,
+            getAcceleration(gameRef.current),
+            e.target.value,
+            true,
+            true
+          )
+        }
+        onChange={(e) =>
+          changeUpdate(
+            setAcceleration,
+            gameRef,
+            modifyConfig.gravity,
+            e.target.value,
+            false,
+            true,
+            true
+          )
+        }
         value={acceleration.value}
       />
       <label htmlFor="gravity-menu-gravity-delay">Acceleration Delay</label>
@@ -324,13 +415,27 @@ function GravityMenu({ gameRef, game }) {
         name="gravity-delay"
         id="gravity-menu-gravity-delay"
         aria-label="Gravity"
-        onFocus={() =>
-          setAccelerationDelay((state) => ({ ...state, focus: true }))
-        }
+        onFocus={() => focus(setAccelerationDelay)}
         onBlur={(e) =>
-          onBlur(e.target.value, setAccelerationDelay, getAccelerationDelay)
+          blur(
+            setAccelerationDelay,
+            getAccelerationDelay(gameRef.current),
+            e.target.value,
+            true,
+            true
+          )
         }
-        onChange={(e) => onChange(e.target.value, setAccelerationDelay)}
+        onChange={(e) =>
+          changeUpdate(
+            setAccelerationDelay,
+            gameRef,
+            modifyConfig.gravity,
+            e.target.value,
+            false,
+            true,
+            true
+          )
+        }
         value={accelerationDelay.value}
       />
     </>
@@ -420,135 +525,16 @@ function QueueMenu({ gameRef, game }) {
   });
 
   useEffect(() => {
-    const setValIfBlurred = (state, val) => {
-      if (state.focus || state.error || state.value === val) {
-        return state;
-      }
-
-      return { ...state, value: val, error: false };
-    };
-
-    setNewSeedReset((state) => setValIfBlurred(state, getNewSeedOnReset(game)));
-    setHoldEnabled((state) => setValIfBlurred(state, getHoldEnabled(game)));
-    setLimitSize((state) => setValIfBlurred(state, getLimitSize(game)));
-    setnthPC((state) => setValIfBlurred(state, getNthPC(game)));
-    setInitialHold((state) => setValIfBlurred(state, getInitialHold(game)));
-    setInitialPieces((state) => setValIfBlurred(state, getInitialPieces(game)));
-    setSeed((state) => setValIfBlurred(state, getSeed(game)));
-    setHold((state) => setValIfBlurred(state, getHold(game)));
-    setNext((state) => setValIfBlurred(state, getNext(game)));
+    set(setNewSeedReset, getNewSeedOnReset(gameRef.current));
+    set(setHoldEnabled, getHoldEnabled(gameRef.current));
+    set(setLimitSize, getLimitSize(gameRef.current));
+    set(setnthPC, getNthPC(gameRef.current));
+    set(setInitialHold, getInitialHold(gameRef.current));
+    set(setInitialPieces, getInitialPieces(gameRef.current));
+    set(setSeed, getSeed(gameRef.current));
+    set(setHold, getHold(gameRef.current));
+    set(setNext, getNext(gameRef.current));
   }, [gameRef, game]);
-
-  const toggleNewSeedOnReset = (newSeedReset) => {
-    newSeedReset((state) => {
-      gameRef.current = modifyConfig.queue(
-        gameRef.current,
-        state.name,
-        !state.value,
-        performance.now()
-      );
-      return { ...state, value: !state.value };
-    });
-  };
-
-  const onChangeSeed = (val, setSeed) => {
-    setSeed((state) => {
-      const paddedVal = val.padStart(c.QUEUE_SEED_LENGTH, '0');
-      if (val !== '' && validate[state.name](paddedVal)) {
-        // Update seed on blur
-        return { ...state, value: val, error: false };
-      }
-
-      return { ...state, value: val };
-    });
-  };
-
-  const onBlurSeed = (val, setSeed) => {
-    setSeed((state) => {
-      // Show current seed on empty input
-      if (val === '') {
-        return {
-          ...state,
-          value: getSeed(gameRef.current),
-          error: false,
-          focus: false,
-        };
-      }
-
-      const paddedVal = val.padStart(c.QUEUE_SEED_LENGTH, '0');
-      if (validate[state.name](paddedVal)) {
-        gameRef.current = modifyConfig.queue(
-          gameRef.current,
-          state.name,
-          paddedVal.toLowerCase(),
-          performance.now()
-        );
-        return {
-          ...state,
-          value: paddedVal.toUpperCase(),
-          error: false,
-          focus: false,
-        };
-      }
-
-      return { ...state, error: true, focus: false };
-    });
-  };
-
-  const onChange = (val, setState) => {
-    setState((state) => {
-      // On queue piece change make change immediate
-      if (validate[state.name](val)) {
-        gameRef.current = modifyConfig.queue(
-          gameRef.current,
-          state.name,
-          val.toLowerCase(),
-          performance.now()
-        );
-        return { ...state, value: val, error: false };
-      }
-
-      return { ...state, value: val };
-    });
-  };
-
-  const onBlurHold = (val, setState) => {
-    setState((state) => {
-      if (validate[state.name](val)) {
-        return {
-          ...state,
-          value: val.toUpperCase(),
-          error: false,
-          focus: false,
-        };
-      }
-      return { ...state, error: true, focus: false };
-    });
-  };
-
-  const onBlurNext = (val, setNext) => {
-    setNext((state) => {
-      if (val === '') {
-        return {
-          ...state,
-          value: getNext(gameRef.current),
-          error: false,
-          focus: false,
-        };
-      }
-
-      if (validate[state.name](val)) {
-        return {
-          ...state,
-          value: getNext(gameRef.current),
-          error: false,
-          focus: false,
-        };
-      }
-
-      return { ...state, error: true, focus: false };
-    });
-  };
 
   return (
     <>
@@ -560,7 +546,7 @@ function QueueMenu({ gameRef, game }) {
           name="queue-new-seed"
           id="queue-menu-new-seed"
           checked={newSeedReset.value}
-          onChange={() => toggleNewSeedOnReset(setNewSeedReset)}
+          onChange={() => toggle(setNewSeedReset, gameRef, modifyConfig.queue)}
         />
         <span
           className="toggle-button"
@@ -576,9 +562,20 @@ function QueueMenu({ gameRef, game }) {
         name="seed"
         id="queue-menu-seed"
         aria-label="Queue seed"
-        onFocus={() => setSeed((state) => ({ ...state, focus: true }))}
-        onBlur={(e) => onBlurSeed(e.target.value, setSeed)}
-        onChange={(e) => onChangeSeed(e.target.value, setSeed)}
+        onFocus={() => focus(setSeed)}
+        onBlur={(e) =>
+          blurSeed(
+            setSeed,
+            gameRef,
+            modifyConfig.queue,
+            getSeed(gameRef.current),
+            e.target.value,
+            c.QUEUE_SEED_LENGTH
+          )
+        }
+        onChange={(e) =>
+          changeSeed(setSeed, e.target.value, c.QUEUE_SEED_LENGTH)
+        }
         value={seed.value}
       />
       <label className="custom-checkbox" htmlFor="queue-menu-hold-enabled">
@@ -605,9 +602,17 @@ function QueueMenu({ gameRef, game }) {
         name="queue-hold"
         id="gravity-menu-gravity"
         aria-label="Hold piece"
-        onFocus={() => setHold((state) => ({ ...state, focus: true }))}
-        onBlur={(e) => onBlurHold(e.target.value, setHold)}
-        onChange={(e) => onChange(e.target.value, setHold)}
+        onFocus={() => focus(setHold)}
+        onBlur={(e) => blur(setHold, getHold(gameRef.current), e.target.value)}
+        onChange={(e) =>
+          changeUpdate(
+            setHold,
+            gameRef,
+            modifyConfig.queue,
+            e.target.value,
+            true
+          )
+        }
         value={hold.value}
       />
       <label htmlFor="queue-menu-next">Next Pieces</label>
@@ -617,9 +622,19 @@ function QueueMenu({ gameRef, game }) {
         name="queue-next"
         id="queue-menu-next"
         aria-label="Next pieces"
-        onFocus={() => setNext((state) => ({ ...state, focus: true }))}
-        onBlur={(e) => onBlurNext(e.target.value, setNext)}
-        onChange={(e) => onChange(e.target.value, setNext)}
+        onFocus={() => focus(setNext)}
+        onBlur={(e) =>
+          blur(setNext, getNext(gameRef.current), e.target.value, false, true)
+        }
+        onChange={(e) =>
+          changeUpdate(
+            setNext,
+            gameRef,
+            modifyConfig.queue,
+            e.target.value,
+            true
+          )
+        }
         value={next.value}
       />
       <label htmlFor="queue-menu-nth-pc">PC Bag</label>
@@ -732,12 +747,12 @@ function GarbageMenu({ gameRef, game }) {
   const getNewSeedOnReset = (game) => !!game.config.garbageNewSeedOnReset;
   const getSeed = (game) => game.config.garbageSeed.toUpperCase();
   const getComboBlock = (game) => !!game.config.garbageComboBlock;
-  const getGarbageSpawn = (game) => game.config.garbageSpawn;
-  const getGarbageCharge = (game) => game.config.garbageCharge;
-  const getGarbageChargeDelay = (game) => game.config.garbageChargeDelay;
-  const getGarbageChargePieces = (game) => game.config.garbageChargePieces;
-  const getGarbageCap = (game) => game.config.garbageCap;
-  const getGarbageCheesiness = (game) => game.config.garbageCheesiness;
+  const getSpawn = (game) => game.config.garbageSpawn;
+  const getCharge = (game) => game.config.garbageCharge;
+  const getChargeDelay = (game) => game.config.garbageChargeDelay;
+  const getChargePieces = (game) => game.config.garbageChargePieces;
+  const getCap = (game) => game.config.garbageCap;
+  const getCheesiness = (game) => game.config.garbageCheesiness;
 
   const [newSeedReset, setNewSeedReset] = useState({
     value: getNewSeedOnReset(gameRef.current),
@@ -757,203 +772,56 @@ function GarbageMenu({ gameRef, game }) {
   });
 
   const [spawn, setSpawn] = useState({
-    value: getGarbageSpawn(gameRef.current),
+    value: getSpawn(gameRef.current),
     name: 'garbageSpawn',
     error: false,
   });
 
   const [charge, setCharge] = useState({
-    value: getGarbageCharge(gameRef.current),
+    value: getCharge(gameRef.current),
     name: 'garbageCharge',
     error: false,
   });
 
   const [chargeDelay, setChargeDelay] = useState({
-    value: getGarbageChargeDelay(gameRef.current),
+    value: getChargeDelay(gameRef.current),
     name: 'garbageChargeDelay',
     error: false,
     focus: false,
   });
 
   const [chargePieces, setChargePieces] = useState({
-    value: getGarbageChargePieces(gameRef.current),
+    value: getChargePieces(gameRef.current),
     name: 'garbageChargePieces',
     error: false,
     focus: false,
   });
 
   const [cap, setCap] = useState({
-    value: getGarbageCap(gameRef.current),
+    value: getCap(gameRef.current),
     name: 'garbageCap',
     error: false,
     focus: false,
   });
 
   const [cheesiness, setCheesiness] = useState({
-    value: getGarbageCheesiness(gameRef.current),
+    value: getCheesiness(gameRef.current),
     name: 'garbageCheesiness',
     error: false,
     focus: false,
   });
 
   useEffect(() => {
-    const setValIfBlurred = (state, val) => {
-      // Don't change value when user is typing or on error
-      if (state.focus || state.error) {
-        return state;
-      }
-      return { ...state, value: val, error: false };
-    };
-
-    setNewSeedReset((state) =>
-      setValIfBlurred(state, getNewSeedOnReset(gameRef.current))
-    );
-    setSeed((state) => setValIfBlurred(state, getSeed(gameRef.current)));
-    setComboBlock((state) =>
-      setValIfBlurred(state, getComboBlock(gameRef.current))
-    );
-    setSpawn((state) =>
-      setValIfBlurred(state, getGarbageSpawn(gameRef.current))
-    );
-    setCharge((state) =>
-      setValIfBlurred(state, getGarbageCharge(gameRef.current))
-    );
-    setChargeDelay((state) =>
-      setValIfBlurred(state, getGarbageChargeDelay(gameRef.current))
-    );
-    setChargePieces((state) =>
-      setValIfBlurred(state, getGarbageChargePieces(gameRef.current))
-    );
-    setCap((state) => setValIfBlurred(state, getGarbageCap(gameRef.current)));
-    setCheesiness((state) =>
-      setValIfBlurred(state, getGarbageCheesiness(gameRef.current))
-    );
+    set(setNewSeedReset, getNewSeedOnReset(gameRef.current));
+    set(setSeed, getSeed(gameRef.current));
+    set(setComboBlock, getComboBlock(gameRef.current));
+    set(setSpawn, getSpawn(gameRef.current));
+    set(setCharge, getCharge(gameRef.current));
+    set(setChargeDelay, getChargeDelay(gameRef.current));
+    set(setChargePieces, getChargePieces(gameRef.current));
+    set(setCap, getCap(gameRef.current));
+    set(setCheesiness, getCheesiness(gameRef.current));
   }, [gameRef, game]);
-
-  const toggleGarbageOption = (setToggleOption) => {
-    setToggleOption((state) => {
-      gameRef.current = modifyConfig.garbage(
-        gameRef.current,
-        state.name,
-        !state.value,
-        performance.now()
-      );
-      return { ...state, value: !state.value };
-    });
-  };
-
-  const onChangeSeed = (val, setSeed) => {
-    setSeed((state) => {
-      const paddedVal = val.padStart(c.GARBAGE_SEED_LENGTH, '0');
-      if (val !== '' && validate[state.name](paddedVal)) {
-        // Update seed in game on blur
-        return { ...state, value: val, error: false };
-      }
-      return { ...state, value: val };
-    });
-  };
-
-  const onBlurSeed = (val, setSeed) => {
-    setSeed((state) => {
-      // Show current seed on empty input
-      if (val === '') {
-        return {
-          ...state,
-          value: getSeed(gameRef.current),
-          error: false,
-          focus: false,
-        };
-      }
-
-      const paddedVal = val.padStart(c.GARBAGE_SEED_LENGTH, '0');
-      if (validate[state.name](paddedVal)) {
-        gameRef.current = modifyConfig.garbage(
-          gameRef.current,
-          state.name,
-          paddedVal.toLowerCase(),
-          performance.now()
-        );
-        return {
-          ...state,
-          value: paddedVal.toUpperCase(),
-          error: false,
-          focus: false,
-        };
-      }
-
-      return { ...state, error: true, focus: false };
-    });
-  };
-
-  const onChangeGarbageSpawn = (val, setState) => {
-    setState((state) => {
-      if (val !== '' && validate[state.name](val)) {
-        gameRef.current = modifyConfig.garbage(
-          gameRef.current,
-          state.name,
-          val,
-          performance.now()
-        );
-        return { ...state, value: val, error: false };
-      }
-
-      return { ...state, value: val, error: true };
-    });
-  };
-
-  const onChangeGarbageCharge = (val, setState) => {
-    setState((state) => {
-      if (val !== '' && validate[state.name](val)) {
-        gameRef.current = modifyConfig.garbage(
-          gameRef.current,
-          state.name,
-          val,
-          performance.now()
-        );
-        return { ...state, value: val, error: false };
-      }
-
-      return { ...state, value: val, error: true };
-    });
-  };
-
-  const onChange = (val, setState) => {
-    setState((state) => {
-      // Save (game) state on blur
-      if (val !== '' && validate[state.name](Number(val))) {
-        return { ...state, value: val, error: false };
-      }
-
-      return { ...state, value: val };
-    });
-  };
-
-  const onBlur = (val, setState, getGameVal) => {
-    // Show error on blur
-    setState((state) => {
-      // Current value for empty string
-      if (val === '') {
-        return {
-          ...state,
-          value: getGameVal(gameRef.current),
-          error: false,
-          focus: false,
-        };
-      }
-
-      if (!validate[state.name](Number(val))) {
-        return { ...state, error: true, focus: false };
-      }
-
-      gameRef.current = modifyConfig.garbage(
-        gameRef.current,
-        state.name,
-        Number(val),
-        performance.now()
-      );
-      return { ...state, value: val, error: false, focus: false };
-    });
-  };
 
   return (
     <>
@@ -965,7 +833,9 @@ function GarbageMenu({ gameRef, game }) {
           name="garbage-new-seed"
           id="garbage-menu-new-seed"
           checked={newSeedReset.value}
-          onChange={() => toggleGarbageOption(setNewSeedReset)}
+          onChange={() =>
+            toggle(setNewSeedReset, gameRef, modifyConfig.garbage)
+          }
         />
         <span
           className="toggle-button"
@@ -982,9 +852,20 @@ function GarbageMenu({ gameRef, game }) {
         id="garbage-menu-seed"
         aria-label="Garbage seed"
         value={seed.value}
-        onFocus={() => setSeed((state) => ({ ...state, focus: true }))}
-        onChange={(e) => onChangeSeed(e.target.value, setSeed)}
-        onBlur={(e) => onBlurSeed(e.target.value, setSeed)}
+        onFocus={() => focus(setSeed)}
+        onChange={(e) =>
+          changeSeed(setSeed, e.target.value, c.GARBAGE_SEED_LENGTH)
+        }
+        onBlur={(e) =>
+          blurSeed(
+            setSeed,
+            gameRef,
+            modifyConfig.garbage,
+            getSeed(gameRef.current),
+            e.target.value,
+            c.GARBAGE_SEED_LENGTH
+          )
+        }
       />
       <label className="custom-checkbox" htmlFor="garbage-menu-combo-block">
         Combo Blocking
@@ -994,7 +875,7 @@ function GarbageMenu({ gameRef, game }) {
           name="garbage-combo-block"
           id="garbage-menu-combo-block"
           checked={comboBlock.value}
-          onChange={() => toggleGarbageOption(setComboBlock)}
+          onChange={() => toggle(setComboBlock, gameRef, modifyConfig.garbage)}
         />
         <span
           className="toggle-button"
@@ -1008,7 +889,9 @@ function GarbageMenu({ gameRef, game }) {
         name="garbage-spawn"
         id="garbage-menu-spawn"
         value={spawn.value}
-        onChange={(e) => onChangeGarbageSpawn(e.target.value, setSpawn)}
+        onChange={(e) =>
+          changeUpdate(setSpawn, gameRef, modifyConfig.garbage, e.target.value)
+        }
       >
         {c.GARBAGE_SPAWN_OPTIONS.map((option) => (
           <option key={option} value={option}>
@@ -1022,7 +905,9 @@ function GarbageMenu({ gameRef, game }) {
         name="garbage-charge"
         id="garbage-menu-charge"
         value={charge.value}
-        onChange={(e) => onChangeGarbageCharge(e.target.value, setCharge)}
+        onChange={(e) =>
+          changeUpdate(setCharge, gameRef, modifyConfig.garbage, e.target.value)
+        }
       >
         {c.GARBAGE_CHARGE_OPTIONS.map((option) => (
           <option key={option} value={option}>
@@ -1043,10 +928,26 @@ function GarbageMenu({ gameRef, game }) {
           id="garbage-menu-charge-delay"
           aria-label="Garbage charge delay"
           value={chargeDelay.value}
-          onFocus={() => setChargeDelay((state) => ({ ...state, focus: true }))}
-          onChange={(e) => onChange(e.target.value, setChargeDelay)}
+          onFocus={() => focus(setChargeDelay)}
+          onChange={(e) =>
+            changeUpdate(
+              setChargeDelay,
+              gameRef,
+              modifyConfig.garbage,
+              e.target.value,
+              false,
+              true,
+              true
+            )
+          }
           onBlur={(e) =>
-            onBlur(e.target.value, setChargeDelay, getGarbageChargeDelay)
+            blur(
+              setChargeDelay,
+              getChargeDelay(gameRef.current),
+              e.target.value,
+              true,
+              true
+            )
           }
         />
       )}
@@ -1065,12 +966,26 @@ function GarbageMenu({ gameRef, game }) {
           id="garbage-menu-charge-pieces"
           aria-label="Garbage charge pieces"
           value={chargePieces.value}
-          onFocus={() =>
-            setChargePieces((state) => ({ ...state, focus: true }))
+          onFocus={() => focus(setChargePieces)}
+          onChange={(e) =>
+            changeUpdate(
+              setChargePieces,
+              gameRef,
+              modifyConfig.garbage,
+              e.target.value,
+              false,
+              true,
+              true
+            )
           }
-          onChange={(e) => onChange(e.target.value, setChargePieces)}
           onBlur={(e) =>
-            onBlur(e.target.value, setChargePieces, getGarbageChargePieces)
+            blur(
+              setChargePieces,
+              getChargePieces(gameRef.current),
+              e.target.value,
+              true,
+              true
+            )
           }
         />
       )}
@@ -1082,9 +997,21 @@ function GarbageMenu({ gameRef, game }) {
         id="garbage-menu-cap"
         aria-label="Garbage cap"
         value={cap.value}
-        onFocus={() => setCap((state) => ({ ...state, focus: true }))}
-        onChange={(e) => onChange(e.target.value, setCap)}
-        onBlur={(e) => onBlur(e.target.value, setCap, getGarbageCap)}
+        onFocus={() => focus(setCap)}
+        onChange={(e) =>
+          changeUpdate(
+            setCap,
+            gameRef,
+            modifyConfig.garbage,
+            e.target.value,
+            false,
+            true,
+            true
+          )
+        }
+        onBlur={(e) =>
+          blur(setCap, getCap(gameRef.current), e.target.value, true, true)
+        }
       />
       <label htmlFor="garbage-menu-cheese">Garbage Cheesiness</label>
       <input
@@ -1094,10 +1021,26 @@ function GarbageMenu({ gameRef, game }) {
         id="garbage-menu-cheese"
         aria-label="Garbage cheesiness"
         value={cheesiness.value}
-        onFocus={() => setCheesiness((state) => ({ ...state, focus: true }))}
-        onChange={(e) => onChange(e.target.value, setCheesiness)}
+        onFocus={() => focus(setCheesiness)}
+        onChange={(e) =>
+          changeUpdate(
+            setCheesiness,
+            gameRef,
+            modifyConfig.garbage,
+            e.target.value,
+            false,
+            true,
+            true
+          )
+        }
         onBlur={(e) =>
-          onBlur(e.target.value, setCheesiness, getGarbageCheesiness)
+          blur(
+            setCheesiness,
+            getCheesiness(gameRef.current),
+            e.target.value,
+            true,
+            true
+          )
         }
       />
     </>
@@ -1127,68 +1070,10 @@ function GarbageModeMenu({ gameRef, game }) {
   });
 
   useEffect(() => {
-    const setValIfBlurred = (state, val) => {
-      // Don't change value when user is typing
-      if (state.focus || state.error) {
-        return state;
-      }
-      return { ...state, value: val, error: false };
-    };
-    setAPS((state) => setValIfBlurred(state, getAPS(gameRef.current)));
-    setAPSAttack((state) =>
-      setValIfBlurred(state, getAPSAttack(gameRef.current))
-    );
-    setAPSSecond((state) =>
-      setValIfBlurred(state, getAPSSecond(gameRef.current))
-    );
+    set(setAPS, getAPS(gameRef.current));
+    set(setAPSAttack, getAPSAttack(gameRef.current));
+    set(setAPSSecond, getAPSSecond(gameRef.current));
   }, [gameRef, game]);
-
-  const toggleGarbageOption = (setOption) => {
-    setOption((state) => {
-      gameRef.current = modifyConfig.garbage(
-        gameRef.current,
-        state.name,
-        !state.value,
-        performance.now()
-      );
-      return { ...state, value: !state.value };
-    });
-  };
-
-  const onChange = (value, setOption) => {
-    setOption((state) => {
-      if (value !== '' && validate[state.name](Number(value))) {
-        gameRef.current = modifyConfig.garbage(
-          gameRef.current,
-          state.name,
-          Number(value),
-          performance.now()
-        );
-        return { ...state, value, error: false };
-      }
-
-      return { ...state, value };
-    });
-  };
-
-  const onBlur = (value, setOption, getValue) => {
-    setOption((state) => {
-      // Show current value
-      if (value === '') {
-        return {
-          ...state,
-          value: getValue(gameRef.current),
-          error: false,
-          focus: false,
-        };
-      }
-
-      if (validate[state.name](Number(value))) {
-        return { ...state, value, error: false, focus: false };
-      }
-      return { ...state, value, error: true, focus: false };
-    });
-  };
 
   return (
     <>
@@ -1200,7 +1085,7 @@ function GarbageModeMenu({ gameRef, game }) {
           name="garbage-mode-menu-enable-APS"
           id="garbage-mode-menu-enable-APS"
           checked={APS.value}
-          onChange={() => toggleGarbageOption(setAPS)}
+          onChange={() => toggle(setAPS, gameRef, modifyConfig.garbage)}
         />
         <span
           className="toggle-button"
@@ -1216,9 +1101,27 @@ function GarbageModeMenu({ gameRef, game }) {
         id="garbage-mode-menu-APS"
         aria-label="Garbage APS"
         value={APSAttack.value}
-        onFocus={() => setAPSAttack((state) => ({ ...state, focus: true }))}
-        onChange={(e) => onChange(e.target.value, setAPSAttack)}
-        onBlur={(e) => onBlur(e.target.value, setAPSAttack, getAPSAttack)}
+        onFocus={() => focus(setAPSAttack)}
+        onChange={(e) =>
+          changeUpdate(
+            setAPSAttack,
+            gameRef,
+            modifyConfig.garbage,
+            e.target.value,
+            false,
+            true,
+            true
+          )
+        }
+        onBlur={(e) =>
+          blur(
+            setAPSAttack,
+            getAPSAttack(gameRef.current),
+            e.target.value,
+            true,
+            true
+          )
+        }
       />
       <label htmlFor="garbage-mode-menu-APS-second">Seconds</label>
       <input
@@ -1228,9 +1131,27 @@ function GarbageModeMenu({ gameRef, game }) {
         id="garbage-mode-menu-APS-second"
         aria-label="Garbage APS"
         value={APSSecond.value}
-        onFocus={() => setAPSSecond((state) => ({ ...state, focus: true }))}
-        onChange={(e) => onChange(e.target.value, setAPSSecond)}
-        onBlur={(e) => onBlur(e.target.value, setAPSSecond, getAPSSecond)}
+        onFocus={() => focus(setAPSSecond)}
+        onChange={(e) =>
+          changeUpdate(
+            setAPSSecond,
+            gameRef,
+            modifyConfig.garbage,
+            e.target.value,
+            false,
+            true,
+            true
+          )
+        }
+        onBlur={(e) =>
+          blur(
+            setAPSSecond,
+            getAPSSecond(gameRef.current),
+            e.target.value,
+            true,
+            true
+          )
+        }
       />
     </>
   );
