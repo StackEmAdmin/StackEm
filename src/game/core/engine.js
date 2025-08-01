@@ -18,7 +18,12 @@ const MAX_UPDATES = 100;
  * @returns {Object} The updated game state after all moves are applied.
  */
 function applyMoves(game, moves) {
-  return moves.reduce((state, move) => move.fn(state), game);
+  return moves.reduce((state, move) => {
+    if (state.over) {
+      return state;
+    }
+    return move.fn(state);
+  }, game);
 }
 
 /**

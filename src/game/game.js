@@ -36,6 +36,11 @@ import newRules, { rulesLib } from './features/rules/rules';
  * @param {boolean} [options.highlight=false] - Whether to highlight filled cells.
  * @param {boolean} [options.autoColor=true] - Whether to automatically color filled cells if a piece is detected.
  * @param {number} [options.queueSeed=undefined] - The RNG seed for the queue.
+ * @param {boolean} [options.queueHoldEnabled=true] - Whether to allow hold in the queue.
+ * @param {number} [options.queueLimitSize=0] - The maximum number of pieces to generate. Provide 0 to disable limit.
+ * @param {string} [options.queueInitialHold=''] - Optional string specifying the initial hold in the queue.
+ * @param {string} [options.queueInitialPieces=''] - Optional string specifying the initial piece type sequence in the queue.
+ * @param {number} [options.queueNthPC=1] - Specifies which All Clear (PC) scenario to simulate by removing pieces from the initial bag added.
  * @param {boolean} [options.queueNewSeedOnReset=true] - Whether to generate a new seed for the queue when the game is reset.
  * @param {boolean} [options.enableUndo=false] - Whether to enable undo and redo.
  * @returns {Object} - The new game state object.
@@ -66,6 +71,11 @@ function newGame({
   highlight = false,
   autoColor = true,
   queueSeed = undefined,
+  queueHoldEnabled = true,
+  queueLimitSize = 0,
+  queueInitialHold = '',
+  queueInitialPieces = '',
+  queueNthPC = 1,
   queueNewSeedOnReset = true,
   garbageSeed = undefined,
   garbageNewSeedOnReset = true,
@@ -96,6 +106,11 @@ function newGame({
     highlight,
     autoColor,
     queueSeed,
+    queueHoldEnabled,
+    queueLimitSize,
+    queueInitialHold,
+    queueInitialPieces,
+    queueNthPC,
     queueNewSeedOnReset,
     garbageSeed,
     garbageNewSeedOnReset,
@@ -103,10 +118,18 @@ function newGame({
   };
 
   // Populate rng seed in config
-  const initialQueue = newQueue(queueSeed, startTime);
-  config.queueSeed = initialQueue.rng.seed;
+  const queue = newQueue(
+    queueSeed,
+    queueHoldEnabled,
+    queueLimitSize,
+    queueInitialHold,
+    queueInitialPieces,
+    queueNthPC,
+    startTime
+  );
+  config.queueSeed = queue.rng.seed;
 
-  const initialGarbage = newGarbage(
+  const garbage = newGarbage(
     garbageSeed,
     cols,
     garbageSpawn,
@@ -120,7 +143,7 @@ function newGame({
     garbageModeAPSAttack,
     garbageModeAPSSecond
   );
-  config.garbageSeed = initialGarbage.rng.seed;
+  config.garbageSeed = garbage.rng.seed;
 
   return {
     config,
@@ -138,7 +161,7 @@ function newGame({
     numPieces: 0,
     numAttack: 0,
     board: newBoard(rows, cols),
-    queue: initialQueue,
+    queue: queue,
     rules: newRules(kick, attack, spins),
     gravity: newGravity(
       gravity,
@@ -148,7 +171,7 @@ function newGame({
       gravityAcc,
       gravityAccDelay
     ),
-    garbage: initialGarbage,
+    garbage: garbage,
   };
 }
 
@@ -162,6 +185,10 @@ function newGame({
  * @returns {Object} - The updated game state.
  */
 function update(game, currentTime) {
+  if (game.over) {
+    return game;
+  }
+
   let nextGame = updateGravity(game, currentTime);
   nextGame = updateGarbage(nextGame, currentTime);
 
@@ -944,6 +971,15 @@ function calculateGameOver(game, currentTime) {
     return game;
   }
 
+  // Ran out of pieces
+  if (game.queue.pieces.length === 0) {
+    return {
+      ...game,
+      over: true,
+      endTime: currentTime,
+    };
+  }
+
   // Next piece in queue spawns on top of occupied spot
   if (!boardLib.isLegal(game.board, queueLib.nextPiece(game.queue))) {
     return {
@@ -1584,6 +1620,17 @@ function modifyGravity(game, property, value, currentTime) {
  * @returns {Object} - The updated game state object with modified queue configuration.
  */
 function modifyQueue(game, property, value, currentTime) {
+  if (property === 'queueHoldEnabled') {
+    const nextConfig = { ...game.config, [property]: value };
+    const nextQueue = queueLib.setHoldEnabled(game.queue, value);
+    return {
+      ...game,
+      config: nextConfig,
+      queue: nextQueue,
+      UR: URLib.save(game.UR, game),
+    };
+  }
+
   if (property === 'queueHold') {
     const nextQueue = queueLib.setHold(game.queue, value, currentTime);
     return { ...game, queue: nextQueue, UR: URLib.save(game.UR, game) };
@@ -1605,12 +1652,17 @@ function modifyQueue(game, property, value, currentTime) {
     };
   }
 
-  if (property === 'queueNewSeedOnReset') {
-    const nextConfig = { ...game.config, [property]: value };
-    return { ...game, config: nextConfig, UR: URLib.save(game.UR, game) };
+  // No such property or already exists
+  if (game.config[property] === undefined || game.config[property] === value) {
+    return game;
   }
 
-  return game;
+  const nextConfig = { ...game.config, [property]: value };
+  return {
+    ...game,
+    config: nextConfig,
+    UR: URLib.save(game.UR, game),
+  };
 }
 
 /**

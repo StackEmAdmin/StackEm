@@ -62,8 +62,10 @@ function grids(game, splitPoint) {
   let displayBoard = boardLib.copyBoard(game.board);
   const nextPiece = game.queue.pieces[0];
 
-  displayBoard = placeGhostPiece(displayBoard, nextPiece);
-  displayBoard = boardLib.place(displayBoard, nextPiece);
+  if (nextPiece) {
+    displayBoard = placeGhostPiece(displayBoard, nextPiece);
+    displayBoard = boardLib.place(displayBoard, nextPiece);
+  }
 
   const grid = displayBoard.grid.slice(0, splitPoint);
   const gridTop = displayBoard.grid.slice(splitPoint);

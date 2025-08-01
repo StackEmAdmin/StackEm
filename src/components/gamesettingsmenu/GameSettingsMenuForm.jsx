@@ -6,6 +6,76 @@ import str from '../../util/str';
 
 import './GameSettingsMenuForm.css';
 
+function focus(setState) {
+  setState((state) => {
+    if (state.focus) {
+      return state;
+    }
+    return { ...state, focus: true };
+  });
+}
+
+function toggle(setState, gameRef, update) {
+  setState((state) => {
+    gameRef.current = update(
+      gameRef.current,
+      state.name,
+      !state.value,
+      performance.now()
+    );
+    return { ...state, value: !state.value };
+  });
+}
+
+function blur(setState, gameVal, value, toNumber = false) {
+  setState((state) => {
+    const val = toNumber ? Number(value) : value;
+    if (validate[state.name](val)) {
+      return {
+        ...state,
+        value: gameVal,
+        error: false,
+        focus: false,
+      };
+    }
+
+    return { ...state, error: true, focus: false };
+  });
+}
+
+function changeUpdate(
+  setState,
+  gameRef,
+  update,
+  value,
+  valueToLower = false,
+  valueToNumber = false
+) {
+  setState((state) => {
+    if (state.value === value) {
+      return state;
+    }
+
+    const val = valueToLower
+      ? value.toLowerCase()
+      : valueToNumber
+      ? Number(value)
+      : value;
+
+    if (validate[state.name](val)) {
+      gameRef.current = update(
+        gameRef.current,
+        state.name,
+        val,
+        performance.now()
+      );
+      return { ...state, value: value, error: false };
+    }
+
+    return { ...state, value: value };
+  });
+}
+
 function ConfigurationMenu({ gameRef, game }) {
   const getSpin = (game) => game.config.spins;
 
@@ -270,8 +340,16 @@ function GravityMenu({ gameRef, game }) {
 function QueueMenu({ gameRef, game }) {
   const getNewSeedOnReset = (game) => !!game.config.queueNewSeedOnReset;
   const getSeed = (game) => game.config.queueSeed.toUpperCase();
+  const getHoldEnabled = (game) => !!game.config.queueHoldEnabled;
+  const getLimitSize = (game) =>
+    game.config.queueLimitSize === 0 ? '' : game.config.queueLimitSize;
+  const getInitialHold = (game) => game.config.queueInitialHold.toUpperCase();
+  const getInitialPieces = (game) =>
+    game.config.queueInitialPieces.toUpperCase();
+  const getNthPC = (game) =>
+    game.config.queueNthPC < 2 ? '' : game.config.queueNthPC;
   const getHold = (game) => {
-    if (game.queue.hold.type) {
+    if (game.queue.hold && game.queue.hold.type) {
       return game.queue.hold.type.toUpperCase();
     }
     return '';
@@ -293,12 +371,47 @@ function QueueMenu({ gameRef, game }) {
     error: false,
     focus: false,
   });
+
+  const [holdEnabled, setHoldEnabled] = useState({
+    value: getHoldEnabled(gameRef.current),
+    name: 'queueHoldEnabled',
+  });
+
+  const [limitSize, setLimitSize] = useState({
+    value: getLimitSize(gameRef.current),
+    name: 'queueLimitSize',
+    error: false,
+    focus: false,
+  });
+
+  const [nthPC, setnthPC] = useState({
+    value: getNthPC(gameRef.current),
+    name: 'queueNthPC',
+    error: false,
+    focus: false,
+  });
+
+  const [initialHold, setInitialHold] = useState({
+    value: getInitialHold(gameRef.current),
+    name: 'queueInitialHold',
+    error: false,
+    focus: false,
+  });
+
+  const [initialPieces, setInitialPieces] = useState({
+    value: getInitialPieces(gameRef.current),
+    name: 'queueInitialPieces',
+    error: false,
+    focus: false,
+  });
+
   const [hold, setHold] = useState({
     value: getHold(gameRef.current),
     name: 'queueHold',
     error: false,
     focus: false,
   });
+
   const [next, setNext] = useState({
     value: getNext(gameRef.current),
     name: 'queueNext',
@@ -308,13 +421,19 @@ function QueueMenu({ gameRef, game }) {
 
   useEffect(() => {
     const setValIfBlurred = (state, val) => {
-      if (state.focus || state.error) {
+      if (state.focus || state.error || state.value === val) {
         return state;
       }
+
       return { ...state, value: val, error: false };
     };
 
     setNewSeedReset((state) => setValIfBlurred(state, getNewSeedOnReset(game)));
+    setHoldEnabled((state) => setValIfBlurred(state, getHoldEnabled(game)));
+    setLimitSize((state) => setValIfBlurred(state, getLimitSize(game)));
+    setnthPC((state) => setValIfBlurred(state, getNthPC(game)));
+    setInitialHold((state) => setValIfBlurred(state, getInitialHold(game)));
+    setInitialPieces((state) => setValIfBlurred(state, getInitialPieces(game)));
     setSeed((state) => setValIfBlurred(state, getSeed(game)));
     setHold((state) => setValIfBlurred(state, getHold(game)));
     setNext((state) => setValIfBlurred(state, getNext(game)));
@@ -462,6 +581,22 @@ function QueueMenu({ gameRef, game }) {
         onChange={(e) => onChangeSeed(e.target.value, setSeed)}
         value={seed.value}
       />
+      <label className="custom-checkbox" htmlFor="queue-menu-hold-enabled">
+        Allow Hold
+        <input
+          className="toggle"
+          type="checkbox"
+          name="queue-hold-enabled"
+          id="queue-menu-hold-enabled"
+          checked={holdEnabled.value}
+          onChange={() => toggle(setHoldEnabled, gameRef, modifyConfig.queue)}
+        />
+        <span
+          className="toggle-button"
+          data-tg-off="Off"
+          data-tg-on="On"
+        ></span>
+      </label>
       <label htmlFor="queue-menu-hold">Hold Piece</label>
       <input
         className={'--global-no-spinner' + (hold.error ? ' error' : '')}
@@ -486,6 +621,108 @@ function QueueMenu({ gameRef, game }) {
         onBlur={(e) => onBlurNext(e.target.value, setNext)}
         onChange={(e) => onChange(e.target.value, setNext)}
         value={next.value}
+      />
+      <label htmlFor="queue-menu-nth-pc">PC Bag</label>
+      <input
+        className={'--global-no-spinner' + (nthPC.error ? ' error' : '')}
+        type="text"
+        name="queue-nth-pc"
+        id="queue-menu-nth-pc"
+        aria-label="PC bag"
+        onFocus={() => focus(setnthPC)}
+        onBlur={(e) =>
+          blur(setnthPC, getNthPC(gameRef.current), e.target.value, true)
+        }
+        onChange={(e) =>
+          changeUpdate(
+            setnthPC,
+            gameRef,
+            modifyConfig.queue,
+            e.target.value,
+            false,
+            true
+          )
+        }
+        value={nthPC.value}
+      />
+      <label htmlFor="queue-menu-initial-hold">Initial Hold</label>
+      <input
+        className={'--global-no-spinner' + (initialHold.error ? ' error' : '')}
+        type="text"
+        maxLength={1}
+        name="queue-initial-hold"
+        id="queue-menu-initial-hold"
+        aria-label="Initial hold"
+        onFocus={() => focus(setInitialHold)}
+        onBlur={(e) =>
+          blur(setInitialHold, getInitialHold(gameRef.current), e.target.value)
+        }
+        onChange={(e) => {
+          changeUpdate(
+            setInitialHold,
+            gameRef,
+            modifyConfig.queue,
+            e.target.value,
+            true
+          );
+        }}
+        value={initialHold.value}
+      />
+      <label htmlFor="queue-menu-initial-pieces">Initial Pieces</label>
+      <input
+        className={
+          '--global-no-spinner' + (initialPieces.error ? ' error' : '')
+        }
+        type="text"
+        name="queue-initial-pieces"
+        id="queue-menu-initial-pieces"
+        aria-label="Initial pieces"
+        onFocus={() => focus(setInitialPieces)}
+        onBlur={(e) =>
+          blur(
+            setInitialPieces,
+            getInitialPieces(gameRef.current),
+            e.target.value
+          )
+        }
+        onChange={(e) => {
+          changeUpdate(
+            setInitialPieces,
+            gameRef,
+            modifyConfig.queue,
+            e.target.value,
+            true
+          );
+        }}
+        value={initialPieces.value}
+      />
+      <label htmlFor="queue-menu-limit-size">Limit Queue Size</label>
+      <input
+        className={'--global-no-spinner' + (limitSize.error ? ' error' : '')}
+        type="text"
+        name="queue-limit-size"
+        id="queue-menu-limit-size"
+        aria-label="Limit queue size"
+        onFocus={() => focus(setLimitSize)}
+        onBlur={(e) =>
+          blur(
+            setLimitSize,
+            getLimitSize(gameRef.current),
+            e.target.value,
+            true
+          )
+        }
+        onChange={(e) =>
+          changeUpdate(
+            setLimitSize,
+            gameRef,
+            modifyConfig.queue,
+            e.target.value,
+            false,
+            true
+          )
+        }
+        value={limitSize.value}
       />
     </>
   );

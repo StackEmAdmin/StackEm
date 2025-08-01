@@ -4,6 +4,14 @@ function validRange(val, min, max) {
   return val >= min && val <= max;
 }
 
+function validType(val, type) {
+  if (type === 'integer') {
+    return Number.isInteger(val);
+  }
+
+  return typeof val === type;
+}
+
 function validSpins(val) {
   return typeof val === c.SPINS_TYPE && c.SPINS_OPTIONS.includes(val);
 }
@@ -52,6 +60,38 @@ function validGravityAccDelay(val) {
 
 function validQueueSeed(val) {
   return typeof val === c.QUEUE_SEED_TYPE && c.QUEUE_SEED_REGEX.test(val);
+}
+
+function validQueueHoldEnabled(val) {
+  return typeof val === c.QUEUE_HOLD_ENABLED_TYPE;
+}
+
+function validQueueLimitSize(val) {
+  return (
+    validType(val, c.QUEUE_LIMIT_SIZE_TYPE) &&
+    validRange(val, c.QUEUE_LIMIT_SIZE_MIN, c.QUEUE_LIMIT_SIZE_MAX)
+  );
+}
+
+function validQueueInitialHold(val) {
+  return (
+    typeof val === c.QUEUE_INITIAL_HOLD_TYPE &&
+    c.QUEUE_INITIAL_HOLD_REGEX.test(val)
+  );
+}
+
+function validQueueInitialPieces(val) {
+  return (
+    typeof val === c.QUEUE_INITIAL_PIECES_TYPE &&
+    c.QUEUE_INITIAL_PIECES_REGEX.test(val)
+  );
+}
+
+function validQueueNthPC(val) {
+  return (
+    validType(val, c.QUEUE_NTH_PC_TYPE) &&
+    validRange(val, c.QUEUE_NTH_PC_MIN, c.QUEUE_NTH_PC_MAX)
+  );
 }
 
 function validQueueHold(val) {
@@ -138,6 +178,11 @@ const validate = {
   gravityAcc: validGravityAcc,
   gravityAccDelay: validGravityAccDelay,
   queueSeed: validQueueSeed,
+  queueHoldEnabled: validQueueHoldEnabled,
+  queueLimitSize: validQueueLimitSize,
+  queueInitialHold: validQueueInitialHold,
+  queueInitialPieces: validQueueInitialPieces,
+  queueNthPC: validQueueNthPC,
   queueHold: validQueueHold,
   queueNext: validQueueNext,
   garbageSeed: validGarbageSeed,
@@ -159,6 +204,11 @@ const defaults = {
   gravityLockPenalty: c.GRAVITY_LOCK_PENALTY_DEFAULT,
   gravityAcc: c.GRAVITY_ACC_DEFAULT,
   gravityAccDelay: c.GRAVITY_ACC_DELAY_DEFAULT,
+  queueHoldEnabled: c.QUEUE_HOLD_ENABLED_DEFAULT,
+  queueLimitSize: c.QUEUE_LIMIT_SIZE_DEFAULT,
+  queueInitialHold: c.QUEUE_INITIAL_HOLD_DEFAULT,
+  queueInitialPieces: c.QUEUE_INITIAL_PIECES_DEFAULT,
+  queueNthPC: c.QUEUE_NTH_PC_DEFAULT,
   garbageSpawn: c.GARBAGE_SPAWN_DEFAULT,
   garbageCharge: c.GARBAGE_CHARGE_DEFAULT,
   garbageChargeDelay: c.GARBAGE_CHARGE_DELAY_DEFAULT,
