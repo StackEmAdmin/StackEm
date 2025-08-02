@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import GameRender from './gamerender/GameRender';
 import { controller } from '../../game/game';
 import {
@@ -128,7 +128,8 @@ function GameComponent({ gameRef, pubSubRef }) {
       }
 
       if (publishExists && updatedGame !== gameRef.current) {
-        pubSubRef.current.publish(updatedGame);
+        // Publish after current render
+        requestAnimationFrame(() => pubSubRef.current.publish());
       }
 
       gameRef.current = updatedGame;
@@ -204,35 +205,45 @@ function GameComponent({ gameRef, pubSubRef }) {
     sectionEleRef.current.focus();
   }, []);
 
+  const fillCell = useCallback(
+    (row, col) =>
+      fillCellClick(
+        pressedRef,
+        actionsRef,
+        modKeybinds,
+        modEnabled,
+        row,
+        col,
+        performance.now()
+      ),
+    [modEnabled, modKeybinds]
+  );
+
+  const clearCell = useCallback(
+    (row, col) =>
+      clearCellClick(
+        pressedRef,
+        actionsRef,
+        modKeybinds,
+        modEnabled,
+        row,
+        col,
+        performance.now()
+      ),
+    [modEnabled, modKeybinds]
+  );
+
+  const resetFillCell = useCallback(() => {
+    resetFillCellClick(actionsRef, modEnabled, performance.now());
+  }, [modEnabled]);
+
   return (
     <section className="section game" ref={sectionEleRef} tabIndex={0}>
       <GameRender
         game={displayGame}
-        fillCell={(row, col) =>
-          fillCellClick(
-            pressedRef,
-            actionsRef,
-            modKeybinds,
-            modEnabled,
-            row,
-            col,
-            performance.now()
-          )
-        }
-        clearCell={(row, col) =>
-          clearCellClick(
-            pressedRef,
-            actionsRef,
-            modKeybinds,
-            modEnabled,
-            row,
-            col,
-            performance.now()
-          )
-        }
-        resetFillCell={() =>
-          resetFillCellClick(actionsRef, modEnabled, performance.now())
-        }
+        fillCell={fillCell}
+        clearCell={clearCell}
+        resetFillCell={resetFillCell}
       />
     </section>
   );

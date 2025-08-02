@@ -155,7 +155,7 @@ function changeUpdate(
   });
 }
 
-function ConfigurationMenu({ gameRef, game }) {
+function ConfigurationMenu({ gameRef, show, pubSubRef }) {
   const getSpin = (game) => game.config.spins;
 
   const [spins, setSpins] = useState({
@@ -165,15 +165,29 @@ function ConfigurationMenu({ gameRef, game }) {
   });
 
   useEffect(() => {
-    set(setSpins, getSpin(gameRef.current));
-  }, [gameRef, game]);
+    if (!show) {
+      return;
+    }
+
+    const setAll = (game) => {
+      if (spins.value !== getSpin(game)) {
+        set(setSpins, getSpin(game));
+      }
+    };
+    setAll(gameRef.current);
+
+    const handleUpdate = () => setAll(gameRef.current);
+    const pubSub = pubSubRef.current;
+    pubSub.subscribe(handleUpdate);
+    return () => pubSub.unsubscribe(handleUpdate);
+  }, [gameRef, pubSubRef, show, spins]);
 
   return (
     <>
       <label htmlFor="kick-option">Rotation System</label>
       <select
         className="--global-hover-focus-active-border"
-        name="kick-option"
+        name="kick"
         id="kick-option"
       >
         <option value="srsPlus">SRS+</option>
@@ -181,7 +195,7 @@ function ConfigurationMenu({ gameRef, game }) {
       <label htmlFor="spins-option">Spin Detection</label>
       <select
         className="--global-hover-focus-active-border"
-        name="spins-option"
+        name={spins.name}
         id="spins-option"
         value={spins.value}
         onChange={(e) =>
@@ -197,7 +211,7 @@ function ConfigurationMenu({ gameRef, game }) {
       <label htmlFor="attack-option">Attack System</label>
       <select
         className="--global-hover-focus-active-border"
-        name="attack-option"
+        name="attack"
         id="attack-option"
       >
         <option value="tsOne">TS One</option>
@@ -206,7 +220,7 @@ function ConfigurationMenu({ gameRef, game }) {
   );
 }
 
-function GravityMenu({ gameRef, game }) {
+function GravityMenu({ gameRef, show, pubSubRef }) {
   const getGravity = (game) => game.gravity.g;
   const getLock = (game) => game.gravity.lock;
   const getLockCap = (game) => game.gravity.lockCap;
@@ -252,13 +266,47 @@ function GravityMenu({ gameRef, game }) {
   });
 
   useEffect(() => {
-    set(setGravity, getGravity(gameRef.current));
-    set(setLock, getLock(gameRef.current));
-    set(setLockCap, getLockCap(gameRef.current));
-    set(setLockPenalty, getLockPenalty(gameRef.current));
-    set(setAcceleration, getAcceleration(gameRef.current));
-    set(setAccelerationDelay, getAccelerationDelay(gameRef.current));
-  }, [gameRef, game]);
+    if (!show) {
+      return;
+    }
+
+    const setAll = (game) => {
+      if (gravity.value !== getGravity(game)) {
+        set(setGravity, getGravity(game));
+      }
+      if (lock.value !== getLock(game)) {
+        set(setLock, getLock(game));
+      }
+      if (lockCap.value !== getLockCap(game)) {
+        set(setLockCap, getLockCap(game));
+      }
+      if (lockPenalty.value !== getLockPenalty(game)) {
+        set(setLockPenalty, getLockPenalty(game));
+      }
+      if (acceleration.value !== getAcceleration(game)) {
+        set(setAcceleration, getAcceleration(game));
+      }
+      if (accelerationDelay.value !== getAccelerationDelay(game)) {
+        set(setAccelerationDelay, getAccelerationDelay(game));
+      }
+    };
+    setAll(gameRef.current);
+
+    const handleUpdate = () => setAll(gameRef.current);
+    const pubSub = pubSubRef.current;
+    pubSub.subscribe(handleUpdate);
+    return () => pubSub.unsubscribe(handleUpdate);
+  }, [
+    gameRef,
+    pubSubRef,
+    show,
+    gravity,
+    lock,
+    lockCap,
+    lockPenalty,
+    acceleration,
+    accelerationDelay,
+  ]);
 
   return (
     <>
@@ -266,7 +314,7 @@ function GravityMenu({ gameRef, game }) {
       <input
         className={'--global-no-spinner' + (gravity.error ? ' error' : '')}
         type="text"
-        name="gravity"
+        name={gravity.name}
         id="gravity-menu-gravity"
         aria-label="Gravity"
         onFocus={() => focus(setGravity)}
@@ -296,7 +344,7 @@ function GravityMenu({ gameRef, game }) {
       <input
         className={'--global-no-spinner' + (lock.error ? ' error' : '')}
         type="text"
-        name="lock"
+        name={lock.name}
         id="gravity-menu-lock"
         aria-label="Gravity lock"
         onFocus={() => focus(setLock)}
@@ -320,7 +368,7 @@ function GravityMenu({ gameRef, game }) {
       <input
         className={'--global-no-spinner' + (lockCap.error ? ' error' : '')}
         type="text"
-        name="lock-cap"
+        name={lockCap.name}
         id="gravity-menu-lock-cap"
         aria-label="Gravity lock cap"
         onFocus={() => focus(setLockCap)}
@@ -350,7 +398,7 @@ function GravityMenu({ gameRef, game }) {
       <input
         className={'--global-no-spinner' + (lockPenalty.error ? ' error' : '')}
         type="text"
-        name="lock-penalty"
+        name={lockPenalty.name}
         id="gravity-menu-lock-penalty"
         aria-label="Gravity lock penalty"
         onFocus={() => focus(setLockPenalty)}
@@ -380,7 +428,7 @@ function GravityMenu({ gameRef, game }) {
       <input
         className={'--global-no-spinner' + (acceleration.error ? ' error' : '')}
         type="text"
-        name="gravity-acc"
+        name={acceleration.name}
         id="gravity-menu-gravity-acc"
         aria-label="Gravity"
         onFocus={() => focus(setAcceleration)}
@@ -412,7 +460,7 @@ function GravityMenu({ gameRef, game }) {
           '--global-no-spinner' + (accelerationDelay.error ? ' error' : '')
         }
         type="text"
-        name="gravity-delay"
+        name={accelerationDelay.name}
         id="gravity-menu-gravity-delay"
         aria-label="Gravity"
         onFocus={() => focus(setAccelerationDelay)}
@@ -442,7 +490,7 @@ function GravityMenu({ gameRef, game }) {
   );
 }
 
-function QueueMenu({ gameRef, game }) {
+function QueueMenu({ gameRef, show, pubSubRef }) {
   const getNewSeedOnReset = (game) => !!game.config.queueNewSeedOnReset;
   const getSeed = (game) => game.config.queueSeed.toUpperCase();
   const getHoldEnabled = (game) => !!game.config.queueHoldEnabled;
@@ -525,16 +573,60 @@ function QueueMenu({ gameRef, game }) {
   });
 
   useEffect(() => {
-    set(setNewSeedReset, getNewSeedOnReset(gameRef.current));
-    set(setHoldEnabled, getHoldEnabled(gameRef.current));
-    set(setLimitSize, getLimitSize(gameRef.current));
-    set(setnthPC, getNthPC(gameRef.current));
-    set(setInitialHold, getInitialHold(gameRef.current));
-    set(setInitialPieces, getInitialPieces(gameRef.current));
-    set(setSeed, getSeed(gameRef.current));
-    set(setHold, getHold(gameRef.current));
-    set(setNext, getNext(gameRef.current));
-  }, [gameRef, game]);
+    // Don't update when menu is hidden
+    if (!show) {
+      return;
+    }
+
+    const setAll = (game) => {
+      if (newSeedReset.value !== getNewSeedOnReset(game)) {
+        set(setNewSeedReset, getNewSeedOnReset(game));
+      }
+      if (holdEnabled.value !== getHoldEnabled(game)) {
+        set(setHoldEnabled, getHoldEnabled(game));
+      }
+      if (limitSize.value !== getLimitSize(game)) {
+        set(setLimitSize, getLimitSize(game));
+      }
+      if (nthPC.value !== getNthPC(game)) {
+        set(setnthPC, getNthPC(game));
+      }
+      if (initialHold.value !== getInitialHold(game)) {
+        set(setInitialHold, getInitialHold(game));
+      }
+      if (initialPieces.value !== getInitialPieces(game)) {
+        set(setInitialPieces, getInitialPieces(game));
+      }
+      if (seed.value !== getSeed(game)) {
+        set(setSeed, getSeed(game));
+      }
+      if (hold.value !== getHold(game)) {
+        set(setHold, getHold(game));
+      }
+      if (next.value !== getNext(game)) {
+        set(setNext, getNext(game));
+      }
+    };
+    setAll(gameRef.current);
+
+    const handleUpdate = () => setAll(gameRef.current);
+    const pubSub = pubSubRef.current;
+    pubSub.subscribe(handleUpdate);
+    return () => pubSub.unsubscribe(handleUpdate);
+  }, [
+    gameRef,
+    pubSubRef,
+    show,
+    newSeedReset,
+    holdEnabled,
+    limitSize,
+    nthPC,
+    initialHold,
+    initialPieces,
+    seed,
+    hold,
+    next,
+  ]);
 
   return (
     <>
@@ -543,7 +635,7 @@ function QueueMenu({ gameRef, game }) {
         <input
           className="toggle"
           type="checkbox"
-          name="queue-new-seed"
+          name={newSeedReset.name}
           id="queue-menu-new-seed"
           checked={newSeedReset.value}
           onChange={() => toggle(setNewSeedReset, gameRef, modifyConfig.queue)}
@@ -559,7 +651,7 @@ function QueueMenu({ gameRef, game }) {
         className={'--global-no-spinner' + (seed.error ? ' error' : '')}
         type="text"
         maxLength={32}
-        name="seed"
+        name={seed.name}
         id="queue-menu-seed"
         aria-label="Queue seed"
         onFocus={() => focus(setSeed)}
@@ -583,7 +675,7 @@ function QueueMenu({ gameRef, game }) {
         <input
           className="toggle"
           type="checkbox"
-          name="queue-hold-enabled"
+          name={holdEnabled.name}
           id="queue-menu-hold-enabled"
           checked={holdEnabled.value}
           onChange={() => toggle(setHoldEnabled, gameRef, modifyConfig.queue)}
@@ -599,7 +691,7 @@ function QueueMenu({ gameRef, game }) {
         className={'--global-no-spinner' + (hold.error ? ' error' : '')}
         type="text"
         maxLength={1}
-        name="queue-hold"
+        name={hold.name}
         id="gravity-menu-gravity"
         aria-label="Hold piece"
         onFocus={() => focus(setHold)}
@@ -619,7 +711,7 @@ function QueueMenu({ gameRef, game }) {
       <input
         className={'--global-no-spinner' + (next.error ? ' error' : '')}
         type="text"
-        name="queue-next"
+        name={next.name}
         id="queue-menu-next"
         aria-label="Next pieces"
         onFocus={() => focus(setNext)}
@@ -641,7 +733,7 @@ function QueueMenu({ gameRef, game }) {
       <input
         className={'--global-no-spinner' + (nthPC.error ? ' error' : '')}
         type="text"
-        name="queue-nth-pc"
+        name={nthPC.name}
         id="queue-menu-nth-pc"
         aria-label="PC bag"
         onFocus={() => focus(setnthPC)}
@@ -665,7 +757,7 @@ function QueueMenu({ gameRef, game }) {
         className={'--global-no-spinner' + (initialHold.error ? ' error' : '')}
         type="text"
         maxLength={1}
-        name="queue-initial-hold"
+        name={initialHold.name}
         id="queue-menu-initial-hold"
         aria-label="Initial hold"
         onFocus={() => focus(setInitialHold)}
@@ -689,7 +781,7 @@ function QueueMenu({ gameRef, game }) {
           '--global-no-spinner' + (initialPieces.error ? ' error' : '')
         }
         type="text"
-        name="queue-initial-pieces"
+        name={initialPieces.name}
         id="queue-menu-initial-pieces"
         aria-label="Initial pieces"
         onFocus={() => focus(setInitialPieces)}
@@ -715,7 +807,7 @@ function QueueMenu({ gameRef, game }) {
       <input
         className={'--global-no-spinner' + (limitSize.error ? ' error' : '')}
         type="text"
-        name="queue-limit-size"
+        name={limitSize.name}
         id="queue-menu-limit-size"
         aria-label="Limit queue size"
         onFocus={() => focus(setLimitSize)}
@@ -743,7 +835,7 @@ function QueueMenu({ gameRef, game }) {
   );
 }
 
-function GarbageMenu({ gameRef, game }) {
+function GarbageMenu({ gameRef, show, pubSubRef }) {
   const getNewSeedOnReset = (game) => !!game.config.garbageNewSeedOnReset;
   const getSeed = (game) => game.config.garbageSeed.toUpperCase();
   const getComboBlock = (game) => !!game.config.garbageComboBlock;
@@ -812,16 +904,59 @@ function GarbageMenu({ gameRef, game }) {
   });
 
   useEffect(() => {
-    set(setNewSeedReset, getNewSeedOnReset(gameRef.current));
-    set(setSeed, getSeed(gameRef.current));
-    set(setComboBlock, getComboBlock(gameRef.current));
-    set(setSpawn, getSpawn(gameRef.current));
-    set(setCharge, getCharge(gameRef.current));
-    set(setChargeDelay, getChargeDelay(gameRef.current));
-    set(setChargePieces, getChargePieces(gameRef.current));
-    set(setCap, getCap(gameRef.current));
-    set(setCheesiness, getCheesiness(gameRef.current));
-  }, [gameRef, game]);
+    if (!show) {
+      return;
+    }
+
+    const setAll = (game) => {
+      if (newSeedReset.value !== getNewSeedOnReset(game)) {
+        set(setNewSeedReset, getNewSeedOnReset(game));
+      }
+      if (seed.value !== getSeed(game)) {
+        set(setSeed, getSeed(game));
+      }
+      if (comboBlock.value !== getComboBlock(game)) {
+        set(setComboBlock, getComboBlock(game));
+      }
+      if (spawn.value !== getSpawn(game)) {
+        set(setSpawn, getSpawn(game));
+      }
+      if (charge.value !== getCharge(game)) {
+        set(setCharge, getCharge(game));
+      }
+      if (chargeDelay.value !== getChargeDelay(game)) {
+        set(setChargeDelay, getChargeDelay(game));
+      }
+      if (chargePieces.value !== getChargePieces(game)) {
+        set(setChargePieces, getChargePieces(game));
+      }
+      if (cap.value !== getCap(game)) {
+        set(setCap, getCap(game));
+      }
+      if (cheesiness.value !== getCheesiness(game)) {
+        set(setCheesiness, getCheesiness(game));
+      }
+    };
+    setAll(gameRef.current);
+
+    const handleUpdate = () => setAll(gameRef.current);
+    const pubSub = pubSubRef.current;
+    pubSub.subscribe(handleUpdate);
+    return () => pubSub.unsubscribe(handleUpdate);
+  }, [
+    gameRef,
+    pubSubRef,
+    show,
+    newSeedReset,
+    seed,
+    comboBlock,
+    spawn,
+    charge,
+    chargeDelay,
+    chargePieces,
+    cap,
+    cheesiness,
+  ]);
 
   return (
     <>
@@ -830,7 +965,7 @@ function GarbageMenu({ gameRef, game }) {
         <input
           className="toggle"
           type="checkbox"
-          name="garbage-new-seed"
+          name={newSeedReset.name}
           id="garbage-menu-new-seed"
           checked={newSeedReset.value}
           onChange={() =>
@@ -848,7 +983,7 @@ function GarbageMenu({ gameRef, game }) {
         className={'--global-no-spinner' + (seed.error ? ' error' : '')}
         type="text"
         maxLength={32}
-        name="seed"
+        name={seed.name}
         id="garbage-menu-seed"
         aria-label="Garbage seed"
         value={seed.value}
@@ -872,7 +1007,7 @@ function GarbageMenu({ gameRef, game }) {
         <input
           className="toggle"
           type="checkbox"
-          name="garbage-combo-block"
+          name={comboBlock.name}
           id="garbage-menu-combo-block"
           checked={comboBlock.value}
           onChange={() => toggle(setComboBlock, gameRef, modifyConfig.garbage)}
@@ -886,7 +1021,7 @@ function GarbageMenu({ gameRef, game }) {
       <label htmlFor="garbage-menu-spawn">Garbage Spawn</label>
       <select
         className="--global-hover-focus-active-border"
-        name="garbage-spawn"
+        name={spawn.name}
         id="garbage-menu-spawn"
         value={spawn.value}
         onChange={(e) =>
@@ -902,7 +1037,7 @@ function GarbageMenu({ gameRef, game }) {
       <label htmlFor="garbage-menu-charge">Garbage Charge</label>
       <select
         className="--global-hover-focus-active-border"
-        name="garbage-charge"
+        name={charge.name}
         id="garbage-menu-charge"
         value={charge.value}
         onChange={(e) =>
@@ -924,7 +1059,7 @@ function GarbageMenu({ gameRef, game }) {
             '--global-no-spinner' + (chargeDelay.error ? ' error' : '')
           }
           type="text"
-          name="garbage-charge"
+          name={chargeDelay.name}
           id="garbage-menu-charge-delay"
           aria-label="Garbage charge delay"
           value={chargeDelay.value}
@@ -962,7 +1097,7 @@ function GarbageMenu({ gameRef, game }) {
             `--global-no-spinner` + (chargePieces.error ? ' error' : '')
           }
           type="text"
-          name="garbage-charge-pieces"
+          name={chargePieces.name}
           id="garbage-menu-charge-pieces"
           aria-label="Garbage charge pieces"
           value={chargePieces.value}
@@ -993,7 +1128,7 @@ function GarbageMenu({ gameRef, game }) {
       <input
         className={'--global-no-spinner' + (cap.error ? ' error' : '')}
         type="text"
-        name="garbage-cap"
+        name={cap.name}
         id="garbage-menu-cap"
         aria-label="Garbage cap"
         value={cap.value}
@@ -1017,7 +1152,7 @@ function GarbageMenu({ gameRef, game }) {
       <input
         className={'--global-no-spinner' + (cheesiness.error ? ' error' : '')}
         type="text"
-        name="garbage-cheese"
+        name={cheesiness.name}
         id="garbage-menu-cheese"
         aria-label="Garbage cheesiness"
         value={cheesiness.value}
@@ -1047,7 +1182,7 @@ function GarbageMenu({ gameRef, game }) {
   );
 }
 
-function GarbageModeMenu({ gameRef, game }) {
+function GarbageModeMenu({ gameRef, show, pubSubRef }) {
   const getAPS = (game) => !!game.config.garbageModeAPS;
   const getAPSAttack = (game) => game.config.garbageModeAPSAttack;
   const getAPSSecond = (game) => game.config.garbageModeAPSSecond;
@@ -1070,10 +1205,28 @@ function GarbageModeMenu({ gameRef, game }) {
   });
 
   useEffect(() => {
-    set(setAPS, getAPS(gameRef.current));
-    set(setAPSAttack, getAPSAttack(gameRef.current));
-    set(setAPSSecond, getAPSSecond(gameRef.current));
-  }, [gameRef, game]);
+    if (!show) {
+      return;
+    }
+
+    const setAll = (game) => {
+      if (APS.value !== getAPS(game)) {
+        set(setAPS, getAPS(game));
+      }
+      if (APSAttack.value !== getAPSAttack(game)) {
+        set(setAPSAttack, getAPSAttack(game));
+      }
+      if (APSSecond.value !== getAPSSecond(game)) {
+        set(setAPSSecond, getAPSSecond(game));
+      }
+    };
+    setAll(gameRef.current);
+
+    const handleUpdate = () => setAll(gameRef.current);
+    const pubSub = pubSubRef.current;
+    pubSub.subscribe(handleUpdate);
+    return () => pubSub.unsubscribe(handleUpdate);
+  }, [gameRef, pubSubRef, show, APS, APSAttack, APSSecond]);
 
   return (
     <>
@@ -1097,7 +1250,7 @@ function GarbageModeMenu({ gameRef, game }) {
       <input
         className={'--global-no-spinner' + (APSAttack.error ? ' error' : '')}
         type="text"
-        name="garbage-APS-attack"
+        name={APSAttack.name}
         id="garbage-mode-menu-APS"
         aria-label="Garbage APS"
         value={APSAttack.value}
@@ -1127,7 +1280,7 @@ function GarbageModeMenu({ gameRef, game }) {
       <input
         className={'--global-no-spinner' + (APSSecond.error ? ' error' : '')}
         type="text"
-        name="garbage-APS-second"
+        name={APSSecond.name}
         id="garbage-mode-menu-APS-second"
         aria-label="Garbage APS"
         value={APSSecond.value}
@@ -1159,18 +1312,6 @@ function GarbageModeMenu({ gameRef, game }) {
 
 function GameSettingsMenuForm({ gameRef, pubSubRef, show }) {
   const [activeMenu, setActiveMenu] = useState('configuration');
-  const [game, setGame] = useState(gameRef.current);
-
-  useEffect(() => {
-    const pubSub = pubSubRef.current;
-    const handleUpdate = (newState) => show && setGame(newState);
-    pubSub.subscribe(handleUpdate);
-    return () => pubSub.unsubscribe(handleUpdate);
-  }, [pubSubRef, show]);
-
-  useEffect(() => {
-    show && setGame(gameRef.current);
-  }, [gameRef, show]);
 
   return (
     <div className="game-settings-menu-form-container">
@@ -1196,17 +1337,27 @@ function GameSettingsMenuForm({ gameRef, pubSubRef, show }) {
           <option value="garbage-mode">Garbage Modes</option>
         </select>
         {activeMenu === 'configuration' && (
-          <ConfigurationMenu gameRef={gameRef} game={game} />
+          <ConfigurationMenu
+            gameRef={gameRef}
+            show={show}
+            pubSubRef={pubSubRef}
+          />
         )}
         {activeMenu === 'gravity' && (
-          <GravityMenu gameRef={gameRef} game={game} />
+          <GravityMenu gameRef={gameRef} show={show} pubSubRef={pubSubRef} />
         )}
-        {activeMenu === 'queue' && <QueueMenu gameRef={gameRef} game={game} />}
+        {activeMenu === 'queue' && (
+          <QueueMenu gameRef={gameRef} show={show} pubSubRef={pubSubRef} />
+        )}
         {activeMenu === 'garbage' && (
-          <GarbageMenu gameRef={gameRef} game={game} />
+          <GarbageMenu gameRef={gameRef} show={show} pubSubRef={pubSubRef} />
         )}
         {activeMenu === 'garbage-mode' && (
-          <GarbageModeMenu gameRef={gameRef} game={game} />
+          <GarbageModeMenu
+            gameRef={gameRef}
+            show={show}
+            pubSubRef={pubSubRef}
+          />
         )}
       </form>
     </div>

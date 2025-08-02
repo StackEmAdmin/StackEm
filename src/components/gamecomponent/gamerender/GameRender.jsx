@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import displayCalculate from '../../../game/util/displayHelper';
 import './GameRender.css';
 
@@ -16,49 +16,33 @@ function calcRowColFromRect(cellRect, boardRect, rows, offSet) {
   };
 }
 
-function Cell({ cls }) {
+const Cell = memo(function Cell({ cls }) {
   const className = 'cell' + (cls ? ` ${cls}` : '');
   return <div className={className}></div>;
-}
+});
 
-function Cells({ grid }) {
-  const height = grid.length;
-
-  return (
-    <>
-      {grid.map((row, i) =>
-        row.map((_, j) => (
-          <Cell key={`${i}-${j}`} cls={grid[height - i - 1][j]} />
-        ))
-      )}
-    </>
-  );
-}
-
-function GridTop({ grid, onMouseDown, onMouseOver }) {
+function GridTop({ grid, split, onMouseDown, onMouseOver }) {
   // Board is split into two components
   // BoardTop is the component where pieces are spawned
   // Other pieces can be pushed into BoardTop with kicks and garbage
 
   const boardRef = useRef(null);
-  const numRows = grid.length;
-  const numCols = grid[0].length;
+  const rows = grid.length;
 
   // When clicking on a cell, call onClickCell
   useEffect(() => {
     const boardEle = boardRef.current;
 
-    const onMouseDownListener = (ev) => onMouseDown(ev, boardEle, numRows);
-    const onMouseOverListener = (ev) => onMouseOver(ev, boardEle, numRows);
+    const onMouseDownListener = (ev) => onMouseDown(ev, split, boardEle, rows);
+    const onMouseOverListener = (ev) => onMouseOver(ev, split, boardEle, rows);
 
     boardEle.addEventListener('mousedown', onMouseDownListener);
     boardEle.addEventListener('mouseover', onMouseOverListener);
-
     return () => {
       boardEle.removeEventListener('mousedown', onMouseDownListener);
       boardEle.removeEventListener('mouseover', onMouseOverListener);
     };
-  }, [onMouseDown, onMouseOver, numRows]);
+  }, [onMouseDown, onMouseOver, rows, split]);
 
   return (
     <div
@@ -66,7 +50,11 @@ function GridTop({ grid, onMouseDown, onMouseOver }) {
       ref={boardRef}
       onContextMenu={(ev) => ev.preventDefault()}
     >
-      <Cells grid={grid} />
+      {grid.map((row, i) =>
+        row.map((_, j) => (
+          <Cell key={`${i}-${j}`} cls={grid[grid.length - i - 1][j]} />
+        ))
+      )}
     </div>
   );
 }
@@ -78,8 +66,10 @@ function Grid({ grid, onMouseDown, onMouseOver }) {
   useEffect(() => {
     const boardEle = boardRef.current;
 
-    const onMouseDownListener = (ev) => onMouseDown(ev, boardEle, BOARD_HEIGHT);
-    const onMouseOverListener = (ev) => onMouseOver(ev, boardEle, BOARD_HEIGHT);
+    const onMouseDownListener = (ev) =>
+      onMouseDown(ev, 0, boardEle, BOARD_HEIGHT);
+    const onMouseOverListener = (ev) =>
+      onMouseOver(ev, 0, boardEle, BOARD_HEIGHT);
 
     boardEle.addEventListener('mousedown', onMouseDownListener);
     boardEle.addEventListener('mouseover', onMouseOverListener);
@@ -96,15 +86,19 @@ function Grid({ grid, onMouseDown, onMouseOver }) {
       ref={boardRef}
       onContextMenu={(ev) => ev.preventDefault()}
     >
-      <Cells grid={grid} />
+      {grid.map((row, i) =>
+        row.map((_, j) => (
+          <Cell key={`${i}-${j}`} cls={grid[grid.length - i - 1][j]} />
+        ))
+      )}
     </div>
   );
 }
 
-function GarbageCell({ cls }) {
+const GarbageCell = memo(function GarbageCell({ cls }) {
   const className = 'garbage-cell' + (cls ? ` ${cls}` : '');
   return <div className={className}></div>;
-}
+});
 
 function Garbage({ charged, uncharged }) {
   let emptyNumCells = MAX_GARBAGE;
@@ -116,9 +110,6 @@ function Garbage({ charged, uncharged }) {
   emptyNumCells = differenceOrZero(emptyNumCells, chargedNumCells);
   const unchargedNumCells = Math.min(emptyNumCells, uncharged);
   emptyNumCells = differenceOrZero(emptyNumCells, unchargedNumCells);
-
-  // console.log('charged, uncharged: ', charged, uncharged);
-  // console.log(chargedNumCells, unchargedNumCells, emptyNumCells, MAX_GARBAGE);
 
   return (
     <div className="garbage">
@@ -262,52 +253,58 @@ function GameRender({ game, fillCell, clearCell, resetFillCell }) {
   const clearRef = useRef(false);
 
   // Fill and clear cell for Grid and GridTop
-  const onMouseDown = (offSet) => (ev, gridEle, rows) => {
-    gridMouseDownRef.current = true;
+  const onMouseDown = useCallback(
+    (ev, offSet, gridEle, rows) => {
+      gridMouseDownRef.current = true;
 
-    // If right clicked, then clear in stead of fill
-    if (ev.button === 2) {
-      clearRef.current = true;
-    }
+      // If right clicked, then clear in stead of fill
+      if (ev.button === 2) {
+        clearRef.current = true;
+      }
 
-    // Clicked on grid (and not cell)
-    if (ev.target === gridEle) {
-      return;
-    }
+      // Clicked on grid (and not cell)
+      if (ev.target === gridEle) {
+        return;
+      }
 
-    // Calculate row and col clicked cell (target)
-    const { row, col } = calcRowColFromRect(
-      ev.target.getBoundingClientRect(),
-      gridEle.getBoundingClientRect(),
-      rows,
-      offSet
-    );
+      // Calculate row and col clicked cell (target)
+      const { row, col } = calcRowColFromRect(
+        ev.target.getBoundingClientRect(),
+        gridEle.getBoundingClientRect(),
+        rows,
+        offSet
+      );
 
-    if (clearRef.current) {
-      clearCell(row, col);
-    } else {
-      fillCell(row, col);
-    }
-  };
+      if (clearRef.current) {
+        clearCell(row, col);
+      } else {
+        fillCell(row, col);
+      }
+    },
+    [clearCell, fillCell]
+  );
 
-  const onMouseOver = (offSet) => (ev, gridEle, rows) => {
-    if (!gridMouseDownRef.current || ev.target === gridEle) {
-      return;
-    }
+  const onMouseOver = useCallback(
+    (ev, offSet, gridEle, rows) => {
+      if (!gridMouseDownRef.current || ev.target === gridEle) {
+        return;
+      }
 
-    const { row, col } = calcRowColFromRect(
-      ev.target.getBoundingClientRect(),
-      gridEle.getBoundingClientRect(),
-      rows,
-      offSet
-    );
+      const { row, col } = calcRowColFromRect(
+        ev.target.getBoundingClientRect(),
+        gridEle.getBoundingClientRect(),
+        rows,
+        offSet
+      );
 
-    if (clearRef.current) {
-      clearCell(row, col);
-    } else {
-      fillCell(row, col);
-    }
-  };
+      if (clearRef.current) {
+        clearCell(row, col);
+      } else {
+        fillCell(row, col);
+      }
+    },
+    [clearCell, fillCell]
+  );
 
   useEffect(() => {
     const onMouseUp = (ev) => {
@@ -338,14 +335,11 @@ function GameRender({ game, fillCell, clearCell, resetFillCell }) {
     <div className={'game-container' + (userAgentFF ? ' ff' : '')}>
       <GridTop
         grid={gridTop}
-        onMouseDown={onMouseDown(BOARD_HEIGHT)}
-        onMouseOver={onMouseOver(BOARD_HEIGHT)}
+        split={BOARD_HEIGHT}
+        onMouseDown={onMouseDown}
+        onMouseOver={onMouseOver}
       />
-      <Grid
-        grid={grid}
-        onMouseDown={onMouseDown(0)}
-        onMouseOver={onMouseOver(0)}
-      />
+      <Grid grid={grid} onMouseDown={onMouseDown} onMouseOver={onMouseOver} />
       <Garbage
         uncharged={garbageQueue.uncharged}
         charged={garbageQueue.charged}

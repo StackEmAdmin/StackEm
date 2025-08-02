@@ -71,7 +71,7 @@ function GameSettingsMenu({ parentRef, gameRef, pubSubRef }) {
       containerEle.classList.remove('animate');
     }, 550);
     return () => clearTimeout(timeout);
-  });
+  }, []);
 
   // Resize Handle event listener
   useEffect(() => {
@@ -161,15 +161,15 @@ function GameSettingsMenu({ parentRef, gameRef, pubSubRef }) {
   useEffect(() => {
     const windowResize = () => {
       if (window.innerWidth < 768) {
-        setResizeData({ ...resizeData, smallScreen: true });
+        setResizeData((resizeData) => ({ ...resizeData, smallScreen: true }));
       } else {
-        setResizeData({ ...resizeData, smallScreen: false });
+        setResizeData((resizeData) => ({ ...resizeData, smallScreen: false }));
       }
     };
 
     window.addEventListener('resize', windowResize);
     return () => window.removeEventListener('resize', windowResize);
-  });
+  }, []);
 
   useEffect(() => {
     if (!parentRef.current.classList.contains('parent-resize-target')) {
@@ -192,7 +192,7 @@ function GameSettingsMenu({ parentRef, gameRef, pubSubRef }) {
       parentRef.current.style.width = `${resizeData.width}px`;
       return;
     }
-  });
+  }, [docked, resizeData, showSettings, parentRef]);
 
   return (
     <div
