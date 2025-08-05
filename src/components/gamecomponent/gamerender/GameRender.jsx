@@ -16,9 +16,114 @@ function calcRowColFromRect(cellRect, boardRect, rows, offSet) {
   };
 }
 
+/**
+ * Returns the CSS variable corresponding to the piece type found in the input string.
+ * Removes the substring 'ghost' from the input string if present, then checks for
+ * specific piece type identifiers ('hg ', 'ho ', etc.). Each identifier corresponds
+ * to a different piece type, and the function returns the associated CSS variable.
+ *
+ * @param {string} string - The input string containing the piece type identifier.
+ * @returns {string} - The CSS variable representing the color for the piece type.
+ * Returns an empty string if no valid piece type is found.
+ */
+
+function pieceTypeToColor(string) {
+  const stringToCheck = string.replace('ghost', '');
+  if (stringToCheck.includes('hg ')) {
+    return 'var(--g)';
+  }
+  if (stringToCheck.includes('ho ')) {
+    return 'var(--o)';
+  }
+  if (stringToCheck.includes('hi ')) {
+    return 'var(--i)';
+  }
+  if (stringToCheck.includes('hl ')) {
+    return 'var(--l)';
+  }
+  if (stringToCheck.includes('hj ')) {
+    return 'var(--j)';
+  }
+  if (stringToCheck.includes('hs ')) {
+    return 'var(--s)';
+  }
+  if (stringToCheck.includes('hz ')) {
+    return 'var(--z)';
+  }
+  if (stringToCheck.includes('ht ')) {
+    return 'var(--t)';
+  }
+  return '';
+}
+
+/**
+ * Adds a linear gradient to the given CSS style string to create a corner
+ * shape.
+ *
+ * @param {string} style - The CSS style string to add the gradient to.
+ * @param {string} color - The color of the gradient.
+ * @param {string} width - The width of the gradient.
+ * @param {string} top - The top position of the gradient.
+ * @param {string} left - The left position of the gradient.
+ * @returns {string} - The modified CSS style string with the gradient added.
+ */
+function addCornerStylesLinGrad(style, color, width, top, left) {
+  const s = `linear-gradient(to right, ${color} ${width}, transparent ${width}) ${top} ${left} / ${width} ${width} no-repeat, 
+  linear-gradient(to bottom, ${color} ${width}, transparent ${width}) ${top} ${left} / ${width} ${width} no-repeat`;
+
+  if (style === '') {
+    return s;
+  }
+
+  return style + ', ' + s;
+}
+
+/**
+ * Calculates the CSS styles needed to create a corner shape for a given
+ * piece type. The function takes a string containing the
+ * piece type identifier, and returns an object with the calculated CSS
+ * style string for the `background` property.
+ *
+ * @param {string} string - The input string containing the highlighted
+ * piece type and corner identifiers.
+ * @returns {Object} - An object with the calculated CSS style string for
+ * the `background` property.
+ */
+function calcCornerStyles(string) {
+  if (!string.includes('corner')) {
+    return null;
+  }
+
+  let background = '';
+  const color = pieceTypeToColor(string);
+  const w = 'var(--border-width)';
+
+  if (string.includes('tl-corner')) {
+    background = addCornerStylesLinGrad(background, color, w, '0', '0');
+  }
+  if (string.includes('tr-corner')) {
+    background = addCornerStylesLinGrad(background, color, w, '100%', '0');
+  }
+  if (string.includes('bl-corner')) {
+    background = addCornerStylesLinGrad(background, color, w, '0', '100%');
+  }
+  if (string.includes('br-corner')) {
+    background = addCornerStylesLinGrad(background, color, w, '100%', '100%');
+  }
+
+  return { background };
+}
+
 const Cell = memo(function Cell({ cls }) {
+  const styles = calcCornerStyles(cls);
   const className = 'cell' + (cls ? ` ${cls}` : '');
-  return <div className={className}></div>;
+  return styles ? (
+    <div className={className}>
+      <div style={styles} className="corner"></div>
+    </div>
+  ) : (
+    <div className={className}></div>
+  );
 });
 
 function GridTop({ grid, split, onMouseDown, onMouseOver }) {
