@@ -360,12 +360,11 @@ function GameRender({ game, fillCell, clearCell, resetFillCell }) {
   // Fill and clear cell for Grid and GridTop
   const onMouseDown = useCallback(
     (ev, offSet, gridEle, rows) => {
-      gridMouseDownRef.current = true;
-
       // If right clicked, then clear in stead of fill
       if (ev.button === 2) {
         clearRef.current = true;
       }
+      gridMouseDownRef.current = true;
 
       // Clicked on grid (and not cell)
       if (ev.target === gridEle) {
@@ -412,15 +411,23 @@ function GameRender({ game, fillCell, clearCell, resetFillCell }) {
   );
 
   useEffect(() => {
-    const onMouseUp = (ev) => {
-      gridMouseDownRef.current = false;
-      clearRef.current = false;
-      resetFillCell();
-      ev.preventDefault();
+    const onMouseUp = () => {
+      // Delay to allow contextMenu handler to run first
+      setTimeout(() => {
+        resetFillCell();
+        gridMouseDownRef.current = false;
+        clearRef.current = false;
+      }, 1);
     };
 
+    const onContextMenu = (ev) => {
+      gridMouseDownRef.current && ev.preventDefault();
+    };
+
+    window.addEventListener('contextmenu', onContextMenu);
     window.addEventListener('mouseup', onMouseUp);
     return () => {
+      window.removeEventListener('contextmenu', onContextMenu);
       window.removeEventListener('mouseup', onMouseUp);
     };
   }, [resetFillCell]);
