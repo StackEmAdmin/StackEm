@@ -360,6 +360,8 @@ function fillRow(board, row, col, type, highlight, nextPiece) {
     }
   }
 
+  const hasType = (cell) => cell.split(' ').some((word) => word === type);
+
   // If already filled then do nothing
   const gridRow = board.grid[row];
   if (gridRow) {
@@ -369,7 +371,7 @@ function fillRow(board, row, col, type, highlight, nextPiece) {
       if (i === col && isGridOccupied(board.grid, row, i)) {
         filled = false;
         break;
-      } else if (i !== col && !gridRow[i].includes(type)) {
+      } else if (i !== col && !hasType(gridRow[i])) {
         filled = false;
         break;
       }
