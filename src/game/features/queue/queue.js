@@ -394,16 +394,27 @@ function setHoldEnabled(queue, enabled) {
  * @returns {Object} The updated game queue object with the hold piece set.
  */
 function setHold(queue, holdType) {
+  // No change if adding same hold piece
   if (queue.hold && holdType === queue.hold.type) {
     return queue;
   }
 
-  // Hold and limit size...
-  // If no hold and one added, then what's wise?
-  // Should we trim queue, a piece worth being sacrificed?
-  // I think not. no queue.pieces decreases.
-  // If no hold and one added, simply increment/decrement numPieces.
+  // No change if removing hold and no hold piece
+  if (!queue.hold && holdType === '') {
+    return queue;
+  }
 
+  // Enforce limit if enabled
+  // Reached limit and no hold (don't add a hold)
+  if (
+    queue.limitSize > 0 &&
+    queue.numPieces >= queue.limitSize &&
+    !queue.hold
+  ) {
+    return queue;
+  }
+
+  // Removing hold
   if (holdType === '') {
     const newNumPieces = queue.hold ? queue.numPieces - 1 : queue.numPieces;
     return {

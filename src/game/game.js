@@ -1633,12 +1633,17 @@ function modifyQueue(game, property, value, currentTime) {
 
   if (property === 'queueHold') {
     const nextQueue = queueLib.setHold(game.queue, value, currentTime);
-    return { ...game, queue: nextQueue, UR: URLib.save(game.UR, game) };
+    return game.queue === nextQueue
+      ? game
+      : { ...game, queue: nextQueue, UR: URLib.save(game.UR, game) };
   }
 
   if (property === 'queueNext') {
     const nextQueue = queueLib.setNext(game.queue, value, currentTime);
-    return { ...game, queue: nextQueue, UR: URLib.save(game.UR, game) };
+
+    return game.queue === nextQueue
+      ? game
+      : { ...game, queue: nextQueue, UR: URLib.save(game.UR, game) };
   }
 
   if (property === 'queueSeed') {
