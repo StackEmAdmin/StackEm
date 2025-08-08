@@ -155,6 +155,66 @@ function changeUpdate(
   });
 }
 
+function CustomCheckbox({
+  id,
+  labelText,
+  name,
+  checked,
+  onToggle,
+  onText = 'On',
+  offText = 'Off',
+}) {
+  return (
+    <label htmlFor={id} className="custom-checkbox">
+      {labelText}
+      <input
+        type="checkbox"
+        className="toggle"
+        id={id}
+        name={name}
+        checked={checked}
+        onChange={onToggle}
+      />
+      <span
+        className="toggle-button"
+        data-tg-on={onText}
+        data-tg-off={offText}
+      ></span>
+    </label>
+  );
+}
+
+function LabelInput({
+  id,
+  labelText,
+  hasError,
+  name,
+  ariaLabel,
+  onFocus,
+  onBlur,
+  onChange,
+  value,
+  maxLength,
+}) {
+  return (
+    <>
+      <label htmlFor={id}>{labelText}</label>
+      <input
+        type="text"
+        className={'--global-no-spinner' + (hasError ? ' error' : '')}
+        name={name}
+        id={id}
+        aria-label={ariaLabel}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        onChange={onChange}
+        value={value}
+        maxLength={maxLength}
+      />
+    </>
+  );
+}
+
 function ConfigurationMenu({ gameRef, show, pubSubRef }) {
   const getSpin = (game) => game.config.spins;
 
@@ -310,13 +370,12 @@ function GravityMenu({ gameRef, show, pubSubRef }) {
 
   return (
     <>
-      <label htmlFor="gravity-menu-gravity">Gravity</label>
-      <input
-        className={'--global-no-spinner' + (gravity.error ? ' error' : '')}
-        type="text"
-        name={gravity.name}
+      <LabelInput
         id="gravity-menu-gravity"
-        aria-label="Gravity"
+        labelText="Gravity"
+        hasError={gravity.error}
+        name={gravity.name}
+        ariaLabel="Gravity"
         onFocus={() => focus(setGravity)}
         onBlur={(e) =>
           blur(
@@ -340,13 +399,12 @@ function GravityMenu({ gameRef, show, pubSubRef }) {
         }
         value={gravity.value}
       />
-      <label htmlFor="gravity-menu-lock">Lock</label>
-      <input
-        className={'--global-no-spinner' + (lock.error ? ' error' : '')}
-        type="text"
-        name={lock.name}
+      <LabelInput
         id="gravity-menu-lock"
-        aria-label="Gravity lock"
+        labelText="Lock"
+        hasError={lock.error}
+        name={lock.name}
+        ariaLabel="Gravity lock"
         onFocus={() => focus(setLock)}
         onBlur={(e) =>
           blur(setLock, getLock(gameRef.current), e.target.value, true, true)
@@ -364,13 +422,12 @@ function GravityMenu({ gameRef, show, pubSubRef }) {
         }
         value={lock.value}
       />
-      <label htmlFor="gravity-menu-lock-cap">Lock Cap</label>
-      <input
-        className={'--global-no-spinner' + (lockCap.error ? ' error' : '')}
-        type="text"
-        name={lockCap.name}
+      <LabelInput
         id="gravity-menu-lock-cap"
-        aria-label="Gravity lock cap"
+        labelText="Lock Cap"
+        hasError={lockCap.error}
+        name={lockCap.name}
+        ariaLabel="Gravity lock cap"
         onFocus={() => focus(setLockCap)}
         onBlur={(e) =>
           blur(
@@ -394,13 +451,12 @@ function GravityMenu({ gameRef, show, pubSubRef }) {
         }
         value={lockCap.value}
       />
-      <label htmlFor="gravity-menu-lock-penalty">Lock Penalty</label>
-      <input
-        className={'--global-no-spinner' + (lockPenalty.error ? ' error' : '')}
-        type="text"
-        name={lockPenalty.name}
+      <LabelInput
         id="gravity-menu-lock-penalty"
-        aria-label="Gravity lock penalty"
+        labelText="Lock Penalty"
+        hasError={lockPenalty.error}
+        name={lockPenalty.name}
+        ariaLabel="Gravity lock penalty"
         onFocus={() => focus(setLockPenalty)}
         onBlur={(e) =>
           blur(
@@ -424,13 +480,12 @@ function GravityMenu({ gameRef, show, pubSubRef }) {
         }
         value={lockPenalty.value}
       />
-      <label htmlFor="gravity-menu-gravity-acc">Acceleration</label>
-      <input
-        className={'--global-no-spinner' + (acceleration.error ? ' error' : '')}
-        type="text"
-        name={acceleration.name}
+      <LabelInput
         id="gravity-menu-gravity-acc"
-        aria-label="Gravity"
+        labelText="Acceleration"
+        hasError={acceleration.error}
+        name={acceleration.name}
+        ariaLabel="Gravity acceleration"
         onFocus={() => focus(setAcceleration)}
         onBlur={(e) =>
           blur(
@@ -454,15 +509,12 @@ function GravityMenu({ gameRef, show, pubSubRef }) {
         }
         value={acceleration.value}
       />
-      <label htmlFor="gravity-menu-gravity-delay">Acceleration Delay</label>
-      <input
-        className={
-          '--global-no-spinner' + (accelerationDelay.error ? ' error' : '')
-        }
-        type="text"
+      <LabelInput
+        id="gravity-menu-gravity-acc-delay"
+        labelText="Acceleration Delay"
+        hasError={accelerationDelay.error}
         name={accelerationDelay.name}
-        id="gravity-menu-gravity-delay"
-        aria-label="Gravity"
+        ariaLabel="Gravity acceleration delay"
         onFocus={() => focus(setAccelerationDelay)}
         onBlur={(e) =>
           blur(
@@ -494,13 +546,6 @@ function QueueMenu({ gameRef, show, pubSubRef }) {
   const getNewSeedOnReset = (game) => !!game.config.queueNewSeedOnReset;
   const getSeed = (game) => game.config.queueSeed.toUpperCase();
   const getHoldEnabled = (game) => !!game.config.queueHoldEnabled;
-  const getLimitSize = (game) =>
-    game.config.queueLimitSize === 0 ? '' : game.config.queueLimitSize;
-  const getInitialHold = (game) => game.config.queueInitialHold.toUpperCase();
-  const getInitialPieces = (game) =>
-    game.config.queueInitialPieces.toUpperCase();
-  const getNthPC = (game) =>
-    game.config.queueNthPC < 2 ? '' : game.config.queueNthPC;
   const getHold = (game) => {
     if (game.queue.hold && game.queue.hold.type) {
       return game.queue.hold.type.toUpperCase();
@@ -530,34 +575,6 @@ function QueueMenu({ gameRef, show, pubSubRef }) {
     name: 'queueHoldEnabled',
   });
 
-  const [limitSize, setLimitSize] = useState({
-    value: getLimitSize(gameRef.current),
-    name: 'queueLimitSize',
-    error: false,
-    focus: false,
-  });
-
-  const [nthPC, setnthPC] = useState({
-    value: getNthPC(gameRef.current),
-    name: 'queueNthPC',
-    error: false,
-    focus: false,
-  });
-
-  const [initialHold, setInitialHold] = useState({
-    value: getInitialHold(gameRef.current),
-    name: 'queueInitialHold',
-    error: false,
-    focus: false,
-  });
-
-  const [initialPieces, setInitialPieces] = useState({
-    value: getInitialPieces(gameRef.current),
-    name: 'queueInitialPieces',
-    error: false,
-    focus: false,
-  });
-
   const [hold, setHold] = useState({
     value: getHold(gameRef.current),
     name: 'queueHold',
@@ -585,18 +602,6 @@ function QueueMenu({ gameRef, show, pubSubRef }) {
       if (holdEnabled.value !== getHoldEnabled(game)) {
         set(setHoldEnabled, getHoldEnabled(game));
       }
-      if (limitSize.value !== getLimitSize(game)) {
-        set(setLimitSize, getLimitSize(game));
-      }
-      if (nthPC.value !== getNthPC(game)) {
-        set(setnthPC, getNthPC(game));
-      }
-      if (initialHold.value !== getInitialHold(game)) {
-        set(setInitialHold, getInitialHold(game));
-      }
-      if (initialPieces.value !== getInitialPieces(game)) {
-        set(setInitialPieces, getInitialPieces(game));
-      }
       if (seed.value !== getSeed(game)) {
         set(setSeed, getSeed(game));
       }
@@ -613,47 +618,23 @@ function QueueMenu({ gameRef, show, pubSubRef }) {
     const pubSub = pubSubRef.current;
     pubSub.subscribe(handleUpdate);
     return () => pubSub.unsubscribe(handleUpdate);
-  }, [
-    gameRef,
-    pubSubRef,
-    show,
-    newSeedReset,
-    holdEnabled,
-    limitSize,
-    nthPC,
-    initialHold,
-    initialPieces,
-    seed,
-    hold,
-    next,
-  ]);
+  }, [gameRef, pubSubRef, show, newSeedReset, holdEnabled, seed, hold, next]);
 
   return (
     <>
-      <label className="custom-checkbox" htmlFor="queue-menu-new-seed">
-        New seed on reset
-        <input
-          className="toggle"
-          type="checkbox"
-          name={newSeedReset.name}
-          id="queue-menu-new-seed"
-          checked={newSeedReset.value}
-          onChange={() => toggle(setNewSeedReset, gameRef, modifyConfig.queue)}
-        />
-        <span
-          className="toggle-button"
-          data-tg-off="Off"
-          data-tg-on="On"
-        ></span>
-      </label>
-      <label htmlFor="queue-menu-seed">Seed</label>
-      <input
-        className={'--global-no-spinner' + (seed.error ? ' error' : '')}
-        type="text"
-        maxLength={32}
-        name={seed.name}
+      <CustomCheckbox
+        id="queue-menu-new-seed"
+        labelText="New seed on reset"
+        name={newSeedReset.name}
+        checked={newSeedReset.value}
+        onToggle={() => toggle(setNewSeedReset, gameRef, modifyConfig.queue)}
+      />
+      <LabelInput
         id="queue-menu-seed"
-        aria-label="Queue seed"
+        labelText="Seed"
+        hasError={seed.error}
+        name={seed.name}
+        ariaLabel="Queue seed"
         onFocus={() => focus(setSeed)}
         onBlur={(e) =>
           blurSeed(
@@ -669,31 +650,21 @@ function QueueMenu({ gameRef, show, pubSubRef }) {
           changeSeed(setSeed, e.target.value, c.QUEUE_SEED_LENGTH)
         }
         value={seed.value}
+        maxLength={c.QUEUE_SEED_LENGTH}
       />
-      <label className="custom-checkbox" htmlFor="queue-menu-hold-enabled">
-        Allow Hold
-        <input
-          className="toggle"
-          type="checkbox"
-          name={holdEnabled.name}
-          id="queue-menu-hold-enabled"
-          checked={holdEnabled.value}
-          onChange={() => toggle(setHoldEnabled, gameRef, modifyConfig.queue)}
-        />
-        <span
-          className="toggle-button"
-          data-tg-off="Off"
-          data-tg-on="On"
-        ></span>
-      </label>
-      <label htmlFor="queue-menu-hold">Hold Piece</label>
-      <input
-        className={'--global-no-spinner' + (hold.error ? ' error' : '')}
-        type="text"
-        maxLength={1}
+      <CustomCheckbox
+        id="queue-menu-hold-enabled"
+        labelText="Allow hold"
+        name={holdEnabled.name}
+        checked={holdEnabled.value}
+        onToggle={() => toggle(setHoldEnabled, gameRef, modifyConfig.queue)}
+      />
+      <LabelInput
+        id="queue-menu-hold"
+        labelText="Hold Piece"
+        hasError={hold.error}
         name={hold.name}
-        id="gravity-menu-gravity"
-        aria-label="Hold piece"
+        ariaLabel="Hold piece"
         onFocus={() => focus(setHold)}
         onBlur={(e) => blur(setHold, getHold(gameRef.current), e.target.value)}
         onChange={(e) =>
@@ -706,14 +677,14 @@ function QueueMenu({ gameRef, show, pubSubRef }) {
           )
         }
         value={hold.value}
+        maxLength={1}
       />
-      <label htmlFor="queue-menu-next">Next Pieces</label>
-      <input
-        className={'--global-no-spinner' + (next.error ? ' error' : '')}
-        type="text"
-        name={next.name}
+      <LabelInput
         id="queue-menu-next"
-        aria-label="Next pieces"
+        labelText="Next Pieces"
+        hasError={next.error}
+        name={next.name}
+        ariaLabel="Next pieces"
         onFocus={() => focus(setNext)}
         onBlur={(e) =>
           blur(setNext, getNext(gameRef.current), e.target.value, false, true)
@@ -728,108 +699,6 @@ function QueueMenu({ gameRef, show, pubSubRef }) {
           )
         }
         value={next.value}
-      />
-      <label htmlFor="queue-menu-nth-pc">PC Bag</label>
-      <input
-        className={'--global-no-spinner' + (nthPC.error ? ' error' : '')}
-        type="text"
-        name={nthPC.name}
-        id="queue-menu-nth-pc"
-        aria-label="PC bag"
-        onFocus={() => focus(setnthPC)}
-        onBlur={(e) =>
-          blur(setnthPC, getNthPC(gameRef.current), e.target.value, true)
-        }
-        onChange={(e) =>
-          changeUpdate(
-            setnthPC,
-            gameRef,
-            modifyConfig.queue,
-            e.target.value,
-            false,
-            true
-          )
-        }
-        value={nthPC.value}
-      />
-      <label htmlFor="queue-menu-initial-hold">Initial Hold</label>
-      <input
-        className={'--global-no-spinner' + (initialHold.error ? ' error' : '')}
-        type="text"
-        maxLength={1}
-        name={initialHold.name}
-        id="queue-menu-initial-hold"
-        aria-label="Initial hold"
-        onFocus={() => focus(setInitialHold)}
-        onBlur={(e) =>
-          blur(setInitialHold, getInitialHold(gameRef.current), e.target.value)
-        }
-        onChange={(e) => {
-          changeUpdate(
-            setInitialHold,
-            gameRef,
-            modifyConfig.queue,
-            e.target.value,
-            true
-          );
-        }}
-        value={initialHold.value}
-      />
-      <label htmlFor="queue-menu-initial-pieces">Initial Pieces</label>
-      <input
-        className={
-          '--global-no-spinner' + (initialPieces.error ? ' error' : '')
-        }
-        type="text"
-        name={initialPieces.name}
-        id="queue-menu-initial-pieces"
-        aria-label="Initial pieces"
-        onFocus={() => focus(setInitialPieces)}
-        onBlur={(e) =>
-          blur(
-            setInitialPieces,
-            getInitialPieces(gameRef.current),
-            e.target.value
-          )
-        }
-        onChange={(e) => {
-          changeUpdate(
-            setInitialPieces,
-            gameRef,
-            modifyConfig.queue,
-            e.target.value,
-            true
-          );
-        }}
-        value={initialPieces.value}
-      />
-      <label htmlFor="queue-menu-limit-size">Limit Queue Size</label>
-      <input
-        className={'--global-no-spinner' + (limitSize.error ? ' error' : '')}
-        type="text"
-        name={limitSize.name}
-        id="queue-menu-limit-size"
-        aria-label="Limit queue size"
-        onFocus={() => focus(setLimitSize)}
-        onBlur={(e) =>
-          blur(
-            setLimitSize,
-            getLimitSize(gameRef.current),
-            e.target.value,
-            true
-          )
-        }
-        onChange={(e) =>
-          changeUpdate(
-            setLimitSize,
-            gameRef,
-            modifyConfig.queue,
-            e.target.value,
-            false,
-            true
-          )
-        }
-        value={limitSize.value}
       />
     </>
   );
@@ -960,37 +829,20 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
 
   return (
     <>
-      <label className="custom-checkbox" htmlFor="garbage-menu-new-seed">
-        New seed on reset
-        <input
-          className="toggle"
-          type="checkbox"
-          name={newSeedReset.name}
-          id="garbage-menu-new-seed"
-          checked={newSeedReset.value}
-          onChange={() =>
-            toggle(setNewSeedReset, gameRef, modifyConfig.garbage)
-          }
-        />
-        <span
-          className="toggle-button"
-          data-tg-off="Off"
-          data-tg-on="On"
-        ></span>
-      </label>
-      <label htmlFor="garbage-menu-seed">Seed</label>
-      <input
-        className={'--global-no-spinner' + (seed.error ? ' error' : '')}
-        type="text"
-        maxLength={32}
-        name={seed.name}
+      <CustomCheckbox
+        id="garbage-menu-new-seed"
+        labelText="New seed on reset"
+        name={newSeedReset.name}
+        checked={newSeedReset.value}
+        onToggle={() => toggle(setNewSeedReset, gameRef, modifyConfig.garbage)}
+      />
+      <LabelInput
         id="garbage-menu-seed"
-        aria-label="Garbage seed"
-        value={seed.value}
+        labelText="Seed"
+        hasError={seed.error}
+        name={seed.name}
+        ariaLabel="Garbage seed"
         onFocus={() => focus(setSeed)}
-        onChange={(e) =>
-          changeSeed(setSeed, e.target.value, c.GARBAGE_SEED_LENGTH)
-        }
         onBlur={(e) =>
           blurSeed(
             setSeed,
@@ -1001,23 +853,19 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
             c.GARBAGE_SEED_LENGTH
           )
         }
+        onChange={(e) =>
+          changeSeed(setSeed, e.target.value, c.GARBAGE_SEED_LENGTH)
+        }
+        value={seed.value}
+        maxLength={32}
       />
-      <label className="custom-checkbox" htmlFor="garbage-menu-combo-block">
-        Combo Blocking
-        <input
-          className="toggle"
-          type="checkbox"
-          name={comboBlock.name}
-          id="garbage-menu-combo-block"
-          checked={comboBlock.value}
-          onChange={() => toggle(setComboBlock, gameRef, modifyConfig.garbage)}
-        />
-        <span
-          className="toggle-button"
-          data-tg-off="Off"
-          data-tg-on="On"
-        ></span>
-      </label>
+      <CustomCheckbox
+        id="garbage-menu-combo-block"
+        labelText="Combo Blocking"
+        name={comboBlock.name}
+        checked={comboBlock.value}
+        onToggle={() => toggle(setComboBlock, gameRef, modifyConfig.garbage)}
+      />
       <label htmlFor="garbage-menu-spawn">Garbage Spawn</label>
       <select
         className="--global-hover-focus-active-border"
@@ -1051,30 +899,13 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
         ))}
       </select>
       {charge.value === 'delay' && (
-        <label htmlFor="garbage-menu-charge-delay">Garbage Charge Delay</label>
-      )}
-      {charge.value === 'delay' && (
-        <input
-          className={
-            '--global-no-spinner' + (chargeDelay.error ? ' error' : '')
-          }
-          type="text"
-          name={chargeDelay.name}
+        <LabelInput
           id="garbage-menu-charge-delay"
-          aria-label="Garbage charge delay"
-          value={chargeDelay.value}
+          labelText="Garbage Charge Delay"
+          hasError={chargeDelay.error}
+          name={chargeDelay.name}
+          ariaLabel="Garbage charge delay"
           onFocus={() => focus(setChargeDelay)}
-          onChange={(e) =>
-            changeUpdate(
-              setChargeDelay,
-              gameRef,
-              modifyConfig.garbage,
-              e.target.value,
-              false,
-              true,
-              true
-            )
-          }
           onBlur={(e) =>
             blur(
               setChargeDelay,
@@ -1084,24 +915,37 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
               true
             )
           }
+          onChange={(e) =>
+            changeUpdate(
+              setChargeDelay,
+              gameRef,
+              modifyConfig.garbage,
+              e.target.value,
+              false,
+              true,
+              true
+            )
+          }
+          value={chargeDelay.value}
         />
       )}
       {charge.value === 'piece' && (
-        <label htmlFor="garbage-menu-charge-pieces">
-          Garbage Charge Pieces
-        </label>
-      )}
-      {charge.value === 'piece' && (
-        <input
-          className={
-            `--global-no-spinner` + (chargePieces.error ? ' error' : '')
-          }
-          type="text"
-          name={chargePieces.name}
+        <LabelInput
           id="garbage-menu-charge-pieces"
-          aria-label="Garbage charge pieces"
-          value={chargePieces.value}
+          labelText="Garbage Charge Pieces"
+          hasError={chargePieces.error}
+          name={chargePieces.name}
+          ariaLabel="Garbage charge pieces"
           onFocus={() => focus(setChargePieces)}
+          onBlur={(e) =>
+            blur(
+              setChargePieces,
+              getChargePieces(gameRef.current),
+              e.target.value,
+              true,
+              true
+            )
+          }
           onChange={(e) =>
             changeUpdate(
               setChargePieces,
@@ -1113,26 +957,19 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
               true
             )
           }
-          onBlur={(e) =>
-            blur(
-              setChargePieces,
-              getChargePieces(gameRef.current),
-              e.target.value,
-              true,
-              true
-            )
-          }
+          value={chargePieces.value}
         />
       )}
-      <label htmlFor="garbage-menu-cap">Garbage Cap</label>
-      <input
-        className={'--global-no-spinner' + (cap.error ? ' error' : '')}
-        type="text"
-        name={cap.name}
+      <LabelInput
         id="garbage-menu-cap"
-        aria-label="Garbage cap"
-        value={cap.value}
+        labelText="Garbage Cap"
+        hasError={cap.error}
+        name={cap.name}
+        ariaLabel="Garbage cap"
         onFocus={() => focus(setCap)}
+        onBlur={(e) =>
+          blur(setCap, getCap(gameRef.current), e.target.value, true, true)
+        }
         onChange={(e) =>
           changeUpdate(
             setCap,
@@ -1144,19 +981,24 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
             true
           )
         }
-        onBlur={(e) =>
-          blur(setCap, getCap(gameRef.current), e.target.value, true, true)
-        }
+        value={cap.value}
       />
-      <label htmlFor="garbage-menu-cheese">Garbage Cheesiness</label>
-      <input
-        className={'--global-no-spinner' + (cheesiness.error ? ' error' : '')}
-        type="text"
+      <LabelInput
+        id="garbage-menu-cheesiness"
+        labelText="Garbage Cheesiness"
+        hasError={cheesiness.error}
         name={cheesiness.name}
-        id="garbage-menu-cheese"
-        aria-label="Garbage cheesiness"
-        value={cheesiness.value}
+        ariaLabel="Garbage cheesiness"
         onFocus={() => focus(setCheesiness)}
+        onBlur={(e) =>
+          blur(
+            setCheesiness,
+            getCheesiness(gameRef.current),
+            e.target.value,
+            true,
+            true
+          )
+        }
         onChange={(e) =>
           changeUpdate(
             setCheesiness,
@@ -1168,15 +1010,7 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
             true
           )
         }
-        onBlur={(e) =>
-          blur(
-            setCheesiness,
-            getCheesiness(gameRef.current),
-            e.target.value,
-            true,
-            true
-          )
-        }
+        value={cheesiness.value}
       />
     </>
   );
@@ -1230,42 +1064,20 @@ function GarbageModeMenu({ gameRef, show, pubSubRef }) {
 
   return (
     <>
-      <label className="custom-checkbox" htmlFor="garbage-mode-menu-enable-APS">
-        Attack Per Second (APS)
-        <input
-          className="toggle"
-          type="checkbox"
-          name="garbage-mode-menu-enable-APS"
-          id="garbage-mode-menu-enable-APS"
-          checked={APS.value}
-          onChange={() => toggle(setAPS, gameRef, modifyConfig.garbage)}
-        />
-        <span
-          className="toggle-button"
-          data-tg-off="Off"
-          data-tg-on="On"
-        ></span>
-      </label>
-      <label htmlFor="garbage-mode-menu-APS-attack">Attack</label>
-      <input
-        className={'--global-no-spinner' + (APSAttack.error ? ' error' : '')}
-        type="text"
+      <CustomCheckbox
+        id="garbage-mode-menu-enable-APS"
+        labelText="Attack Per Second (APS)"
+        name={APS.name}
+        checked={APS.value}
+        onToggle={() => toggle(setAPS, gameRef, modifyConfig.garbage)}
+      />
+      <LabelInput
+        id="garbage-mode-menu-APS-attack"
+        labelText="Attack"
+        hasError={APSAttack.error}
         name={APSAttack.name}
-        id="garbage-mode-menu-APS"
-        aria-label="Garbage APS"
-        value={APSAttack.value}
+        ariaLabel="Garbage APS"
         onFocus={() => focus(setAPSAttack)}
-        onChange={(e) =>
-          changeUpdate(
-            setAPSAttack,
-            gameRef,
-            modifyConfig.garbage,
-            e.target.value,
-            false,
-            true,
-            true
-          )
-        }
         onBlur={(e) =>
           blur(
             setAPSAttack,
@@ -1275,16 +1087,35 @@ function GarbageModeMenu({ gameRef, show, pubSubRef }) {
             true
           )
         }
+        onChange={(e) =>
+          changeUpdate(
+            setAPSAttack,
+            gameRef,
+            modifyConfig.garbage,
+            e.target.value,
+            false,
+            true,
+            true
+          )
+        }
+        value={APSAttack.value}
       />
-      <label htmlFor="garbage-mode-menu-APS-second">Seconds</label>
-      <input
-        className={'--global-no-spinner' + (APSSecond.error ? ' error' : '')}
-        type="text"
-        name={APSSecond.name}
+      <LabelInput
         id="garbage-mode-menu-APS-second"
-        aria-label="Garbage APS"
-        value={APSSecond.value}
+        labelText="Seconds"
+        hasError={APSSecond.error}
+        name={APSSecond.name}
+        ariaLabel="Garbage APS"
         onFocus={() => focus(setAPSSecond)}
+        onBlur={(e) =>
+          blur(
+            setAPSSecond,
+            getAPSSecond(gameRef.current),
+            e.target.value,
+            true,
+            true
+          )
+        }
         onChange={(e) =>
           changeUpdate(
             setAPSSecond,
@@ -1296,15 +1127,175 @@ function GarbageModeMenu({ gameRef, show, pubSubRef }) {
             true
           )
         }
+        value={APSSecond.value}
+      />
+    </>
+  );
+}
+
+function InitialStateMenu({ gameRef, show, pubSubRef }) {
+  const getNthPC = (game) =>
+    game.config.queueNthPC < 2 ? '' : game.config.queueNthPC;
+  const getInitialHold = (game) => game.config.queueInitialHold.toUpperCase();
+  const getInitialPieces = (game) =>
+    game.config.queueInitialPieces.toUpperCase();
+  const getLimitSize = (game) =>
+    game.config.queueLimitSize === 0 ? '' : game.config.queueLimitSize;
+
+  const [nthPC, setnthPC] = useState({
+    value: getNthPC(gameRef.current),
+    name: 'queueNthPC',
+    error: false,
+    focus: false,
+  });
+
+  const [initialHold, setInitialHold] = useState({
+    value: getInitialHold(gameRef.current),
+    name: 'queueInitialHold',
+    error: false,
+    focus: false,
+  });
+
+  const [initialPieces, setInitialPieces] = useState({
+    value: getInitialPieces(gameRef.current),
+    name: 'queueInitialPieces',
+    error: false,
+    focus: false,
+  });
+
+  const [limitSize, setLimitSize] = useState({
+    value: getLimitSize(gameRef.current),
+    name: 'queueLimitSize',
+    error: false,
+    focus: false,
+  });
+
+  useEffect(() => {
+    // Don't update when menu is hidden
+    if (!show) {
+      return;
+    }
+
+    const setAll = (game) => {
+      if (limitSize.value !== getLimitSize(game)) {
+        set(setLimitSize, getLimitSize(game));
+      }
+      if (nthPC.value !== getNthPC(game)) {
+        set(setnthPC, getNthPC(game));
+      }
+      if (initialHold.value !== getInitialHold(game)) {
+        set(setInitialHold, getInitialHold(game));
+      }
+      if (initialPieces.value !== getInitialPieces(game)) {
+        set(setInitialPieces, getInitialPieces(game));
+      }
+    };
+    setAll(gameRef.current);
+
+    const handleUpdate = () => setAll(gameRef.current);
+    const pubSub = pubSubRef.current;
+    pubSub.subscribe(handleUpdate);
+    return () => pubSub.unsubscribe(handleUpdate);
+  }, [gameRef, pubSubRef, show, limitSize, nthPC, initialHold, initialPieces]);
+
+  return (
+    <>
+      <LabelInput
+        id="initial-menu-nth-pc"
+        labelText="PC Bag"
+        hasError={nthPC.error}
+        name={nthPC.name}
+        ariaLabel="PC bag"
+        onFocus={() => focus(setnthPC)}
         onBlur={(e) =>
-          blur(
-            setAPSSecond,
-            getAPSSecond(gameRef.current),
+          blur(setnthPC, getNthPC(gameRef.current), e.target.value, true)
+        }
+        onChange={(e) =>
+          changeUpdate(
+            setnthPC,
+            gameRef,
+            modifyConfig.queue,
             e.target.value,
-            true,
+            false,
             true
           )
         }
+        value={nthPC.value}
+        maxLength={1}
+      />
+      <LabelInput
+        id="initial-menu-initial-hold"
+        labelText="Initial Hold"
+        hasError={initialHold.error}
+        name={initialHold.name}
+        ariaLabel="Initial hold"
+        onFocus={() => focus(setInitialHold)}
+        onBlur={(e) =>
+          blur(setInitialHold, getInitialHold(gameRef.current), e.target.value)
+        }
+        onChange={(e) =>
+          changeUpdate(
+            setInitialHold,
+            gameRef,
+            modifyConfig.queue,
+            e.target.value,
+            true
+          )
+        }
+        value={initialHold.value}
+        maxLength={1}
+      />
+      <LabelInput
+        id="initial-menu-initial-pieces"
+        labelText="Initial Pieces"
+        hasError={initialPieces.error}
+        name={initialPieces.name}
+        ariaLabel="Initial pieces"
+        onFocus={() => focus(setInitialPieces)}
+        onBlur={(e) =>
+          blur(
+            setInitialPieces,
+            getInitialPieces(gameRef.current),
+            e.target.value
+          )
+        }
+        onChange={(e) =>
+          changeUpdate(
+            setInitialPieces,
+            gameRef,
+            modifyConfig.queue,
+            e.target.value,
+            true
+          )
+        }
+        value={initialPieces.value}
+      />
+      <LabelInput
+        id="initial-menu-limit-size"
+        labelText="Limit Queue Size"
+        hasError={limitSize.error}
+        name={limitSize.name}
+        ariaLabel="Limit queue size"
+        onFocus={() => focus(setLimitSize)}
+        onBlur={(e) =>
+          blur(
+            setLimitSize,
+            getLimitSize(gameRef.current),
+            e.target.value,
+            true
+          )
+        }
+        onChange={(e) =>
+          changeUpdate(
+            setLimitSize,
+            gameRef,
+            modifyConfig.queue,
+            e.target.value,
+            false,
+            true
+          )
+        }
+        value={limitSize.value}
       />
     </>
   );
@@ -1335,6 +1326,7 @@ function GameSettingsMenuForm({ gameRef, pubSubRef, show }) {
           <option value="queue">Queue</option>
           <option value="garbage">Garbage</option>
           <option value="garbage-mode">Garbage Modes</option>
+          <option value="initial-state">Initial State</option>
         </select>
         {activeMenu === 'configuration' && (
           <ConfigurationMenu
@@ -1354,6 +1346,13 @@ function GameSettingsMenuForm({ gameRef, pubSubRef, show }) {
         )}
         {activeMenu === 'garbage-mode' && (
           <GarbageModeMenu
+            gameRef={gameRef}
+            show={show}
+            pubSubRef={pubSubRef}
+          />
+        )}
+        {activeMenu === 'initial-state' && (
+          <InitialStateMenu
             gameRef={gameRef}
             show={show}
             pubSubRef={pubSubRef}
