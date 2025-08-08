@@ -1246,6 +1246,7 @@ function fillRow(game, row, col, currentTime) {
     row,
     col,
     game.fillType,
+    game.highlight,
     queueLib.nextPiece(game.queue)
   );
 
@@ -1276,7 +1277,7 @@ function fillRow(game, row, col, currentTime) {
  * @returns {Object} - The updated game state object.
  */
 function clearRow(game, row, col, currentTime) {
-  const nextBoard = boardLib.clearRow(game.board, row);
+  const nextBoard = boardLib.clearRow(game.board, row, game.highlight);
 
   if (nextBoard === game.board) {
     return game;

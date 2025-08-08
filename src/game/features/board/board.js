@@ -104,6 +104,15 @@ function place(board, piece) {
 }
 
 /**
+ * Checks if a cell has a highlight.
+ * @param {string} cell - The cell value to check.
+ * @returns {boolean} True if the cell has a highlighted segment, false otherwise.
+ */
+function hasHighlight(cell) {
+  return cell.includes('h');
+}
+
+/**
  * Combines two strings.
  * Ensures only one occurrence of a highlighted segment ('h') exists.
  *
@@ -116,7 +125,6 @@ function place(board, piece) {
  * @example
  * addStringsUnique('o ho', 'hz'); // returns 'o hz'
  */
-
 function addStrUniqueHighlight(str1, str2) {
   // Adding highlight
   if (str2[0].includes('h')) {
@@ -146,7 +154,7 @@ function addUniqueHighlight(str1, str2) {
  * Filters a string to only include or exclude words that contain the highlight ('h') character.
  *
  * @param {string} str - The string to filter.
- * @param {boolean} [inverse=false] - If true, words with 'h' persist. If false, words with 'h' are removed.
+ * @param {boolean} [keep=false] - If true, words with 'h' persist. If false, words with 'h' are removed.
  *
  * @returns {string} - The filtered string.
  *
@@ -154,8 +162,8 @@ function addUniqueHighlight(str1, str2) {
  * filterHighlight('o hz', true); // returns 'o'
  * filterHighlight('o hz', false); // returns 'hz'
  */
-function filterHighlight(str, inverse = false) {
-  if (inverse) {
+function filterHighlight(str, keep = false) {
+  if (keep) {
     return str
       .split(' ')
       .filter((word) => !word.includes('h'))
@@ -329,11 +337,16 @@ function fillCells(board, cells, type, highlight) {
  * @param {number} row - The row index of the cell to fill.
  * @param {number} col - The column index of the cell to fill.
  * @param {string} type - The type of piece to fill the row with.
+ * @param {Object} highlight - Whether to highlight the row.
  * @param {Object} nextPiece - The next piece object.
  *
  * @returns {Object} The updated board object.
  */
-function fillRow(board, row, col, type, nextPiece) {
+function fillRow(board, row, col, type, highlight, nextPiece) {
+  if (highlight) {
+    return highlightRow(board, row, col, type);
+  }
+
   // Prevent filling on top of next piece
   for (let i = 0; i < nextPiece.span.length; i++) {
     if (
@@ -383,19 +396,74 @@ function fillRow(board, row, col, type, nextPiece) {
 }
 
 /**
+ * Highlights a row on the board with a specified type.
+ *
+ * @function highlightRow
+ * @param {Object} board - The board object containing the grid.
+ * @param {number} row - The row index of the row to highlight.
+ * @param {number} col - The column index where the highlight should have a hole.
+ * @param {string} type - The type of highlight to apply.
+ *
+ * @returns {Object} The updated board object.
+ */
+function highlightRow(board, row, col, type) {
+  const fillType = `h${type}`;
+
+  const hasType = (cell) => cell.includes(fillType);
+
+  // If already highlighted then do nothing
+  const gridRow = board.grid[row];
+  if (gridRow) {
+    let filled = true;
+    for (let i = 0; i < gridRow.length; i++) {
+      if (i === col && hasHighlight(gridRow[i])) {
+        filled = false;
+        break;
+      }
+      if (i !== col && !hasType(gridRow[i])) {
+        filled = false;
+        break;
+      }
+    }
+
+    if (filled) {
+      return board;
+    }
+  }
+
+  const nextGrid = copyGrid(board);
+  addRowsIfNeeded(nextGrid, row + 1);
+  for (let i = 0; i < nextGrid[row].length; i++) {
+    if (i === col) {
+      nextGrid[row][i] = filterHighlight(nextGrid[row][i], true);
+      continue;
+    }
+
+    nextGrid[row][i] = addStrUniqueHighlight(nextGrid[row][i], fillType);
+  }
+
+  return { ...board, grid: nextGrid };
+}
+
+/**
  * Clears a row on the board.
  *
  * @param {Object} board - The board object containing the grid.
  * @param {number} row - The row index of the row to clear.
+ * @param {boolean} highlight - Remove highlight instead.
  *
  * @returns {Object} The updated board object.
  * - If the row is already empty the function returns the original board.
  * - If the row is cleared the function returns a new board with the updated grid.
  */
-function clearRow(board, row) {
+function clearRow(board, row, highlight) {
   const gridRow = board.grid[row];
   if (!gridRow) {
     return board;
+  }
+
+  if (highlight) {
+    return removeHighlightRow(board, row);
   }
 
   // If row is already empty then do nothing
@@ -415,6 +483,38 @@ function clearRow(board, row) {
   for (let i = 0; i < nextGrid[row].length; i++) {
     // Leave highlighted cell
     nextGrid[row][i] = filterHighlight(nextGrid[row][i]);
+  }
+  return { ...board, grid: nextGrid };
+}
+
+/**
+ * Removes highlights from a specific row on the board.
+ *
+ * @param {Object} board - The board object containing the grid.
+ * @param {number} row - The row index of the row to remove highlights from.
+ *
+ * @returns {Object} The updated board object.
+ * - If the row has no highlights, the function returns the original board.
+ * - If the row had highlights removed, the function returns a new board with the updated grid.
+ */
+function removeHighlightRow(board, row) {
+  const gridRow = board.grid[row];
+
+  let cleared = true;
+  for (let i = 0; i < gridRow.length; i++) {
+    if (hasHighlight(gridRow[i])) {
+      cleared = false;
+      break;
+    }
+  }
+
+  if (cleared) {
+    return board;
+  }
+
+  const nextGrid = copyGrid(board);
+  for (let i = 0; i < nextGrid[row].length; i++) {
+    nextGrid[row][i] = filterHighlight(nextGrid[row][i], true);
   }
   return { ...board, grid: nextGrid };
 }
@@ -540,7 +640,6 @@ function isGridRowOccupied(grid, row) {
  *
  * @returns {boolean} Returns true if all cells in the grid are empty, false otherwise.
  */
-
 function isAllClear(grid) {
   for (let i = 0; i < grid.length; i++) {
     for (let j = 0; j < grid[i].length; j++) {
@@ -675,7 +774,6 @@ function addLines(board, lines, piece) {
  * @returns {Array} An array of arrays of strings, representing the garbage lines
  *   with holes.
  */
-
 function createGarbageLines(cols, amountLines, hole) {
   const lines = Array.from({ length: amountLines }, () =>
     Array(cols).fill('g')
