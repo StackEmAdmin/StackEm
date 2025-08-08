@@ -7,22 +7,79 @@ import { pieceLib } from '../piece/piece';
  * @function newBoard
  * @param {number} rows - The number of rows in the board grid.
  * @param {number} cols - The number of columns in the board grid.
+ * @param {string} initialGrid - Specifies the initial board grid on game start.
  *
  * @returns {Object} The new board object.
  * @property {number} rows - The number of rows in the board grid.
  * @property {number} cols - The number of columns in the board grid.
  * @property {Array} grid - The 2D array representing the board grid.
  */
-function newBoard(rows, cols) {
+function newBoard(rows, cols, initialGrid) {
   return {
     rows: rows,
     cols: cols,
-    grid: newGrid(rows, cols),
+    grid: newGrid(rows, cols, initialGrid),
   };
 }
 
-function newGrid(rows, cols) {
-  return Array.from({ length: rows }, () => Array(cols).fill(''));
+function newGrid(rows, cols, initialGrid = '') {
+  if (!initialGrid) {
+    return Array.from({ length: rows }, () => Array(cols).fill(''));
+  }
+
+  return strToGrid(initialGrid, rows, cols);
+}
+
+/**
+ * Converts a string representation of a grid into a 2D array.
+ *
+ * @param {string} str - The string representation of the grid, where each
+ *   character is a column and each line is a row.
+ * @param {number} rows - The number of rows in the board grid.
+ *
+ * @returns {Array} The 2D array representing the board grid.
+ */
+function strToGrid(str, rows) {
+  // String format example:
+  // . . . j j j . . . .
+  // l . . z z j s . . .
+  // l . . . z z s s o o
+  // l l . i i i i s o o
+
+  // Supports highlights (h followed by type). Ex:
+  // . . . j hj . . . hto .
+
+  const formatCell = (string) => {
+    if (string.includes('.')) {
+      return '';
+    }
+
+    if (string.length < 3) {
+      return string;
+    }
+
+    // Cell filled and highlighted examples:
+    // hot -> ho t
+    // tho -> t ho
+    if (string[0] === 'h') {
+      return `${string.slice(0, 2)} ${string.slice(2)}`;
+    }
+
+    return `${string[0]} ${string.slice(1)}`;
+  };
+
+  // Every linebreak is a new row
+  const gridRows = str.trim().toLowerCase().split(/\r?\n/).reverse();
+
+  // Every space is a new column, trim extra spaces, and format
+  const grid = gridRows.map((row) =>
+    row
+      .trim()
+      .split(/\s+/)
+      .map((cell) => formatCell(cell))
+  );
+
+  return addRowsIfNeeded(grid, rows);
 }
 
 /**
@@ -55,13 +112,15 @@ function copyGrid(board) {
  * @param {Array} grid - The 2D array representing the board grid.
  * @param {number} length - The minimum number of rows required in the grid.
  *
- * @returns {void} The function does not return a value, but it modifies the grid in place.
+ * @returns {Array} Modifies grid in place and returns the modified grid.
  */
 function addRowsIfNeeded(grid, length) {
   const cols = grid[0].length;
   while (grid.length < length) {
     grid.push(Array(cols).fill(''));
   }
+
+  return grid;
 }
 
 /**

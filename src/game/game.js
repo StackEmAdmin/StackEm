@@ -42,6 +42,7 @@ import newRules, { rulesLib } from './features/rules/rules';
  * @param {string} [options.queueInitialPieces=''] - Optional string specifying the initial piece type sequence in the queue.
  * @param {number} [options.queueNthPC=1] - Specifies which All Clear (PC) scenario to simulate by removing pieces from the initial bag added.
  * @param {boolean} [options.queueNewSeedOnReset=true] - Whether to generate a new seed for the queue when the game is reset.
+ * @param {string} [options.boardInitialGrid=''] - Optional string specifying the initial board grid on game start.
  * @param {boolean} [options.enableUndo=false] - Whether to enable undo and redo.
  * @returns {Object} - The new game state object.
  */
@@ -77,6 +78,7 @@ function newGame({
   queueInitialPieces = '',
   queueNthPC = 1,
   queueNewSeedOnReset = true,
+  boardInitialGrid = '',
   garbageSeed = undefined,
   garbageNewSeedOnReset = true,
   enableUndo = false,
@@ -112,6 +114,7 @@ function newGame({
     queueInitialPieces,
     queueNthPC,
     queueNewSeedOnReset,
+    boardInitialGrid,
     garbageSeed,
     garbageNewSeedOnReset,
     enableUndo,
@@ -160,7 +163,7 @@ function newGame({
     twist: '',
     numPieces: 0,
     numAttack: 0,
-    board: newBoard(rows, cols),
+    board: newBoard(rows, cols, boardInitialGrid),
     queue: queue,
     rules: newRules(kick, attack, spins),
     gravity: newGravity(
@@ -1724,6 +1727,15 @@ function modifyGarbage(game, property, value, currentTime) {
   };
 }
 
+function modifyBoard(game, property, value) {
+  if (game.config[property] === undefined || game.config[property] === value) {
+    return game;
+  }
+
+  const nextConfig = { ...game.config, [property]: value };
+  return { ...game, config: nextConfig, UR: URLib.save(game.UR, game) };
+}
+
 const controller = {
   update,
   reset,
@@ -1759,6 +1771,7 @@ const modifyConfig = {
   gravity: modifyGravity,
   queue: modifyQueue,
   garbage: modifyGarbage,
+  board: modifyBoard,
 };
 
 export { newGame as default, controller, modifyConfig };

@@ -1,4 +1,25 @@
+// Grid Regular Expression Calculation
+//   Token is exactly one of:
+//     1: . (dot)
+//     2: type
+//     3. type + highlight type
+//     4. highlight type + type
+//     5. highlight type
+//   Row is exactly 10 tokens (space delimited)
+
+const types = '[oiljstzgOILJSTZG]';
+const hTypes = `[hH]${types}`;
+const token = `(?:\\.|${types}|${types}?${hTypes}|${hTypes}${types}?)`;
+const row = `^(?:${token} ){9}${token}$`;
+const ROW_REGEX = new RegExp(row);
+
 const c = {
+  // Game
+  ROWS_TYPE: 'integer',
+  ROWS_VALUE: 26,
+  COLS_TYPE: 'integer',
+  COLS_VALUE: 10,
+
   // Spin Detection System Settings
   SPINS_TYPE: 'string',
   SPINS_OPTIONS: [
@@ -106,6 +127,22 @@ const c = {
   GARBAGE_MODE_APS_SECOND_MIN: 0.1,
   GARBAGE_MODE_APS_SECOND_MAX: 3600,
   GARBAGE_MODE_APS_SECOND_DEFAULT: 1,
+
+  // Board Settings
+  BOARD_INITIAL_GRID_TYPE: 'string',
+  BOARD_INITIAL_GRID_ROW_REGEX: ROW_REGEX,
+  BOARD_INITIAL_GRID_MAX_ROWS: 52,
+  // Piece spawn coords
+  BOARD_INITIAL_GRID_ILLEGAL_COORDS: [
+    [21, 3],
+    [21, 4],
+    [21, 5],
+    [21, 6],
+    [22, 3],
+    [22, 4],
+    [22, 5],
+  ],
+  BOARD_INITIAL_GRID_DEFAULT: '',
 };
 
 export default c;

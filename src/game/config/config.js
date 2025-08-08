@@ -169,6 +169,54 @@ function validGarbageModeAPSSecond(val) {
   );
 }
 
+function validBoardInitialGrid(val) {
+  if (typeof val !== c.BOARD_INITIAL_GRID_TYPE) {
+    return false;
+  }
+
+  if (val === '') {
+    return true;
+  }
+
+  // Split on new line and check every row
+  const rows = val.split(/\r?\n/);
+  if (rows.length > c.BOARD_INITIAL_GRID_MAX_ROWS) {
+    return false;
+  }
+
+  for (const row of rows) {
+    if (row.split(/\s+/).length !== c.COLS_VALUE) {
+      return false;
+    }
+
+    if (!c.BOARD_INITIAL_GRID_ROW_REGEX.test(row)) {
+      return false;
+    }
+  }
+
+  // Validate that piece can spawn
+  if (rows.length < 22) {
+    return true;
+  }
+  // Returns non-highlight fill type
+  const getType = (str) => {
+    if (str.length === 0 || str.length === 2 || str === '.') {
+      return '';
+    }
+    return str[0] === 'h' ? str[2] : str[0];
+  };
+  const grid = rows.reverse().map((row) => row.split(/\s+/));
+  const legal = c.BOARD_INITIAL_GRID_ILLEGAL_COORDS.every((coord) => {
+    const [row, col] = coord;
+    if (grid.length <= row) {
+      return true;
+    }
+    return getType(grid[row][col]) === '';
+  });
+
+  return legal;
+}
+
 const validate = {
   spins: validSpins,
   gravity: validGravity,
@@ -194,6 +242,7 @@ const validate = {
   garbageCheesiness: validGarbageCheesiness,
   garbageModeAPSAttack: validGarbageModeAPSAttack,
   garbageModeAPSSecond: validGarbageModeAPSSecond,
+  boardInitialGrid: validBoardInitialGrid,
 };
 
 const defaults = {
@@ -217,6 +266,7 @@ const defaults = {
   garbageCheesiness: c.GARBAGE_CHEESINESS_DEFAULT,
   garbageModeAPSAttack: c.GARBAGE_MODE_APS_ATTACK_DEFAULT,
   garbageModeAPSSecond: c.GARBAGE_MODE_APS_SECOND_DEFAULT,
+  boardInitialGrid: c.BOARD_INITIAL_GRID_DEFAULT,
 };
 
 export { validate as default, defaults };
