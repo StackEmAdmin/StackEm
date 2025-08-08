@@ -128,14 +128,14 @@ function validGarbageChargeDelay(val) {
 
 function validGarbageChargePieces(val) {
   return (
-    typeof val === c.GARBAGE_CHARGE_PIECES_TYPE &&
+    validType(val, c.GARBAGE_CHARGE_PIECES_TYPE) &&
     validRange(val, c.GARBAGE_CHARGE_PIECES_MIN, c.GARBAGE_CHARGE_PIECES_MAX)
   );
 }
 
 function validGarbageCap(val) {
   return (
-    typeof val === c.GARBAGE_CAP_TYPE &&
+    validType(val, c.GARBAGE_CAP_TYPE) &&
     validRange(val, c.GARBAGE_CAP_MIN, c.GARBAGE_CAP_MAX)
   );
 }
@@ -149,7 +149,7 @@ function validGarbageCheesiness(val) {
 
 function validGarbageModeAPSAttack(val) {
   return (
-    typeof val === c.GARBAGE_MODE_APS_ATTACK_TYPE &&
+    validType(val, c.GARBAGE_MODE_APS_ATTACK_TYPE) &&
     validRange(
       val,
       c.GARBAGE_MODE_APS_ATTACK_MIN,
