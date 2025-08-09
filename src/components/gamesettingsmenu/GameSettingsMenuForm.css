@@ -4,30 +4,31 @@
 
   padding: 3rem 2rem;
   padding-top: 0;
-  margin-bottom: 3rem;
 }
 
-#game-settings-menu-form {
+.game-settings-menu-form {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+
+  padding-bottom: 5rem;
 }
 
-#game-settings-menu-form .title {
+.game-settings-menu-form .title {
   font-size: 1.2rem;
   font-weight: bold;
 }
 
-#game-settings-menu-form #game-settings-options {
+.game-settings-menu-form #game-settings-options {
   margin-bottom: 1rem;
 }
 
-#game-settings-menu-form select.main {
+.game-settings-menu-form select.main {
   background: var(--color-lighter);
   height: 3rem;
 }
 
-#game-settings-menu-form select {
+.game-settings-menu-form select {
   width: 100%;
   height: 2.25rem;
   background: var(--color-light);
@@ -38,11 +39,11 @@
   font-size: 1rem;
 }
 
-#game-settings-menu-form select option {
+.game-settings-menu-form select option {
   font-size: 1rem;
 }
 
-#game-settings-menu-form label {
+.game-settings-menu-form label {
   cursor: pointer;
   padding-right: 0.5rem;
 
@@ -51,7 +52,8 @@
   margin-top: 0.7rem;
 }
 
-#game-settings-menu-form input {
+.game-settings-menu-form input,
+.game-settings-menu-form textarea {
   background-color: var(--color-light);
   padding: 0.5rem 1rem;
   border-radius: var(--border-radius);
@@ -60,51 +62,234 @@
   font-size: 1rem;
 }
 
-#game-settings-menu-form input.error {
+.game-settings-menu-form textarea {
+  padding: 0.5rem;
+  resize: none;
+  white-space: nowrap;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.game-settings-menu-form input.error,
+.game-settings-menu-form textarea.error {
   border: 1px solid var(--error-color);
   animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-#game-settings-menu-form .custom-checkbox {
+.game-settings-menu-form .menu-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+
+  padding-top: 0.7rem;
+}
+
+.game-settings-menu-form .menu-row label {
+  flex: 1;
+  margin: 0;
+}
+
+.game-settings-menu-form .menu-row button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 2.3rem;
+  width: 2.3rem;
+  border-radius: var(--border-radius);
+
+  position: relative;
+  top: 0.4rem;
+}
+
+.game-settings-menu-form .menu-row button:hover {
+  background-color: var(--color-light);
+}
+
+.game-settings-menu-form .menu-row button:active {
+  background-color: var(--color-lighter);
+}
+
+.game-settings-menu-form .menu-row svg {
+  height: 1.1rem;
+  width: 1.1rem;
+  color: var(--text-color);
+}
+
+.game-settings-menu-form .menu-row button:hover svg {
+  color: var(--accent-color);
+}
+
+.game-settings-menu-form .menu-row button:active svg {
+  color: var(--text-color);
+}
+
+.menu-overlay-container {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  background: var(--color);
+}
+
+.menu-overlay-container .menu-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  width: 100%;
+  height: 100%;
+  padding: 2rem 0;
+
+  overflow-y: auto;
+}
+
+.menu-overlay-container .menu-overlay .game-settings-interactive-grid {
+  width: 15rem;
+}
+
+.menu-overlay-container .game-settings-interactive-grid .title {
+  padding-bottom: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: normal;
+  margin-top: 0.7rem;
+}
+
+.menu-overlay-container .game-settings-interactive-grid button.submit {
+  margin-top: 2rem;
+  align-self: center;
+}
+
+.menu-overlay-container .game-settings-interactive-grid .options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.menu-overlay-container .game-settings-interactive-grid button.fill-type {
+  border-radius: var(--border-radius);
+  width: 2rem;
+  height: 2rem;
+  opacity: 0.4;
+}
+
+.game-settings-interactive-grid button.fill-type.active {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.menu-overlay-container .game-settings-interactive-grid button.fill-type.o {
+  background-color: var(--o);
+}
+
+.menu-overlay-container .game-settings-interactive-grid button.fill-type.i {
+  background-color: var(--i);
+}
+
+.menu-overlay-container .game-settings-interactive-grid button.fill-type.l {
+  background-color: var(--l);
+}
+
+.menu-overlay-container .game-settings-interactive-grid button.fill-type.j {
+  background-color: var(--j);
+}
+
+.menu-overlay-container .game-settings-interactive-grid button.fill-type.s {
+  background-color: var(--s);
+}
+
+.menu-overlay-container .game-settings-interactive-grid button.fill-type.t {
+  background-color: var(--t);
+}
+
+.menu-overlay-container .game-settings-interactive-grid button.fill-type.z {
+  background-color: var(--z);
+}
+
+.menu-overlay-container .game-settings-interactive-grid button.fill-type.g {
+  background-color: var(--g);
+}
+
+.menu-overlay-container button.close {
+  cursor: pointer;
+
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 3rem;
+  height: 3rem;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: var(--border-radius);
+}
+
+.menu-overlay-container button.close:hover {
+  background: var(--color-light);
+}
+
+.menu-overlay-container button.close:active {
+  background: var(--color-lighter);
+}
+
+.menu-overlay-container button.close svg {
+  color: var(--text-color);
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.menu-overlay-container button.close:hover svg {
+  color: var(--accent-color);
+}
+
+.menu-overlay-container button.close:active svg {
+  color: var(--text-color);
+}
+
+.game-settings-menu-form .custom-checkbox {
   display: flex;
   justify-content: space-between;
 }
 
-#game-settings-menu-form .custom-checkbox .toggle {
+.game-settings-menu-form .custom-checkbox .toggle {
   display: none;
 }
 
-#game-settings-menu-form .custom-checkbox .toggle,
-#game-settings-menu-form .custom-checkbox .toggle:after,
-#game-settings-menu-form .custom-checkbox .toggle:before,
-#game-settings-menu-form .custom-checkbox .toggle *,
-#game-settings-menu-form .custom-checkbox .toggle *:after,
-#game-settings-menu-form .custom-checkbox .toggle *:before,
-#game-settings-menu-form .custom-checkbox .toggle + .toggle-button {
+.game-settings-menu-form .custom-checkbox .toggle,
+.game-settings-menu-form .custom-checkbox .toggle:after,
+.game-settings-menu-form .custom-checkbox .toggle:before,
+.game-settings-menu-form .custom-checkbox .toggle *,
+.game-settings-menu-form .custom-checkbox .toggle *:after,
+.game-settings-menu-form .custom-checkbox .toggle *:before,
+.game-settings-menu-form .custom-checkbox .toggle + .toggle-button {
   box-sizing: border-box;
 }
 
-#game-settings-menu-form .custom-checkbox .toggle::-moz-selection,
-#game-settings-menu-form .custom-checkbox .toggle:after::-moz-selection,
-#game-settings-menu-form .custom-checkbox .toggle:before::-moz-selection,
-#game-settings-menu-form .custom-checkbox .toggle *::-moz-selection,
-#game-settings-menu-form .custom-checkbox .toggle *:after::-moz-selection,
-#game-settings-menu-form .custom-checkbox .toggle *:before::-moz-selection,
-#game-settings-menu-form
+.game-settings-menu-form .custom-checkbox .toggle::-moz-selection,
+.game-settings-menu-form .custom-checkbox .toggle:after::-moz-selection,
+.game-settings-menu-form .custom-checkbox .toggle:before::-moz-selection,
+.game-settings-menu-form .custom-checkbox .toggle *::-moz-selection,
+.game-settings-menu-form .custom-checkbox .toggle *:after::-moz-selection,
+.game-settings-menu-form .custom-checkbox .toggle *:before::-moz-selection,
+.game-settings-menu-form
   .custom-checkbox
   .toggle
   + .toggle-button::-moz-selection,
-#game-settings-menu-form .custom-checkbox .toggle::selection,
-#game-settings-menu-form .custom-checkbox .toggle:after::selection,
-#game-settings-menu-form .custom-checkbox .toggle:before::selection,
-#game-settings-menu-form .custom-checkbox .toggle *::selection,
-#game-settings-menu-form .custom-checkbox .toggle *:after::selection,
-#game-settings-menu-form .custom-checkbox .toggle *:before::selection,
-#game-settings-menu-form .custom-checkbox .toggle + .toggle-button::selection {
+.game-settings-menu-form .custom-checkbox .toggle::selection,
+.game-settings-menu-form .custom-checkbox .toggle:after::selection,
+.game-settings-menu-form .custom-checkbox .toggle:before::selection,
+.game-settings-menu-form .custom-checkbox .toggle *::selection,
+.game-settings-menu-form .custom-checkbox .toggle *:after::selection,
+.game-settings-menu-form .custom-checkbox .toggle *:before::selection,
+.game-settings-menu-form .custom-checkbox .toggle + .toggle-button::selection {
   background: none;
 }
 
-#game-settings-menu-form .custom-checkbox .toggle + .toggle-button {
+.game-settings-menu-form .custom-checkbox .toggle + .toggle-button {
   outline: 0;
   display: block;
   width: 5em;
@@ -128,12 +313,12 @@
   background: var(--color-lighter);
 }
 
-#game-settings-menu-form .custom-checkbox .toggle + .toggle-button:hover {
+.game-settings-menu-form .custom-checkbox .toggle + .toggle-button:hover {
   border: 1px solid var(--accent-color);
 }
 
-#game-settings-menu-form .custom-checkbox .toggle + .toggle-button:after,
-#game-settings-menu-form .custom-checkbox .toggle + .toggle-button:before {
+.game-settings-menu-form .custom-checkbox .toggle + .toggle-button:after,
+.game-settings-menu-form .custom-checkbox .toggle + .toggle-button:before {
   position: absolute;
   /* content: ''; */
   height: 100%;
@@ -148,37 +333,37 @@
   align-items: center;
 }
 
-#game-settings-menu-form .custom-checkbox .toggle + .toggle-button:after {
+.game-settings-menu-form .custom-checkbox .toggle + .toggle-button:after {
   left: 100%;
   content: attr(data-tg-on);
 }
 
-#game-settings-menu-form .custom-checkbox .toggle + .toggle-button:before {
+.game-settings-menu-form .custom-checkbox .toggle + .toggle-button:before {
   left: 0;
   content: attr(data-tg-off);
 }
-#game-settings-menu-form .custom-checkbox .toggle + .toggle-button:active {
+.game-settings-menu-form .custom-checkbox .toggle + .toggle-button:active {
   border: 1px solid var(--card-border-color-active);
 }
-#game-settings-menu-form
+.game-settings-menu-form
   .custom-checkbox
   .toggle
   + .toggle-button:active:before {
   left: -10%;
 }
-#game-settings-menu-form
+.game-settings-menu-form
   .custom-checkbox
   .toggle:checked
   + .toggle-button:before {
   left: -100%;
 }
-#game-settings-menu-form
+.game-settings-menu-form
   .custom-checkbox
   .toggle:checked
   + .toggle-button:after {
   left: 0;
 }
-#game-settings-menu-form
+.game-settings-menu-form
   .custom-checkbox
   .toggle:checked
   + .toggle-button:active:after {
@@ -205,5 +390,19 @@
   40%,
   60% {
     transform: translate3d(4px, 0, 0);
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .menu-overlay-container .menu-overlay {
+    flex-direction: row;
+    justify-content: center;
+    gap: 5rem;
+    padding: 0;
+  }
+
+  .menu-overlay-container .game-settings-interactive-grid button.submit {
+    margin-top: 1rem;
+    align-self: flex-end;
   }
 }

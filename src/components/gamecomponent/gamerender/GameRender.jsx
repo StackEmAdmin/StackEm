@@ -470,4 +470,4 @@ function GameRender({ game, fillCell, clearCell, resetFillCell }) {
   );
 }
 
-export default GameRender;
+export { GameRender as default, GridTop, Grid, calcRowColFromRect };

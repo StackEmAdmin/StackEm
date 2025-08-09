@@ -170,6 +170,8 @@ const c = {
     [22, 5],
   ],
   BOARD_INITIAL_GRID_DEFAULT: '',
+
+  FILL_TYPES: ['o', 'i', 'l', 'j', 's', 't', 'z', 'g'],
 };
 
 export default c;

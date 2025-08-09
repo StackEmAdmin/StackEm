@@ -1,0 +1,20 @@
+.game-container.grid-container {
+  --cell-size: 1.5rem;
+
+  min-height: calc(26 * var(--cell-size));
+}
+
+.game-container.grid-container .board-top {
+  left: var(--border-width);
+}
+
+.game-container.grid-container .board {
+  border-bottom-left-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
+}
+
+@media screen and (min-width: 768px) {
+  .game-container.grid-container {
+    min-height: auto;
+  }
+}

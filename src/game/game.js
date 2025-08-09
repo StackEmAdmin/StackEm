@@ -1087,6 +1087,14 @@ function toggleHighlight(game, currentTime) {
   };
 }
 
+function toggleAutoColor(game, currentTime) {
+  return {
+    ...game,
+    UR: URLib.save(game.UR, game),
+    autoColor: !game.autoColor,
+  };
+}
+
 /**
  * Sets the fill type of the game to the given type.
  *
@@ -1788,6 +1796,7 @@ const controller = {
   hold,
   receiveGarbage,
   toggleHighlight,
+  toggleAutoColor,
   setFillType,
   fillCell,
   clearCell,

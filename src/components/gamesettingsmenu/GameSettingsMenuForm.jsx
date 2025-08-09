@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import validate from '../../game/config/config';
 import c from '../../game/config/constants';
 import { modifyConfig } from '../../game/game';
 import str from '../../util/str';
+import GameGrid from '../gamegrid/GameGrid';
+import newGame, { controller } from '../../game/game';
 
+import GridSVG from '../../assets/img/GridSVG';
+import CloseSVG from '../../assets/img/CloseSVG';
 import './GameSettingsMenuForm.css';
 
 function set(setState, value) {
@@ -124,7 +129,8 @@ function changeUpdate(
   value,
   valueToLower = false,
   valueToNumber = false,
-  valueSkipEmpty = false
+  valueSkipEmpty = false,
+  valueParseGrid = false
 ) {
   setState((state) => {
     if (state.value === value) {
@@ -135,11 +141,15 @@ function changeUpdate(
       return { ...state, value: value };
     }
 
-    const val = valueToLower
+    let val = valueToLower
       ? value.toLowerCase()
       : valueToNumber
       ? Number(value)
       : value;
+
+    if (valueParseGrid) {
+      val = parseGrid(val);
+    }
 
     if (validate[state.name](val)) {
       gameRef.current = update(
@@ -153,6 +163,118 @@ function changeUpdate(
 
     return { ...state, value: value };
   });
+}
+
+/**
+ * Splits a string into a 2D array, where each element of the array
+ * is a row of the input string, and each element of the inner arrays
+ * is a column of the input string.
+ *
+ * If a row has fewer columns than the row with the most columns, the
+ * row is padded (end) with '.' characters.
+ *
+ * @param {string} text - The input string to be split into a 2D array.
+ * @returns {string[][]} 2D array of strings.
+ */
+function tokenizeGrid(text) {
+  // Split text into rows and columns removing excess whitespace
+  const rows = text
+    .trim()
+    .split(/\r?\n/)
+    .map((line) => line.trim().split(/\s+/));
+
+  const cols = Math.max(...rows.map((row) => row.length));
+  const grid = rows.map((row) => {
+    const copy = row.slice();
+    while (copy.length < cols) {
+      copy.push('.');
+    }
+    return copy;
+  });
+
+  return grid;
+}
+
+/**
+ * Formats the grid so that each column is padded to the width
+ * of the longest token in that column.
+ *
+ * @param {string} text - The input string to be formatted.
+ * @returns {string} Formatted string with padded columns.
+ */
+function formatGrid(text) {
+  // Ensure valid before formatting
+  if (text === '') {
+    return text;
+  }
+
+  const grid = tokenizeGrid(text);
+  const cols = grid[0].length;
+
+  // Calculate max width for each column
+  const colsWidths = new Array(cols).fill(0);
+  for (let r = 0; r < grid.length; r++) {
+    for (let c = 0; c < grid[r].length; c++) {
+      colsWidths[c] = Math.max(colsWidths[c], grid[r][c].length);
+    }
+  }
+
+  // Convert to string with padded columns
+  const padded = grid.map((row) => {
+    return row
+      .map((col, i) => {
+        return String(col).padStart(colsWidths[i], ' ');
+      })
+      .join(' ');
+  });
+
+  return padded.join('\n');
+}
+
+/**
+ * Parses the input text by removing excess whitespace.
+ * This includes collapsing extra spaces between tokens.
+ *
+ * @param {string} text - The input string to be parsed.
+ * @returns {string} Parsed string with standardized spacing.
+ */
+
+function parseGrid(text) {
+  // Remove excess whitespaces
+  const parsed = text
+    .trim()
+    .split(/\r?\n/)
+    .map((line) => line.trim().split(/\s+/).join(' '))
+    .join('\n');
+
+  return parsed;
+}
+
+/**
+ * Converts a 2D array into a string, where each element of the array
+ * is a row of the input string, and each element of the inner arrays
+ * is a column of the input string.
+ *
+ * @param {string[][]} arr - The 2D array to be converted into a string.
+ * @returns {string} String representation of the array.
+ */
+function parseGridArr(arr) {
+  let copy = arr.map((row) => row.slice()).reverse();
+
+  // Filter empty rows following the last non-empty row
+  let foundOccupied = false;
+  copy = copy.filter((row) => {
+    if (foundOccupied) {
+      return true;
+    }
+    foundOccupied = row.some((col) => col !== '');
+    return foundOccupied;
+  });
+
+  // Replace empty spaces with '.'
+  return copy
+    .map((row) => row.map((col) => col.replace(' ', '') || '.').join(' '))
+    .join('\n');
 }
 
 function CustomCheckbox({
@@ -1135,6 +1257,7 @@ function GarbageModeMenu({ gameRef, show, pubSubRef }) {
 
 function InitialStateMenu({ gameRef, show, pubSubRef }) {
   const getEnableUndo = (game) => !!game.config.enableUndo;
+  const getInitialGrid = (game) => formatGrid(game.config.boardInitialGrid);
   const getNthPC = (game) =>
     game.config.queueNthPC < 2 ? '' : game.config.queueNthPC;
   const getInitialHold = (game) => game.config.queueInitialHold.toUpperCase();
@@ -1146,6 +1269,13 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
   const [enableUndo, setEnableUndo] = useState({
     value: getEnableUndo(gameRef.current),
     name: 'enableUndo',
+  });
+
+  const [initialGrid, setInitialGrid] = useState({
+    value: getInitialGrid(gameRef.current),
+    name: 'boardInitialGrid',
+    error: false,
+    focus: false,
   });
 
   const [nthPC, setnthPC] = useState({
@@ -1176,6 +1306,8 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
     focus: false,
   });
 
+  const [showInteractiveGrid, setShowInteractiveGrid] = useState(false);
+
   useEffect(() => {
     // Don't update when menu is hidden
     if (!show) {
@@ -1185,6 +1317,9 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
     const setAll = (game) => {
       if (enableUndo.value !== getEnableUndo(game)) {
         set(setEnableUndo, getEnableUndo(game));
+      }
+      if (initialGrid.value !== getInitialGrid(game)) {
+        set(setInitialGrid, getInitialGrid(game));
       }
       if (limitSize.value !== getLimitSize(game)) {
         set(setLimitSize, getLimitSize(game));
@@ -1210,6 +1345,7 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
     pubSubRef,
     show,
     enableUndo,
+    initialGrid,
     limitSize,
     nthPC,
     initialHold,
@@ -1218,6 +1354,24 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
 
   return (
     <>
+      {showInteractiveGrid && (
+        <InteractiveGrid
+          initialGrid={parseGrid(initialGrid.value)}
+          onClose={() => setShowInteractiveGrid(false)}
+          onSubmit={(value) => {
+            changeUpdate(
+              setInitialGrid,
+              gameRef,
+              modifyConfig.board,
+              value,
+              true,
+              false,
+              false,
+              true
+            );
+          }}
+        />
+      )}
       <CustomCheckbox
         id="initial-menu-enable-undo"
         labelText="Enable Undo"
@@ -1225,6 +1379,44 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
         checked={enableUndo.value}
         onToggle={() => toggle(setEnableUndo, gameRef, modifyConfig.config)}
       />
+      <div className="menu-row">
+        <label htmlFor="initial-menu-initial-grid">Initial Grid</label>
+        <button onClick={() => setShowInteractiveGrid(!showInteractiveGrid)}>
+          <GridSVG />
+        </button>
+      </div>
+      <textarea
+        className={'--global-no-spinner' + (initialGrid.error ? ' error' : '')}
+        type="text"
+        name={initialGrid.name}
+        id="initial-menu-initial-grid"
+        aria-label="Initial grid"
+        spellCheck={false}
+        rows={initialGrid.value ? initialGrid.value.split('\n').length : 1}
+        onFocus={() => focus(setInitialGrid)}
+        onBlur={(e) =>
+          blur(
+            setInitialGrid,
+            getInitialGrid(gameRef.current),
+            parseGrid(e.target.value),
+            false,
+            false
+          )
+        }
+        onChange={(e) =>
+          changeUpdate(
+            setInitialGrid,
+            gameRef,
+            modifyConfig.board,
+            e.target.value,
+            true,
+            false,
+            false,
+            true
+          )
+        }
+        value={initialGrid.value}
+      ></textarea>
       <LabelInput
         id="initial-menu-nth-pc"
         labelText="PC Bag"
@@ -1326,13 +1518,116 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
   );
 }
 
+function InteractiveGrid({ initialGrid, onClose, onSubmit }) {
+  const boardInitialGrid = validate.boardInitialGrid(initialGrid)
+    ? initialGrid
+    : '';
+  const [game, setGame] = useState(newGame({ boardInitialGrid }));
+  const [fillRow, setFillRow] = useState(false);
+
+  const toggleHighlight = () =>
+    setGame((game) => controller.toggleHighlight(game, performance.now()));
+  const toggleAutoColor = () =>
+    setGame((game) => controller.toggleAutoColor(game, performance.now()));
+  const setFillType = (type) =>
+    setGame((game) => controller.setFillType(game, type, performance.now()));
+
+  // Reorder so garbage type is first
+  const fillTypes = [
+    ...c.FILL_TYPES.filter((type) => type === 'g'),
+    ...c.FILL_TYPES.filter((type) => type !== 'g'),
+  ];
+
+  useEffect(() => {
+    const onKeyDown = (e) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
+  const onSetGame = (update) => {
+    setGame((game) => {
+      const updatedGame = update(game);
+      // Prevent fill on piece spawn
+      if (validate.boardInitialGrid(parseGridArr(updatedGame.board.grid))) {
+        return updatedGame;
+      }
+      return game;
+    });
+  };
+
+  return createPortal(
+    <div className="menu-overlay-container">
+      <button className="close" onClick={onClose}>
+        <CloseSVG />
+      </button>
+      <div className="menu-overlay">
+        <GameGrid game={game} setGame={onSetGame} fillRow={fillRow} />
+        <form
+          className="game-settings-menu-form game-settings-interactive-grid"
+          action="#"
+          onSubmit={(ev) => ev.preventDefault()}
+        >
+          <CustomCheckbox
+            id="interactive-grid-fill-row"
+            labelText="Edit mode"
+            name="fill-row"
+            checked={fillRow}
+            onToggle={(e) => setFillRow(e.target.checked)}
+            onText="Row"
+            offText="Cell"
+          />
+          <CustomCheckbox
+            id="interactive-grid-highlight"
+            labelText="Highlight cell"
+            name="highlight"
+            checked={game.highlight}
+            onToggle={(e) => toggleHighlight(e.target.checked)}
+          />
+          <CustomCheckbox
+            id="interactive-grid-autoColor"
+            labelText="Auto color"
+            name="autoColor"
+            checked={game.autoColor}
+            onToggle={(e) => toggleAutoColor(e.target.checked)}
+          />
+          <div id="interactive-grid-fill-type">
+            <p className="title">Fill Type</p>
+            <div className="options">
+              {fillTypes.map((type) => (
+                <button
+                  className={
+                    `fill-type ${type}` +
+                    (game.fillType === type ? ' active' : '')
+                  }
+                  key={type}
+                  onClick={() => setFillType(type)}
+                ></button>
+              ))}
+            </div>
+          </div>
+          <button
+            className="--global-button submit"
+            onClick={() => {
+              onSubmit(parseGridArr(game.board.grid));
+              onClose();
+            }}
+          >
+            Apply
+          </button>
+        </form>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 function GameSettingsMenuForm({ gameRef, pubSubRef, show }) {
   const [activeMenu, setActiveMenu] = useState('configuration');
 
   return (
     <div className="game-settings-menu-form-container">
       <form
-        id="game-settings-menu-form"
+        className="game-settings-menu-form"
         action="#"
         onSubmit={(ev) => ev.preventDefault()}
       >
