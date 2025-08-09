@@ -320,10 +320,14 @@ function reset(game, currentTime, save = true) {
     nextConfig.garbageSeed = undefined;
   }
 
-  // Save game in undo/redo (UR) stack (if desired)
   const nextGame = newGame(nextConfig);
-  const nextUR = save ? URLib.save(game.UR, game) : game.UR;
+  // Don't save if currently disabled or previously disabled
+  if (!nextGame.UR.enabled || !game.UR.enabled) {
+    return nextGame;
+  }
 
+  // Save game in undo/redo (UR) stack (if desired)
+  const nextUR = save ? URLib.save(game.UR, game) : game.UR;
   nextGame.UR = nextUR;
   return nextGame;
 }
@@ -1727,7 +1731,37 @@ function modifyGarbage(game, property, value, currentTime) {
   };
 }
 
+/**
+ * Modifies the board configuration of the game.
+ * If the specified property already has the given value, the game state is returned unchanged.
+ * Otherwise, updates the game's configuration with the new value for the specified property.
+ *
+ * @param {Object} game - The game state object.
+ * @param {string} property - The configuration property to modify.
+ * @param {any} value - The new value for the specified property.
+ * @returns {Object} - The updated game state object with modified board configuration.
+ */
 function modifyBoard(game, property, value) {
+  // Same as modifyConfig for now (may change with future features)
+  if (game.config[property] === undefined || game.config[property] === value) {
+    return game;
+  }
+
+  const nextConfig = { ...game.config, [property]: value };
+  return { ...game, config: nextConfig, UR: URLib.save(game.UR, game) };
+}
+
+/**
+ * Modifies the game configuration of the game.
+ * If the specified property already has the given value, the game state is returned unchanged.
+ * Otherwise, updates the game's configuration with the new value for the specified property.
+ *
+ * @param {Object} game - The game state object.
+ * @param {string} property - The configuration property to modify.
+ * @param {any} value - The new value for the specified property.
+ * @returns {Object} - The updated game state object with modified configuration.
+ */
+function config(game, property, value) {
   if (game.config[property] === undefined || game.config[property] === value) {
     return game;
   }
@@ -1772,6 +1806,7 @@ const modifyConfig = {
   queue: modifyQueue,
   garbage: modifyGarbage,
   board: modifyBoard,
+  config: config,
 };
 
 export { newGame as default, controller, modifyConfig };

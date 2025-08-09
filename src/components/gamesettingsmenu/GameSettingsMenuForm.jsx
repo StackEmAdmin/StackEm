@@ -1134,6 +1134,7 @@ function GarbageModeMenu({ gameRef, show, pubSubRef }) {
 }
 
 function InitialStateMenu({ gameRef, show, pubSubRef }) {
+  const getEnableUndo = (game) => !!game.config.enableUndo;
   const getNthPC = (game) =>
     game.config.queueNthPC < 2 ? '' : game.config.queueNthPC;
   const getInitialHold = (game) => game.config.queueInitialHold.toUpperCase();
@@ -1141,6 +1142,11 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
     game.config.queueInitialPieces.toUpperCase();
   const getLimitSize = (game) =>
     game.config.queueLimitSize === 0 ? '' : game.config.queueLimitSize;
+
+  const [enableUndo, setEnableUndo] = useState({
+    value: getEnableUndo(gameRef.current),
+    name: 'enableUndo',
+  });
 
   const [nthPC, setnthPC] = useState({
     value: getNthPC(gameRef.current),
@@ -1177,6 +1183,9 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
     }
 
     const setAll = (game) => {
+      if (enableUndo.value !== getEnableUndo(game)) {
+        set(setEnableUndo, getEnableUndo(game));
+      }
       if (limitSize.value !== getLimitSize(game)) {
         set(setLimitSize, getLimitSize(game));
       }
@@ -1196,10 +1205,26 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
     const pubSub = pubSubRef.current;
     pubSub.subscribe(handleUpdate);
     return () => pubSub.unsubscribe(handleUpdate);
-  }, [gameRef, pubSubRef, show, limitSize, nthPC, initialHold, initialPieces]);
+  }, [
+    gameRef,
+    pubSubRef,
+    show,
+    enableUndo,
+    limitSize,
+    nthPC,
+    initialHold,
+    initialPieces,
+  ]);
 
   return (
     <>
+      <CustomCheckbox
+        id="initial-menu-enable-undo"
+        labelText="Enable Undo"
+        name={enableUndo.name}
+        checked={enableUndo.value}
+        onToggle={() => toggle(setEnableUndo, gameRef, modifyConfig.config)}
+      />
       <LabelInput
         id="initial-menu-nth-pc"
         labelText="PC Bag"
