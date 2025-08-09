@@ -12,8 +12,20 @@ function validType(val, type) {
   return typeof val === type;
 }
 
+function validKick(val) {
+  return typeof val === c.KICK_TYPE && c.KICK_OPTIONS.includes(val);
+}
+
+function validAttack(val) {
+  return typeof val === c.ATTACK_TYPE && c.ATTACK_OPTIONS.includes(val);
+}
+
 function validSpins(val) {
   return typeof val === c.SPINS_TYPE && c.SPINS_OPTIONS.includes(val);
+}
+
+function validEnableUndo(val) {
+  return typeof val === c.ENABLE_UNDO_TYPE;
 }
 
 function validGravity(val) {
@@ -102,6 +114,10 @@ function validQueueNext(val) {
   return typeof val === c.QUEUE_NEXT_TYPE && c.QUEUE_NEXT_REGEX.test(val);
 }
 
+function validQueueNewSeedOnReset(val) {
+  return typeof val === c.QUEUE_NEW_SEED_ON_RESET_TYPE;
+}
+
 function validGarbageSeed(val) {
   return typeof val === c.GARBAGE_SEED_TYPE && c.GARBAGE_SEED_REGEX.test(val);
 }
@@ -110,6 +126,10 @@ function validGarbageSpawn(val) {
   return (
     typeof val === c.GARBAGE_SPAWN_TYPE && c.GARBAGE_SPAWN_OPTIONS.includes(val)
   );
+}
+
+function validGarbageComboBlock(val) {
+  return typeof val === c.GARBAGE_COMBO_BLOCK_TYPE;
 }
 
 function validGarbageCharge(val) {
@@ -147,6 +167,14 @@ function validGarbageCheesiness(val) {
   );
 }
 
+function validGarbageNewSeedOnReset(val) {
+  return typeof val === c.GARBAGE_NEW_SEED_ON_RESET_TYPE;
+}
+
+function validGarbageModeAPS(val) {
+  return typeof val === c.GARBAGE_MODE_APS_TYPE;
+}
+
 function validGarbageModeAPSAttack(val) {
   return (
     validType(val, c.GARBAGE_MODE_APS_ATTACK_TYPE) &&
@@ -179,17 +207,18 @@ function validBoardInitialGrid(val) {
   }
 
   // Split on new line and check every row
-  const rows = val.split(/\r?\n/);
+  const rows = val.trim().split(/\r?\n/);
   if (rows.length > c.BOARD_INITIAL_GRID_MAX_ROWS) {
     return false;
   }
 
   for (const row of rows) {
-    if (row.split(/\s+/).length !== c.COLS_VALUE) {
+    const trimmedRow = row.trim();
+    if (trimmedRow.split(/\s+/).length !== c.COLS_VALUE) {
       return false;
     }
 
-    if (!c.BOARD_INITIAL_GRID_ROW_REGEX.test(row)) {
+    if (!c.BOARD_INITIAL_GRID_ROW_REGEX.test(trimmedRow)) {
       return false;
     }
   }
@@ -205,7 +234,8 @@ function validBoardInitialGrid(val) {
     }
     return str[0] === 'h' ? str[2] : str[0];
   };
-  const grid = rows.reverse().map((row) => row.split(/\s+/));
+
+  const grid = rows.reverse().map((row) => row.trim().split(/\s+/));
   const legal = c.BOARD_INITIAL_GRID_ILLEGAL_COORDS.every((coord) => {
     const [row, col] = coord;
     if (grid.length <= row) {
@@ -217,8 +247,33 @@ function validBoardInitialGrid(val) {
   return legal;
 }
 
+function validateAll(config) {
+  let hasError = false;
+  let text = '';
+
+  for (const key in config) {
+    const val = config[key];
+    // If key doesn't exist error
+    if (!Object.hasOwn(validate, key)) {
+      hasError = true;
+      text = `Config error. Invalid key: ${key}\n`;
+      break;
+    }
+    if (!validate[key](val)) {
+      hasError = true;
+      text = `Config error. Invalid value for ${key}: ${val}\n`;
+      break;
+    }
+  }
+
+  return { hasError, text };
+}
+
 const validate = {
+  kick: validKick,
+  attack: validAttack,
   spins: validSpins,
+  enableUndo: validEnableUndo,
   gravity: validGravity,
   gravityLock: validGravityLock,
   gravityLockCap: validGravityLockCap,
@@ -233,40 +288,20 @@ const validate = {
   queueNthPC: validQueueNthPC,
   queueHold: validQueueHold,
   queueNext: validQueueNext,
+  queueNewSeedOnReset: validQueueNewSeedOnReset,
   garbageSeed: validGarbageSeed,
   garbageSpawn: validGarbageSpawn,
+  garbageComboBlock: validGarbageComboBlock,
   garbageCharge: validGarbageCharge,
   garbageChargeDelay: validGarbageChargeDelay,
   garbageChargePieces: validGarbageChargePieces,
   garbageCap: validGarbageCap,
   garbageCheesiness: validGarbageCheesiness,
+  garbageNewSeedOnReset: validGarbageNewSeedOnReset,
+  garbageModeAPS: validGarbageModeAPS,
   garbageModeAPSAttack: validGarbageModeAPSAttack,
   garbageModeAPSSecond: validGarbageModeAPSSecond,
   boardInitialGrid: validBoardInitialGrid,
 };
 
-const defaults = {
-  spins: c.SPINS_DEFAULT,
-  gravity: c.GRAVITY_DEFAULT,
-  gravityLock: c.GRAVITY_LOCK_DEFAULT,
-  gravityLockCap: c.GRAVITY_LOCK_CAP_DEFAULT,
-  gravityLockPenalty: c.GRAVITY_LOCK_PENALTY_DEFAULT,
-  gravityAcc: c.GRAVITY_ACC_DEFAULT,
-  gravityAccDelay: c.GRAVITY_ACC_DELAY_DEFAULT,
-  queueHoldEnabled: c.QUEUE_HOLD_ENABLED_DEFAULT,
-  queueLimitSize: c.QUEUE_LIMIT_SIZE_DEFAULT,
-  queueInitialHold: c.QUEUE_INITIAL_HOLD_DEFAULT,
-  queueInitialPieces: c.QUEUE_INITIAL_PIECES_DEFAULT,
-  queueNthPC: c.QUEUE_NTH_PC_DEFAULT,
-  garbageSpawn: c.GARBAGE_SPAWN_DEFAULT,
-  garbageCharge: c.GARBAGE_CHARGE_DEFAULT,
-  garbageChargeDelay: c.GARBAGE_CHARGE_DELAY_DEFAULT,
-  garbageChargePieces: c.GARBAGE_CHARGE_PIECES_DEFAULT,
-  garbageCap: c.GARBAGE_CAP_DEFAULT,
-  garbageCheesiness: c.GARBAGE_CHEESINESS_DEFAULT,
-  garbageModeAPSAttack: c.GARBAGE_MODE_APS_ATTACK_DEFAULT,
-  garbageModeAPSSecond: c.GARBAGE_MODE_APS_SECOND_DEFAULT,
-  boardInitialGrid: c.BOARD_INITIAL_GRID_DEFAULT,
-};
-
-export { validate as default, defaults };
+export { validate as default, validateAll };

@@ -20,6 +20,9 @@ const c = {
   COLS_TYPE: 'integer',
   COLS_VALUE: 10,
 
+  ENABLE_UNDO_TYPE: 'boolean',
+  ENABLE_UNDO_DEFAULT: false,
+
   // Spin Detection System Settings
   SPINS_TYPE: 'string',
   SPINS_OPTIONS: [
@@ -39,6 +42,22 @@ const c = {
     none: 'None',
   },
   SPINS_DEFAULT: 'tSpin',
+
+  // Kick (Rotation System) Settings
+  KICK_TYPE: 'string',
+  KICK_OPTIONS: ['srsPlus'],
+  KICK_NAME: {
+    srsPlus: 'SRS+',
+  },
+  KICK_DEFAULT: 'srsPlus',
+
+  // Attack System
+  ATTACK_TYPE: 'string',
+  ATTACK_OPTIONS: ['tsOne'],
+  ATTACK_NAME: {
+    tsOne: 'tsOne',
+  },
+  ATTACK_DEFAULT: 'tsOne',
 
   // Gravity Settings
   GRAVITY_TYPE: 'number',
@@ -70,6 +89,8 @@ const c = {
   QUEUE_SEED_TYPE: 'string',
   QUEUE_SEED_REGEX: /^[a-fA-F0-9]{32}$/,
   QUEUE_SEED_LENGTH: 32,
+  QUEUE_NEW_SEED_ON_RESET_TYPE: 'boolean',
+  QUEUE_NEW_SEED_ON_RESET_DEFAULT: true,
   QUEUE_HOLD_ENABLED_TYPE: 'boolean',
   QUEUE_HOLD_ENABLED_DEFAULT: true,
   QUEUE_LIMIT_SIZE_TYPE: 'integer',
@@ -95,6 +116,10 @@ const c = {
   GARBAGE_SEED_TYPE: 'string',
   GARBAGE_SEED_REGEX: /^[a-fA-F0-9]{32}$/,
   GARBAGE_SEED_LENGTH: 32,
+  GARBAGE_NEW_SEED_ON_RESET_TYPE: 'boolean',
+  GARBAGE_NEW_SEED_ON_RESET_DEFAULT: true,
+  GARBAGE_COMBO_BLOCK_TYPE: 'boolean',
+  GARBAGE_COMBO_BLOCK_DEFAULT: true,
   GARBAGE_SPAWN_TYPE: 'string',
   GARBAGE_SPAWN_OPTIONS: ['drop', 'instant'],
   GARBAGE_SPAWN_DEFAULT: 'drop',
@@ -119,6 +144,8 @@ const c = {
   GARBAGE_CHEESINESS_DEFAULT: 1,
 
   // Garbage Modes
+  GARBAGE_MODE_APS_TYPE: 'boolean',
+  GARBAGE_MODE_APS_DEFAULT: false,
   GARBAGE_MODE_APS_ATTACK_TYPE: 'integer',
   GARBAGE_MODE_APS_ATTACK_MIN: 0,
   GARBAGE_MODE_APS_ATTACK_MAX: 50,
