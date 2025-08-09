@@ -151,13 +151,19 @@ html #root:has(.game-settings-menu-container.show.animate) {
   transform: rotate(270deg);
 }
 
-.game-settings-menu-container .resize-target .dock-icon {
+.game-settings-menu-container .resize-target .menu-icons {
+  width: 100%;
+  padding: 1rem 2rem;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.game-settings-menu-container .resize-target .menu-icon {
   cursor: pointer;
   min-width: 3rem;
   min-height: 3rem;
-  margin-left: auto;
-  margin-top: 1rem;
-  margin-right: 1rem;
 
   border-radius: var(--border-radius);
 
@@ -166,25 +172,29 @@ html #root:has(.game-settings-menu-container.show.animate) {
   align-items: center;
 }
 
-.game-settings-menu-container .resize-target .dock-icon:hover {
+.game-settings-menu-container .resize-target .menu-icon:hover {
   background-color: var(--color-light);
 }
 
-.game-settings-menu-container .resize-target .dock-icon:hover svg {
+.game-settings-menu-container .resize-target .menu-icon:hover svg {
   color: var(--accent-color);
 }
 
-.game-settings-menu-container .resize-target .dock-icon svg {
+.game-settings-menu-container .resize-target .menu-icon svg {
   width: 1.5rem;
   height: 1.5rem;
   color: var(--text-color);
 }
 
-.game-settings-menu-container .resize-target .dock-icon:active {
+.game-settings-menu-container .resize-target .menu-icon svg.check-svg {
+  color: #5cb85c;
+}
+
+.game-settings-menu-container .resize-target .menu-icon:active {
   background-color: var(--color-lighter);
 }
 
-.game-settings-menu-container .resize-target .dock-icon:active svg {
+.game-settings-menu-container .resize-target .menu-icon:active svg {
   color: var(--text-color);
 }
 

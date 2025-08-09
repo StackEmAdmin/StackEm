@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import GameSettingsMenuForm from './GameSettingsMenuForm';
+import { encode } from '../../game/config/transform';
+import LinkSVG from '../../assets/img/LinkSVG';
+import CheckSVG from '../../assets/img/CheckSVG';
 import ChevronLeftSVG from '../../assets/img/ChevronLeftSVG';
 import CogSVG from '../../assets/img/CogSVG';
 import DockRightSVG from '../../assets/img/DockRightSVG';
@@ -60,6 +63,7 @@ function GameSettingsMenu({ parentRef, gameRef, pubSubRef }) {
     smallScreen: window.innerWidth < 768,
   });
   const [docked, setDocked] = useState(loadGameSettingsMenuDock);
+  const [animateCopy, setAnimateCopy] = useState(false);
   const containerRef = useRef(null);
   const resizeHandleRef = useRef(null);
   const resizeTargetRef = useRef(null);
@@ -194,6 +198,16 @@ function GameSettingsMenu({ parentRef, gameRef, pubSubRef }) {
     }
   }, [docked, resizeData, showSettings, parentRef]);
 
+  const onCopyLink = () => {
+    const serializedConfig = encode(gameRef.current.config);
+    const shareURL = `${window.location.origin}${window.location.pathname}?data=${serializedConfig}`;
+    navigator.clipboard.writeText(shareURL);
+    setAnimateCopy(true);
+    setTimeout(() => {
+      setAnimateCopy(false);
+    }, 5000);
+  };
+
   return (
     <div
       ref={containerRef}
@@ -219,14 +233,19 @@ function GameSettingsMenu({ parentRef, gameRef, pubSubRef }) {
         }
         className="resize-target"
       >
-        <div
-          className="dock-icon"
-          onClick={() => {
-            setDocked(!docked);
-            saveGameSettingsMenuDock(!docked);
-          }}
-        >
-          {resizeData.smallScreen ? <DockBottomSVG /> : <DockRightSVG />}
+        <div className="menu-icons">
+          <div className="menu-icon copy-link" onClick={onCopyLink}>
+            {animateCopy ? <CheckSVG /> : <LinkSVG onClick={onCopyLink} />}
+          </div>
+          <div
+            className="menu-icon dock-icon"
+            onClick={() => {
+              setDocked(!docked);
+              saveGameSettingsMenuDock(!docked);
+            }}
+          >
+            {resizeData.smallScreen ? <DockBottomSVG /> : <DockRightSVG />}
+          </div>
         </div>
         <GameSettingsMenuForm
           gameRef={gameRef}

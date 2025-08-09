@@ -1,7 +1,9 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import GameComponent from '../../components/gamecomponent/GameComponent';
 import GameSettingsMenu from '../../components/gamesettingsmenu/GameSettingsMenu';
 import newGame from '../../game/game';
+import { decode } from '../../game/config/transform';
+import { validateAll } from '../../game/config/config';
 
 import './Practice.css';
 
@@ -22,6 +24,25 @@ function Practice() {
     })()
   );
   const parentRef = useRef(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('data')) {
+      try {
+        const config = decode(params.get('data'));
+        const cleanURL = `${window.location.origin}${window.location.pathname}`;
+        window.history.replaceState({}, document.title, cleanURL);
+        const { hasError, text } = validateAll(config);
+        if (hasError) {
+          throw new Error(text);
+        }
+
+        gameRef.current = newGame(config);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  }, []);
 
   return (
     <div className="practice-container">
