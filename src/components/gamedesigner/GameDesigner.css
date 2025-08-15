@@ -1,0 +1,346 @@
+section.game-designer {
+  padding: 2rem 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.game-designer h1,
+.game-designer form h1 {
+  font-size: 2rem;
+}
+
+.game-designer h2,
+.game-designer form h2 {
+  font-size: 1.5rem;
+}
+
+.game-designer .game-designer-nav {
+  display: flex;
+  justify-content: center;
+
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.game-designer .game-designer-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+
+  width: 100%;
+}
+
+.game-designer .game-designer-nav ul li {
+  width: 45%;
+}
+
+.game-designer .game-designer-nav ul li button {
+  width: 100%;
+  height: 3rem;
+  background-color: var(--color-light);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--card-border-color);
+}
+
+.game-designer .game-designer-nav ul li button:hover {
+  border: 1px solid var(--accent-color);
+}
+
+.game-designer .game-designer-nav ul li button:active {
+  border: 1px solid var(--card-border-color-active);
+  background: var(--color-lighter);
+}
+
+.game-designer .game-designer-nav ul li button.active {
+  border: 1px solid var(--card-border-color-active);
+}
+
+.game-designer .overview-container,
+.game-designer .objectives-container,
+.game-designer .share-container {
+  display: flex;
+
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+
+  padding: 2rem;
+}
+
+.game-designer button.next {
+  position: fixed;
+  z-index: 10;
+  bottom: 4rem;
+  right: 4rem;
+
+  padding: 1rem 1.5rem;
+  font-size: 1.1rem;
+}
+
+.game-designer .rules-container {
+  position: relative;
+}
+
+.game-designer .overview-container .overview,
+.game-designer .objectives-container .objectives,
+.game-designer .share-container .share {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.game-designer .overview-container .overview ul {
+  padding-left: 2rem;
+  list-style-type: disc;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.game-designer .objectives .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.game-designer .objectives form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.game-designer .objectives form .form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  gap: 1ch;
+
+  padding-bottom: 1rem;
+}
+
+.game-designer .objectives form p {
+  display: flex;
+  align-items: center;
+}
+
+.game-designer .objectives .objectives-input {
+  display: inline;
+
+  width: 6.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--color-light);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+}
+
+.game-designer .objectives .objectives-input.error {
+  border: 1px solid var(--error-color);
+  animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.game-designer .objectives .objectives-input.stat {
+  width: 9rem;
+}
+
+.game-designer .objectives .add {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+}
+
+.game-designer .objectives .added-objectives {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.game-designer .objectives .added-objectives .added-objective {
+  display: flex;
+
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--card-border-color);
+}
+
+.game-designer .objectives .added-objectives .added-objective p {
+  display: flex;
+  align-items: center;
+}
+
+.game-designer .objectives .added-objectives .added-objective .remove {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  margin-left: auto;
+}
+
+.game-designer .objectives .added-objectives .added-objective .remove svg {
+  width: 40%;
+  height: 40%;
+}
+
+.game-designer .overview-container .overview b {
+  font-weight: bold;
+}
+
+.game-designer .rules-container {
+  --cell-size: 1.5rem;
+}
+
+.game-designer .share-container .game-comp-container-blur {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  backdrop-filter: blur(5px);
+  filter: blur(5px);
+  -webkit-filter: blur(5px);
+}
+
+.game-designer .share-container .game-comp-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+.game-designer .share-container .game-comp-container .game-comp {
+  padding: 5rem;
+  border-radius: var(--border-radius);
+  background: var(--color);
+}
+
+.game-designer .share-container .game-comp-container .close {
+  background: none;
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  padding: 1rem;
+}
+
+.game-designer .share-container .game-comp-container .close svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.game-designer .share-container .verified {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.game-designer .share-container .verified .row {
+  display: flex;
+  align-items: center;
+}
+
+.game-designer .share-container .verified textarea {
+  background: var(--color-light);
+  border: 1px solid var(--card-border-color);
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+}
+
+.game-designer .share-container .share-icon {
+  cursor: pointer;
+  width: 3rem;
+  height: 3rem;
+
+  border-radius: var(--border-radius);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.game-designer .share-container .share-icon:hover {
+  background-color: var(--color-light);
+}
+
+.game-designer .share-container .share-icon:hover svg {
+  color: var(--accent-color);
+}
+
+.game-designer .share-container .share-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--text-color);
+}
+
+.game-designer .share-container .share-icon svg.check-svg {
+  color: #5cb85c;
+}
+
+@media screen and (min-width: 1024px) {
+  .game-designer .overview,
+  .game-designer .objectives,
+  .game-designer .share {
+    max-width: 45rem;
+  }
+
+  .game-designer .game-designer-nav ul {
+    gap: 1rem;
+  }
+
+  .game-designer .game-designer-nav ul li {
+    width: auto;
+  }
+
+  .game-designer .game-designer-nav ul li button {
+    width: 8rem;
+    height: 3.25rem;
+  }
+
+  .game-designer .overview-container,
+  .game-designer .objectives-container,
+  .game-designer .share-container {
+    padding: 4rem;
+  }
+
+  .game-designer .objectives .add {
+    margin-left: auto;
+  }
+}
+
+@keyframes shake {
+  10%,
+  90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+
+  20%,
+  80% {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+
+  40%,
+  60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}

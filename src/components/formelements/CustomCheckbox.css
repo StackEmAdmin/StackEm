@@ -1,0 +1,103 @@
+.--custom-checkbox {
+  display: flex;
+  justify-content: space-between;
+}
+
+.--custom-checkbox .toggle {
+  display: none;
+}
+
+.--custom-checkbox .toggle,
+.--custom-checkbox .toggle:after,
+.--custom-checkbox .toggle:before,
+.--custom-checkbox .toggle *,
+.--custom-checkbox .toggle *:after,
+.--custom-checkbox .toggle *:before,
+.--custom-checkbox .toggle + .toggle-button {
+  box-sizing: border-box;
+}
+
+.--custom-checkbox .toggle::-moz-selection,
+.--custom-checkbox .toggle:after::-moz-selection,
+.--custom-checkbox .toggle:before::-moz-selection,
+.--custom-checkbox .toggle *::-moz-selection,
+.--custom-checkbox .toggle *:after::-moz-selection,
+.--custom-checkbox .toggle *:before::-moz-selection,
+.--custom-checkbox .toggle + .toggle-button::-moz-selection,
+.--custom-checkbox .toggle::selection,
+.--custom-checkbox .toggle:after::selection,
+.--custom-checkbox .toggle:before::selection,
+.--custom-checkbox .toggle *::selection,
+.--custom-checkbox .toggle *:after::selection,
+.--custom-checkbox .toggle *:before::selection,
+.--custom-checkbox .toggle + .toggle-button::selection {
+  background: none;
+}
+
+.--custom-checkbox .toggle + .toggle-button {
+  outline: 0;
+  display: block;
+  width: 5em;
+  height: 2em;
+  position: relative;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  border: 1px solid var(--card-border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-color);
+  font-size: 1rem;
+
+  overflow: hidden;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transition: all 0.2s ease;
+  background: var(--color-lighter);
+}
+
+.--custom-checkbox .toggle + .toggle-button:hover {
+  border: 1px solid var(--accent-color);
+}
+
+.--custom-checkbox .toggle + .toggle-button:after,
+.--custom-checkbox .toggle + .toggle-button:before {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+
+  font-weight: bold;
+
+  transition: all 0.2s ease;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.--custom-checkbox .toggle + .toggle-button:after {
+  left: 100%;
+  content: attr(data-tg-on);
+}
+
+.--custom-checkbox .toggle + .toggle-button:before {
+  left: 0;
+  content: attr(data-tg-off);
+}
+.--custom-checkbox .toggle + .toggle-button:active {
+  border: 1px solid var(--card-border-color-active);
+}
+.--custom-checkbox .toggle + .toggle-button:active:before {
+  left: -10%;
+}
+.--custom-checkbox .toggle:checked + .toggle-button:before {
+  left: -100%;
+}
+.--custom-checkbox .toggle:checked + .toggle-button:after {
+  left: 0;
+}
+.--custom-checkbox .toggle:checked + .toggle-button:active:after {
+  left: 10%;
+}

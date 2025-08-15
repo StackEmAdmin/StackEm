@@ -116,6 +116,10 @@ html #root:has(.game-settings-menu-container.show.animate) {
   animation: peak-up 1.5s 2 alternate;
 }
 
+.game-settings-menu-container .toggle-settings-button.no-animate {
+  animation: none;
+}
+
 .game-settings-menu-container .toggle-settings-button:hover {
   transform: rotate(90deg)
     translateX(calc(-0.25 * var(--toggle-settings-button-size)));
@@ -158,6 +162,10 @@ html #root:has(.game-settings-menu-container.show.animate) {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+}
+
+.game-settings-menu-container .resize-target .menu-icons > :only-child {
+  margin-left: auto;
 }
 
 .game-settings-menu-container .resize-target .menu-icon {

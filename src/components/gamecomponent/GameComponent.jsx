@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import GameRender from './gamerender/GameRender';
+import GameRender from '../gamerender/GameRender';
 import { controller } from '../../game/game';
 import {
   loadKeybinds,
@@ -17,10 +17,14 @@ import {
 } from '../../game/core/engine';
 import './GameComponent.css';
 
-function GameComponent({ gameRef, pubSubRef }) {
+function GameComponent({
+  gameRef,
+  pubSubRef,
+  onGameOver = () => {},
+  modEnabled = true,
+}) {
   const { keybinds, modKeybinds, pressed } = loadKeybinds();
   const { DAS, ARR, SRR } = loadHandling();
-  const modEnabled = true;
   const [displayGame, setDisplayGame] = useState(gameRef.current);
   const pressedRef = useRef(pressed);
   const actionsRef = useRef([]);
@@ -124,6 +128,7 @@ function GameComponent({ gameRef, pubSubRef }) {
       accumulatorRef.current = newAccumulator;
 
       if (updatedGame.over) {
+        onGameOver(updatedGame);
         updatedGame = controller.reset(gameRef.current, currentTime, false);
       }
 
@@ -172,6 +177,7 @@ function GameComponent({ gameRef, pubSubRef }) {
       );
 
       if (updatedGame.over) {
+        onGameOver(updatedGame);
         updatedGame = controller.reset(gameRef.current, currentTime, false);
       }
 

@@ -146,18 +146,21 @@ function markConnectedHighlights(board) {
  * @param {Array} game.queue.pieces - The array of next pieces.
  * @param {number} splitPoint - The point at which to split the display grid.
  * @param {boolean} calcNextPiece - Whether to calculate next piece and ghost piece.
+ * @param {boolean} calcGhost - Whether to calculate ghost piece.
  *
  * @returns {Object} An object containing the display grid split into two parts: grid and gridTop.
  * @returns {Array} grid - The bottom part of the display grid.
  * @returns {Array} gridTop - The top part of the display grid.
  */
-function grids(game, splitPoint, calcNextPiece = true) {
+function grids(game, splitPoint, calcNextPiece = true, calcGhost = true) {
   // Display grid has current piece, and ghost piece
   let displayBoard = boardLib.copyBoard(game.board);
   const nextPiece = game.queue.pieces[0];
 
   if (calcNextPiece && nextPiece) {
-    displayBoard = placeGhostPiece(displayBoard, nextPiece);
+    if (calcGhost) {
+      displayBoard = placeGhostPiece(displayBoard, nextPiece);
+    }
     displayBoard = boardLib.place(displayBoard, nextPiece);
   }
 

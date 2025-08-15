@@ -1,20 +1,11 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
-import displayCalculate from '../../../game/util/displayHelper';
+import displayCalculate from '../../game/util/displayHelper';
+import { calcRowColFromRect } from './util';
+
 import './GameRender.css';
 
 const BOARD_HEIGHT = 20;
 const MAX_GARBAGE = 30;
-
-function calcRowColFromRect(cellRect, boardRect, rows, offSet) {
-  return {
-    row:
-      rows -
-      1 -
-      Math.round((cellRect.top - boardRect.top) / cellRect.height) +
-      offSet,
-    col: Math.round((cellRect.left - boardRect.left) / cellRect.width),
-  };
-}
 
 /**
  * Returns the CSS variable corresponding to the piece type found in the input string.
@@ -26,7 +17,6 @@ function calcRowColFromRect(cellRect, boardRect, rows, offSet) {
  * @returns {string} - The CSS variable representing the color for the piece type.
  * Returns an empty string if no valid piece type is found.
  */
-
 function pieceTypeToColor(string) {
   const stringToCheck = string.replace('ghost', '');
   if (stringToCheck.includes('hg ')) {
@@ -353,7 +343,14 @@ function Stats({ b2b, combo, pieces, attack, start, combat }) {
   );
 }
 
-function GameRender({ game, fillCell, clearCell, resetFillCell }) {
+function GameRender({
+  game,
+  fillCell,
+  clearCell,
+  resetFillCell,
+  showGhost = true,
+  showStats = true,
+}) {
   const gridMouseDownRef = useRef(false);
   const clearRef = useRef(false);
 
@@ -435,7 +432,9 @@ function GameRender({ game, fillCell, clearCell, resetFillCell }) {
   // Assumes game has at least 20 rows
   const { grid, gridTop, garbageQueue } = displayCalculate.grids(
     game,
-    BOARD_HEIGHT
+    BOARD_HEIGHT,
+    true,
+    showGhost
   );
   const { nextPieces, holdPiece } = displayCalculate.queue(game);
   const { b2b, combo, numPieces, numAttack, startTime, combatScore } =
@@ -458,16 +457,19 @@ function GameRender({ game, fillCell, clearCell, resetFillCell }) {
       />
       <Next nextPieces={nextPieces} />
       <Hold piece={holdPiece} />
-      <Stats
-        b2b={b2b}
-        combo={combo}
-        pieces={numPieces}
-        attack={numAttack}
-        start={startTime}
-        combat={combatScore}
-      />
+      {showStats && (
+        <Stats
+          show={showStats}
+          b2b={b2b}
+          combo={combo}
+          pieces={numPieces}
+          attack={numAttack}
+          start={startTime}
+          combat={combatScore}
+        />
+      )}
     </div>
   );
 }
 
-export { GameRender as default, GridTop, Grid, calcRowColFromRect };
+export { GameRender as default, GridTop, Grid };

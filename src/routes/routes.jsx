@@ -47,6 +47,10 @@ const routes = [
         ],
       },
       {
+        path: '/design',
+        element: <Design />,
+      },
+      {
         path: '/design/:id',
         element: <Design />,
         loader: designLoader,

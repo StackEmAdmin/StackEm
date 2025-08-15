@@ -1,0 +1,114 @@
+.game-preset {
+  display: flex;
+  flex-direction: column;
+  padding: 4rem;
+}
+
+.game-preset .render-container {
+  --cell-size: 1.5rem;
+
+  height: calc(var(--cell-size) * 27);
+
+  display: flex;
+  gap: 5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.game-preset .render-container .game-preset-form {
+  height: 100%;
+  width: 15rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  padding-top: 5rem;
+  padding-bottom: 0;
+}
+
+.game-preset-form .form-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.game-preset-form .form-row button {
+  background: var(--color-light);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--card-border-color);
+
+  width: 45%;
+  height: 3rem;
+
+  margin-bottom: 1rem;
+}
+
+.game-preset-form .form-row button:hover {
+  border: 1px solid var(--accent-color);
+}
+
+.game-preset-form .form-row button:active {
+  background: var(--color-lighter);
+  border: 1px solid var(--card-border-color-active);
+}
+
+.game-preset-form .form-row button.active {
+  border: 1px solid var(--card-border-color-active);
+}
+
+.game-preset-form .game-preset-fill-type .title {
+  padding-bottom: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: normal;
+  margin-top: 0.7rem;
+}
+
+.game-preset-form .fill-type-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.game-preset-form button.fill-type {
+  border-radius: var(--border-radius);
+  width: 2.3rem;
+  height: 2.3rem;
+  opacity: 0.4;
+}
+
+.game-preset-form button.fill-type.active {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.game-preset-form button.fill-type.o {
+  background-color: var(--o);
+}
+
+.game-preset-form button.fill-type.i {
+  background-color: var(--i);
+}
+
+.game-preset-form button.fill-type.l {
+  background-color: var(--l);
+}
+
+.game-preset-form button.fill-type.j {
+  background-color: var(--j);
+}
+
+.game-preset-form button.fill-type.s {
+  background-color: var(--s);
+}
+
+.game-preset-form button.fill-type.t {
+  background-color: var(--t);
+}
+
+.game-preset-form button.fill-type.z {
+  background-color: var(--z);
+}
+
+.game-preset-form button.fill-type.g {
+  background-color: var(--g);
+}

@@ -52,8 +52,14 @@ function saveGameSettingsMenuDock(dock) {
   localStorage.setItem(LS_GAME_SETTINGS_MENU_DOCK, dock);
 }
 
-function GameSettingsMenu({ parentRef, gameRef, pubSubRef }) {
-  const [showSettings, setShowSettings] = useState(false);
+function GameSettingsMenu({
+  parentRef,
+  gameRef,
+  pubSubRef,
+  designer = '',
+  showMenu = false,
+}) {
+  const [showSettings, setShowSettings] = useState(showMenu);
   const [resizeData, setResizeData] = useState({
     active: false,
     height: loadGameSettingsMenuHeight(),
@@ -217,7 +223,7 @@ function GameSettingsMenu({ parentRef, gameRef, pubSubRef }) {
       }
     >
       <div
-        className="toggle-settings-button"
+        className={`toggle-settings-button${showSettings ? ' no-animate' : ''}`}
         onClick={() => setShowSettings(!showSettings)}
       >
         <ChevronLeftSVG />
@@ -234,9 +240,11 @@ function GameSettingsMenu({ parentRef, gameRef, pubSubRef }) {
         className="resize-target"
       >
         <div className="menu-icons">
-          <div className="menu-icon copy-link" onClick={onCopyLink}>
-            {animateCopy ? <CheckSVG /> : <LinkSVG onClick={onCopyLink} />}
-          </div>
+          {designer === '' && (
+            <div className="menu-icon copy-link" onClick={onCopyLink}>
+              {animateCopy ? <CheckSVG /> : <LinkSVG onClick={onCopyLink} />}
+            </div>
+          )}
           <div
             className="menu-icon dock-icon"
             onClick={() => {
@@ -251,6 +259,7 @@ function GameSettingsMenu({ parentRef, gameRef, pubSubRef }) {
           gameRef={gameRef}
           pubSubRef={pubSubRef}
           show={showSettings}
+          designer={designer}
         />
       </div>
     </div>

@@ -6,6 +6,9 @@ import { modifyConfig } from '../../game/game';
 import str from '../../util/str';
 import GameGrid from '../gamegrid/GameGrid';
 import newGame, { controller } from '../../game/game';
+import LabelInput from '../formelements/LabelInput';
+import CustomCheckbox from '../formelements/CustomCheckbox';
+import { parseGridArr, formatGrid, parseGrid } from './util';
 
 import GridSVG from '../../assets/img/GridSVG';
 import CloseSVG from '../../assets/img/CloseSVG';
@@ -29,7 +32,7 @@ function focus(setState) {
   });
 }
 
-function toggle(setState, gameRef, update) {
+function toggle(setState, gameRef, update, pubSubRef) {
   setState((state) => {
     gameRef.current = update(
       gameRef.current,
@@ -37,6 +40,11 @@ function toggle(setState, gameRef, update) {
       !state.value,
       performance.now()
     );
+    pubSubRef.current.publish({
+      type: 'config',
+      name: state.name,
+      value: !state.value,
+    });
     return { ...state, value: !state.value };
   });
 }
@@ -72,7 +80,15 @@ function blur(
   });
 }
 
-function blurSeed(setState, gameRef, update, gameValue, value, padAmount) {
+function blurSeed(
+  setState,
+  gameRef,
+  update,
+  gameValue,
+  value,
+  padAmount,
+  pubSubRef
+) {
   setState((state) => {
     if (value === '') {
       return {
@@ -91,6 +107,11 @@ function blurSeed(setState, gameRef, update, gameValue, value, padAmount) {
         paddedValue.toLowerCase(),
         performance.now()
       );
+      pubSubRef.current.publish({
+        type: 'config',
+        name: state.name,
+        value: paddedValue.toLowerCase(),
+      });
       return {
         ...state,
         value: paddedValue.toUpperCase(),
@@ -127,6 +148,7 @@ function changeUpdate(
   gameRef,
   update,
   value,
+  pubSubRef,
   valueToLower = false,
   valueToNumber = false,
   valueSkipEmpty = false,
@@ -158,183 +180,16 @@ function changeUpdate(
         val,
         performance.now()
       );
+      pubSubRef.current.publish({
+        type: 'config',
+        name: state.name,
+        value: val,
+      });
       return { ...state, value: value, error: false };
     }
 
     return { ...state, value: value };
   });
-}
-
-/**
- * Splits a string into a 2D array, where each element of the array
- * is a row of the input string, and each element of the inner arrays
- * is a column of the input string.
- *
- * If a row has fewer columns than the row with the most columns, the
- * row is padded (end) with '.' characters.
- *
- * @param {string} text - The input string to be split into a 2D array.
- * @returns {string[][]} 2D array of strings.
- */
-function tokenizeGrid(text) {
-  // Split text into rows and columns removing excess whitespace
-  const rows = text
-    .trim()
-    .split(/\r?\n/)
-    .map((line) => line.trim().split(/\s+/));
-
-  const cols = Math.max(...rows.map((row) => row.length));
-  const grid = rows.map((row) => {
-    const copy = row.slice();
-    while (copy.length < cols) {
-      copy.push('.');
-    }
-    return copy;
-  });
-
-  return grid;
-}
-
-/**
- * Formats the grid so that each column is padded to the width
- * of the longest token in that column.
- *
- * @param {string} text - The input string to be formatted.
- * @returns {string} Formatted string with padded columns.
- */
-function formatGrid(text) {
-  // Ensure valid before formatting
-  if (text === '') {
-    return text;
-  }
-
-  const grid = tokenizeGrid(text);
-  const cols = grid[0].length;
-
-  // Calculate max width for each column
-  const colsWidths = new Array(cols).fill(0);
-  for (let r = 0; r < grid.length; r++) {
-    for (let c = 0; c < grid[r].length; c++) {
-      colsWidths[c] = Math.max(colsWidths[c], grid[r][c].length);
-    }
-  }
-
-  // Convert to string with padded columns
-  const padded = grid.map((row) => {
-    return row
-      .map((col, i) => {
-        return String(col).padStart(colsWidths[i], ' ');
-      })
-      .join(' ');
-  });
-
-  return padded.join('\n');
-}
-
-/**
- * Parses the input text by removing excess whitespace.
- * This includes collapsing extra spaces between tokens.
- *
- * @param {string} text - The input string to be parsed.
- * @returns {string} Parsed string with standardized spacing.
- */
-
-function parseGrid(text) {
-  // Remove excess whitespaces
-  const parsed = text
-    .trim()
-    .split(/\r?\n/)
-    .map((line) => line.trim().split(/\s+/).join(' '))
-    .join('\n');
-
-  return parsed;
-}
-
-/**
- * Converts a 2D array into a string, where each element of the array
- * is a row of the input string, and each element of the inner arrays
- * is a column of the input string.
- *
- * @param {string[][]} arr - The 2D array to be converted into a string.
- * @returns {string} String representation of the array.
- */
-function parseGridArr(arr) {
-  let copy = arr.map((row) => row.slice()).reverse();
-
-  // Filter empty rows following the last non-empty row
-  let foundOccupied = false;
-  copy = copy.filter((row) => {
-    if (foundOccupied) {
-      return true;
-    }
-    foundOccupied = row.some((col) => col !== '');
-    return foundOccupied;
-  });
-
-  // Replace empty spaces with '.'
-  return copy
-    .map((row) => row.map((col) => col.replace(' ', '') || '.').join(' '))
-    .join('\n');
-}
-
-function CustomCheckbox({
-  id,
-  labelText,
-  name,
-  checked,
-  onToggle,
-  onText = 'On',
-  offText = 'Off',
-}) {
-  return (
-    <label htmlFor={id} className="custom-checkbox">
-      {labelText}
-      <input
-        type="checkbox"
-        className="toggle"
-        id={id}
-        name={name}
-        checked={checked}
-        onChange={onToggle}
-      />
-      <span
-        className="toggle-button"
-        data-tg-on={onText}
-        data-tg-off={offText}
-      ></span>
-    </label>
-  );
-}
-
-function LabelInput({
-  id,
-  labelText,
-  hasError,
-  name,
-  ariaLabel,
-  onFocus,
-  onBlur,
-  onChange,
-  value,
-  maxLength,
-}) {
-  return (
-    <>
-      <label htmlFor={id}>{labelText}</label>
-      <input
-        type="text"
-        className={'--global-no-spinner' + (hasError ? ' error' : '')}
-        name={name}
-        id={id}
-        aria-label={ariaLabel}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        onChange={onChange}
-        value={value}
-        maxLength={maxLength}
-      />
-    </>
-  );
 }
 
 function ConfigurationMenu({ gameRef, show, pubSubRef }) {
@@ -381,7 +236,13 @@ function ConfigurationMenu({ gameRef, show, pubSubRef }) {
         id="spins-option"
         value={spins.value}
         onChange={(e) =>
-          changeUpdate(setSpins, gameRef, modifyConfig.rules, e.target.value)
+          changeUpdate(
+            setSpins,
+            gameRef,
+            modifyConfig.rules,
+            e.target.value,
+            pubSubRef
+          )
         }
       >
         {c.SPINS_OPTIONS.map((option) => (
@@ -514,6 +375,7 @@ function GravityMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.gravity,
             e.target.value,
+            pubSubRef,
             false,
             true,
             true
@@ -537,6 +399,7 @@ function GravityMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.gravity,
             e.target.value,
+            pubSubRef,
             false,
             true,
             true
@@ -566,6 +429,7 @@ function GravityMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.gravity,
             e.target.value,
+            pubSubRef,
             false,
             true,
             true
@@ -595,6 +459,7 @@ function GravityMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.gravity,
             e.target.value,
+            pubSubRef,
             false,
             true,
             true
@@ -624,6 +489,7 @@ function GravityMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.gravity,
             e.target.value,
+            pubSubRef,
             false,
             true,
             true
@@ -653,6 +519,7 @@ function GravityMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.gravity,
             e.target.value,
+            pubSubRef,
             false,
             true,
             true
@@ -749,7 +616,9 @@ function QueueMenu({ gameRef, show, pubSubRef }) {
         labelText="New seed on reset"
         name={newSeedReset.name}
         checked={newSeedReset.value}
-        onToggle={() => toggle(setNewSeedReset, gameRef, modifyConfig.queue)}
+        onToggle={() =>
+          toggle(setNewSeedReset, gameRef, modifyConfig.queue, pubSubRef)
+        }
       />
       <LabelInput
         id="queue-menu-seed"
@@ -765,7 +634,8 @@ function QueueMenu({ gameRef, show, pubSubRef }) {
             modifyConfig.queue,
             getSeed(gameRef.current),
             e.target.value,
-            c.QUEUE_SEED_LENGTH
+            c.QUEUE_SEED_LENGTH,
+            pubSubRef
           )
         }
         onChange={(e) =>
@@ -779,7 +649,9 @@ function QueueMenu({ gameRef, show, pubSubRef }) {
         labelText="Allow hold"
         name={holdEnabled.name}
         checked={holdEnabled.value}
-        onToggle={() => toggle(setHoldEnabled, gameRef, modifyConfig.queue)}
+        onToggle={() =>
+          toggle(setHoldEnabled, gameRef, modifyConfig.queue, pubSubRef)
+        }
       />
       <LabelInput
         id="queue-menu-hold"
@@ -795,6 +667,7 @@ function QueueMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.queue,
             e.target.value,
+            pubSubRef,
             true
           )
         }
@@ -817,6 +690,7 @@ function QueueMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.queue,
             e.target.value,
+            pubSubRef,
             true
           )
         }
@@ -956,7 +830,9 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
         labelText="New seed on reset"
         name={newSeedReset.name}
         checked={newSeedReset.value}
-        onToggle={() => toggle(setNewSeedReset, gameRef, modifyConfig.garbage)}
+        onToggle={() =>
+          toggle(setNewSeedReset, gameRef, modifyConfig.garbage, pubSubRef)
+        }
       />
       <LabelInput
         id="garbage-menu-seed"
@@ -972,7 +848,8 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
             modifyConfig.garbage,
             getSeed(gameRef.current),
             e.target.value,
-            c.GARBAGE_SEED_LENGTH
+            c.GARBAGE_SEED_LENGTH,
+            pubSubRef
           )
         }
         onChange={(e) =>
@@ -986,7 +863,9 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
         labelText="Combo Blocking"
         name={comboBlock.name}
         checked={comboBlock.value}
-        onToggle={() => toggle(setComboBlock, gameRef, modifyConfig.garbage)}
+        onToggle={() =>
+          toggle(setComboBlock, gameRef, modifyConfig.garbage, pubSubRef)
+        }
       />
       <label htmlFor="garbage-menu-spawn">Garbage Spawn</label>
       <select
@@ -995,7 +874,13 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
         id="garbage-menu-spawn"
         value={spawn.value}
         onChange={(e) =>
-          changeUpdate(setSpawn, gameRef, modifyConfig.garbage, e.target.value)
+          changeUpdate(
+            setSpawn,
+            gameRef,
+            modifyConfig.garbage,
+            e.target.value,
+            pubSubRef
+          )
         }
       >
         {c.GARBAGE_SPAWN_OPTIONS.map((option) => (
@@ -1011,7 +896,13 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
         id="garbage-menu-charge"
         value={charge.value}
         onChange={(e) =>
-          changeUpdate(setCharge, gameRef, modifyConfig.garbage, e.target.value)
+          changeUpdate(
+            setCharge,
+            gameRef,
+            modifyConfig.garbage,
+            e.target.value,
+            pubSubRef
+          )
         }
       >
         {c.GARBAGE_CHARGE_OPTIONS.map((option) => (
@@ -1043,6 +934,7 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
               gameRef,
               modifyConfig.garbage,
               e.target.value,
+              pubSubRef,
               false,
               true,
               true
@@ -1074,6 +966,7 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
               gameRef,
               modifyConfig.garbage,
               e.target.value,
+              pubSubRef,
               false,
               true,
               true
@@ -1098,6 +991,7 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.garbage,
             e.target.value,
+            pubSubRef,
             false,
             true,
             true
@@ -1127,6 +1021,7 @@ function GarbageMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.garbage,
             e.target.value,
+            pubSubRef,
             false,
             true,
             true
@@ -1191,7 +1086,9 @@ function GarbageModeMenu({ gameRef, show, pubSubRef }) {
         labelText="Attack Per Second (APS)"
         name={APS.name}
         checked={APS.value}
-        onToggle={() => toggle(setAPS, gameRef, modifyConfig.garbage)}
+        onToggle={() =>
+          toggle(setAPS, gameRef, modifyConfig.garbage, pubSubRef)
+        }
       />
       <LabelInput
         id="garbage-mode-menu-APS-attack"
@@ -1215,6 +1112,7 @@ function GarbageModeMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.garbage,
             e.target.value,
+            pubSubRef,
             false,
             true,
             true
@@ -1244,6 +1142,7 @@ function GarbageModeMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.garbage,
             e.target.value,
+            pubSubRef,
             false,
             true,
             true
@@ -1364,6 +1263,7 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
               gameRef,
               modifyConfig.board,
               value,
+              pubSubRef,
               true,
               false,
               false,
@@ -1377,7 +1277,9 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
         labelText="Enable Undo"
         name={enableUndo.name}
         checked={enableUndo.value}
-        onToggle={() => toggle(setEnableUndo, gameRef, modifyConfig.config)}
+        onToggle={() =>
+          toggle(setEnableUndo, gameRef, modifyConfig.config, pubSubRef)
+        }
       />
       <div className="menu-row">
         <label htmlFor="initial-menu-initial-grid">Initial Grid</label>
@@ -1409,6 +1311,7 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.board,
             e.target.value,
+            pubSubRef,
             true,
             false,
             false,
@@ -1433,6 +1336,7 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.queue,
             e.target.value,
+            pubSubRef,
             false,
             true
           )
@@ -1456,6 +1360,7 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.queue,
             e.target.value,
+            pubSubRef,
             true
           )
         }
@@ -1482,6 +1387,7 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.queue,
             e.target.value,
+            pubSubRef,
             true
           )
         }
@@ -1508,6 +1414,7 @@ function InitialStateMenu({ gameRef, show, pubSubRef }) {
             gameRef,
             modifyConfig.queue,
             e.target.value,
+            pubSubRef,
             false,
             true
           )
@@ -1621,8 +1528,11 @@ function InteractiveGrid({ initialGrid, onClose, onSubmit }) {
   );
 }
 
-function GameSettingsMenuForm({ gameRef, pubSubRef, show }) {
+function GameSettingsMenuForm({ gameRef, pubSubRef, show, designer }) {
   const [activeMenu, setActiveMenu] = useState('configuration');
+
+  const showQueueMenu = designer !== 'stage';
+  const showInitialStateMenu = designer !== 'stage';
 
   return (
     <div className="game-settings-menu-form-container">
@@ -1643,10 +1553,12 @@ function GameSettingsMenuForm({ gameRef, pubSubRef, show }) {
         >
           <option value="configuration">Configuration</option>
           <option value="gravity">Gravity</option>
-          <option value="queue">Queue</option>
+          {showQueueMenu && <option value="queue">Queue</option>}
           <option value="garbage">Garbage</option>
           <option value="garbage-mode">Garbage Modes</option>
-          <option value="initial-state">Initial State</option>
+          {showInitialStateMenu && (
+            <option value="initial-state">Initial State</option>
+          )}
         </select>
         {activeMenu === 'configuration' && (
           <ConfigurationMenu

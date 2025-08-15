@@ -1,13 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react';
-import {
-  Grid,
-  GridTop,
-  calcRowColFromRect,
-} from '../gamecomponent/gamerender/GameRender';
+import { Grid, GridTop } from '../gamerender/GameRender';
+import { calcRowColFromRect } from '../gamerender/util';
 import { controller } from '../../game/game';
 import displayCalc from '../../game/util/displayHelper';
 
-import '../gamecomponent/gamerender/GameRender.css';
+import '../gamerender/GameRender.css';
 import './GameGrid.css';
 
 const BOARD_HEIGHT = 20;

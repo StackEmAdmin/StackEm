@@ -1,5 +1,8 @@
-.game-container {
+#root {
   --cell-size: 1.75rem;
+}
+
+.game-container {
   --border-width: 2px;
   --gap: 0rem;
   --garbage-width: 0.9rem;
