@@ -9,6 +9,10 @@ function validType(val, type) {
     return Number.isInteger(val);
   }
 
+  if (type === 'array') {
+    return Array.isArray(val);
+  }
+
   return typeof val === type;
 }
 
@@ -247,6 +251,70 @@ function validBoardInitialGrid(val) {
   return legal;
 }
 
+function validObjective(objective) {
+  // Ensure quantifier is valid
+  if (
+    !validType(objective.quantifier, c.OBJECTIVE_QUANTIFIER_TYPE) ||
+    !c.OBJECTIVE_QUANTIFIER_OPTIONS.includes(objective.quantifier)
+  ) {
+    return false;
+  }
+
+  // Ensure amount is valid
+  if (
+    !validType(objective.amount, c.OBJECTIVE_AMOUNT_TYPE) ||
+    !validRange(
+      objective.amount,
+      c.OBJECTIVE_AMOUNT_MIN,
+      c.OBJECTIVE_AMOUNT_MAX
+    )
+  ) {
+    return false;
+  }
+
+  // Ensure objective.type exists and is a valid option
+  if (
+    !validType(objective.type, c.OBJECTIVE_TYPE_TYPE) ||
+    !c.OBJECTIVE_TYPE_OPTIONS.includes(objective.type)
+  ) {
+    return false;
+  }
+
+  if (objective.type === 'spins' || objective.type === 'minis') {
+    // Additional requirements for spins and minis
+
+    // Lines can be either 'any' or integer
+    if (
+      (!validType(objective.lines, c.OBJECTIVE_LINES_TYPE[0]) &&
+        !validType(objective.lines, c.OBJECTIVE_LINES_TYPE[1])) ||
+      !c.OBJECTIVE_LINES_OPTIONS.includes(objective.lines)
+    ) {
+      return false;
+    }
+
+    // Piece can be either 'all' or a valid piece type
+    if (
+      !validType(objective.piece, c.OBJECTIVE_PIECE_TYPE) ||
+      !c.OBJECTIVE_PIECE_OPTIONS.includes(objective.piece)
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function validObjectives(val) {
+  if (
+    !validType(val, c.OBJECTIVES_TYPE) ||
+    val.length > c.OBJECTIVES_MAX_LENGTH
+  ) {
+    return false;
+  }
+
+  return val.every((objective) => validObjective(objective));
+}
+
 function validateAll(config) {
   let hasError = false;
   let text = '';
@@ -302,6 +370,7 @@ const validate = {
   garbageModeAPSAttack: validGarbageModeAPSAttack,
   garbageModeAPSSecond: validGarbageModeAPSSecond,
   boardInitialGrid: validBoardInitialGrid,
+  objectives: validObjectives,
 };
 
 export { validate as default, validateAll };

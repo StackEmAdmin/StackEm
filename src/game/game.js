@@ -5,6 +5,7 @@ import newGravity, { gravityLib } from './features/gravity/gravity';
 import { pieceLib } from './features/piece/piece';
 import newUR, { URLib } from './features/undoredo/undoredo';
 import newRules, { rulesLib } from './features/rules/rules';
+import newObjectives, { objectivesLib } from './features/objectives/objectives';
 
 /**
  * Creates a new game state object.
@@ -35,6 +36,7 @@ import newRules, { rulesLib } from './features/rules/rules';
  * @param {boolean} [options.garbageNewSeedOnReset=true] - Whether to generate a new seed for the garbage spawn system when the game is reset.
  * @param {boolean} [options.highlight=false] - Whether to highlight filled cells.
  * @param {boolean} [options.autoColor=true] - Whether to automatically color filled cells if a piece is detected.
+ * @param {string} [options.fillType='g'] - The piece type to fill on cell or row fill.
  * @param {number} [options.queueSeed=undefined] - The RNG seed for the queue.
  * @param {boolean} [options.queueHoldEnabled=true] - Whether to allow hold in the queue.
  * @param {number} [options.queueLimitSize=0] - The maximum number of pieces to generate. Provide 0 to disable limit.
@@ -44,6 +46,7 @@ import newRules, { rulesLib } from './features/rules/rules';
  * @param {boolean} [options.queueNewSeedOnReset=true] - Whether to generate a new seed for the queue when the game is reset.
  * @param {string} [options.boardInitialGrid=''] - Optional string specifying the initial board grid on game start.
  * @param {boolean} [options.enableUndo=false] - Whether to enable undo and redo.
+ * @param {Array} [options.objectives=[]] - An array of objectives to track.
  * @returns {Object} - The new game state object.
  */
 function newGame({
@@ -71,6 +74,7 @@ function newGame({
   garbageModeAPSSecond = 1,
   highlight = false,
   autoColor = true,
+  fillType = 'g',
   queueSeed = undefined,
   queueHoldEnabled = true,
   queueLimitSize = 0,
@@ -82,6 +86,7 @@ function newGame({
   garbageSeed = undefined,
   garbageNewSeedOnReset = true,
   enableUndo = false,
+  objectives = [],
 } = {}) {
   const config = {
     rows,
@@ -107,6 +112,7 @@ function newGame({
     garbageModeAPSSecond,
     highlight,
     autoColor,
+    fillType,
     queueSeed,
     queueHoldEnabled,
     queueLimitSize,
@@ -118,6 +124,7 @@ function newGame({
     garbageSeed,
     garbageNewSeedOnReset,
     enableUndo,
+    objectives,
   };
 
   // Populate rng seed in config
@@ -151,18 +158,29 @@ function newGame({
   return {
     config,
     highlight,
-    fillType: 'g',
+    fillType,
     autoColor,
     autoColorCells: [],
     UR: newUR(enableUndo),
     startTime,
     endTime: null,
+    won: false,
     over: false,
     combo: -1,
     b2b: -1,
+    maxCombo: -1,
+    maxB2B: -1,
     twist: '',
     numPieces: 0,
     numAttack: 0,
+    numLines: 0,
+    numLinesCancelled: 0,
+    numLinesSurvived: 0,
+    twists: {
+      spins: [],
+      minis: [],
+    },
+    numAllClears: 0,
     board: newBoard(rows, cols, boardInitialGrid),
     queue: queue,
     rules: newRules(kick, attack, spins),
@@ -175,6 +193,7 @@ function newGame({
       gravityAccDelay
     ),
     garbage: garbage,
+    objectives: newObjectives(objectives),
   };
 }
 
@@ -898,7 +917,7 @@ function dropHelper(game, currentTime) {
   const nextNumAttack = game.numAttack + totalAttack;
 
   // 4 Receive Garbage
-  let { nextGarbage, nextAttacks } = garbageLib.cancel(
+  let { nextGarbage, nextAttacks, linesCancelled } = garbageLib.cancel(
     game.garbage,
     totalAttack,
     attacks
@@ -911,8 +930,25 @@ function dropHelper(game, currentTime) {
   );
 
   nextGarbage = garbageLib.chargePieceDrop(updatedGarbage);
-
   sendAttack(nextAttacks, currentTime);
+
+  let nextTwists = null;
+  if (game.twist === 'spin' || game.twist === 'mini') {
+    const twistType = game.twist === 'spin' ? 'spins' : 'minis';
+    const nextTwistsType = [
+      ...game.twists[twistType],
+      {
+        piece: droppedPiece.type,
+        time: currentTime,
+        lines: lineClears,
+      },
+    ];
+
+    nextTwists = {
+      ...game.twists,
+      [twistType]: nextTwistsType,
+    };
+  }
 
   let nextGame;
   // No change in garbage
@@ -921,9 +957,15 @@ function dropHelper(game, currentTime) {
       ...game,
       numPieces: game.numPieces + 1,
       numAttack: nextNumAttack,
+      numLines: game.numLines + lineClears,
+      numLinesCancelled: game.numLinesCancelled + linesCancelled,
+      numAllClears: game.numAllClears + (allClear ? 1 : 0),
       twist: '',
+      twists: nextTwists !== null ? nextTwists : game.twists,
       combo: nextCombo,
       b2b: nextB2B,
+      maxCombo: Math.max(game.maxCombo, nextCombo),
+      maxB2B: Math.max(game.maxB2B, nextB2B),
       board: nextBoard,
       queue: nextQueue,
       UR: URLib.save(game.UR, game),
@@ -934,23 +976,42 @@ function dropHelper(game, currentTime) {
       ...game,
       numPieces: game.numPieces + 1,
       numAttack: nextNumAttack,
+      numLines: game.numLines + lineClears,
+      numLinesCancelled: game.numLinesCancelled + linesCancelled,
+      numLinesSurvived: game.numLinesSurvived + lineClears,
+      numAllClears: game.numAllClears + (allClear ? 1 : 0),
       twist: '',
+      twists: nextTwists !== null ? nextTwists : game.twists,
       combo: nextCombo,
       b2b: nextB2B,
+      maxCombo: Math.max(game.maxCombo, nextCombo),
+      maxB2B: Math.max(game.maxB2B, nextB2B),
       board: nextBoard,
       queue: nextQueue,
       garbage: nextGarbage,
       UR: URLib.save(game.UR, game),
     };
   } else {
+    const numLines = chargedGarbage.reduce(
+      (acc, lines) => acc + lines.amount,
+      0
+    );
+    const numLinesSurvived = game.numLinesSurvived + numLines + linesCancelled;
     ({ nextBoard } = boardLib.receiveGarbage(nextBoard, chargedGarbage));
     nextGame = {
       ...game,
       numPieces: game.numPieces + 1,
       numAttack: nextNumAttack,
+      numLines: game.numLines + lineClears,
+      numLinesCancelled: game.numLinesCancelled + linesCancelled,
+      numLinesSurvived: numLinesSurvived,
+      numAllClears: game.numAllClears + (allClear ? 1 : 0),
       twist: '',
+      twists: nextTwists !== null ? nextTwists : game.twists,
       combo: nextCombo,
       b2b: nextB2B,
+      maxCombo: Math.max(game.maxCombo, nextCombo),
+      maxB2B: Math.max(game.maxB2B, nextB2B),
       board: nextBoard,
       queue: nextQueue,
       garbage: nextGarbage,
@@ -978,9 +1039,11 @@ function calculateGameOver(game, currentTime) {
     return game;
   }
 
+  let nextGame = game;
+
   // Ran out of pieces
   if (game.queue.pieces.length === 0) {
-    return {
+    nextGame = {
       ...game,
       over: true,
       endTime: currentTime,
@@ -988,8 +1051,11 @@ function calculateGameOver(game, currentTime) {
   }
 
   // Next piece in queue spawns on top of occupied spot
-  if (!boardLib.isLegal(game.board, queueLib.nextPiece(game.queue))) {
-    return {
+  if (
+    !nextGame.over &&
+    !boardLib.isLegal(game.board, queueLib.nextPiece(game.queue))
+  ) {
+    nextGame = {
       ...game,
       over: true,
       endTime: currentTime,
@@ -997,15 +1063,22 @@ function calculateGameOver(game, currentTime) {
   }
 
   // Piece height position is 1.33x above board defined height (from instant garbage spawn)
-  if (queueLib.nextPiece(game.queue).y >= game.config.rows * 1.33) {
-    return {
+  if (
+    !nextGame.over &&
+    queueLib.nextPiece(game.queue).y >= game.config.rows * 1.33
+  ) {
+    nextGame = {
       ...game,
       over: true,
       endTime: currentTime,
     };
   }
 
-  return game;
+  if (nextGame.over && objectivesLib.met(game.objectives, game)) {
+    nextGame = { ...nextGame, won: true };
+  }
+
+  return nextGame;
 }
 
 function sendAttack(attacks, currentTime) {
@@ -1080,16 +1153,20 @@ function receiveGarbage(game, amount, time) {
  * @returns {Object} - The updated game state object with the updated highlight mode.
  */
 function toggleHighlight(game, currentTime) {
+  const nextConfig = { ...game.config, highlight: !game.highlight };
   return {
     ...game,
+    config: nextConfig,
     UR: URLib.save(game.UR, game),
     highlight: !game.highlight,
   };
 }
 
 function toggleAutoColor(game, currentTime) {
+  const nextConfig = { ...game.config, autoColor: !game.autoColor };
   return {
     ...game,
+    config: nextConfig,
     UR: URLib.save(game.UR, game),
     autoColor: !game.autoColor,
   };
@@ -1104,8 +1181,10 @@ function toggleAutoColor(game, currentTime) {
  * @returns {Object} - The updated game state object with the updated fill type.
  */
 function setFillType(game, nextFillType, currentTime) {
+  const nextConfig = { ...game.config, fillType: nextFillType };
   return {
     ...game,
+    config: nextConfig,
     UR: URLib.save(game.UR, game),
     fillType: nextFillType,
   };

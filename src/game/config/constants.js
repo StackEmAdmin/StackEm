@@ -171,6 +171,31 @@ const c = {
   ],
   BOARD_INITIAL_GRID_DEFAULT: '',
 
+  // Objectives
+  OBJECTIVES_TYPE: 'array',
+  OBJECTIVES_MAX_LENGTH: 10,
+  OBJECTIVE_TYPE_TYPE: 'string',
+  OBJECTIVE_TYPE_OPTIONS: [
+    'attack',
+    'lines',
+    'maxCombo',
+    'maxB2B',
+    'linesCancelled',
+    'linesSurvived',
+    'allClears',
+    'spins',
+    'minis',
+  ],
+  OBJECTIVE_QUANTIFIER_TYPE: 'string',
+  OBJECTIVE_QUANTIFIER_OPTIONS: ['atLeast', 'exact', 'atMost'],
+  OBJECTIVE_AMOUNT_TYPE: 'integer',
+  OBJECTIVE_AMOUNT_MIN: 0,
+  OBJECTIVE_AMOUNT_MAX: 9999,
+  OBJECTIVE_PIECE_TYPE: 'string',
+  OBJECTIVE_PIECE_OPTIONS: ['all', 'o', 'i', 'l', 'j', 's', 't', 'z'],
+  OBJECTIVE_LINES_TYPE: ['string', 'integer'],
+  OBJECTIVE_LINES_OPTIONS: ['any', 1, 2, 3],
+
   FILL_TYPES: ['o', 'i', 'l', 'j', 's', 't', 'z', 'g'],
 };
 

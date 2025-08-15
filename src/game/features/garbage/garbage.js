@@ -213,20 +213,21 @@ function update(garbage, startTime, currentTime) {
 
 /**
  * Cancels the attack on the garbage object and returns the updated garbage object
- * along with the updated attacks.
+ * along with the updated attacks and the number of lines cancelled.
  *
  * @param {Object} garbage - The game garbage object.
  * @param {number} totalAttack - The total attack.
  * @param {Array<Number>} attacks - The attacks.
  *
- * @returns {Object} An object containing the updated game garbage object and the updated attacks.
+ * @returns {Object} An object containing the updated game garbage object, the updated attacks, and the number of lines cancelled.
  * @returns {Object} returns.nextGarbage - The updated game garbage object.
  * @returns {Array<Number>} returns.nextAttacks - The updated attacks.
+ * @returns {number} returns.linesCancelled - The number of lines cancelled.
  */
 function cancel(garbage, totalAttack, attacks) {
   // No attack or garbage then nothing to cancel
   if (totalAttack === 0 || garbage.queue.length === 0) {
-    return { nextGarbage: garbage, nextAttacks: attacks };
+    return { nextGarbage: garbage, nextAttacks: attacks, linesCancelled: 0 };
   }
 
   // Calculate garbage cancelled by removing lines from the garbage queue
@@ -254,22 +255,23 @@ function cancel(garbage, totalAttack, attacks) {
   };
 
   if (linesCancelled === totalAttack) {
-    return { nextGarbage, nextAttacks: [] };
+    return { nextGarbage, nextAttacks: [], linesCancelled };
   }
 
   // Remove lines cancelled from attacks
   const nextAttacks = attacks.slice(0);
-  while (linesCancelled > 0 && nextAttacks.length > 0) {
-    if (nextAttacks[0] <= linesCancelled) {
-      linesCancelled -= nextAttacks[0];
+  let attacksToRemove = linesCancelled;
+  while (attacksToRemove > 0 && nextAttacks.length > 0) {
+    if (nextAttacks[0] <= attacksToRemove) {
+      attacksToRemove -= nextAttacks[0];
       nextAttacks.shift();
     } else {
-      nextAttacks[0] -= linesCancelled;
-      linesCancelled = 0;
+      nextAttacks[0] -= attacksToRemove;
+      attacksToRemove = 0;
     }
   }
 
-  return { nextGarbage, nextAttacks };
+  return { nextGarbage, nextAttacks, linesCancelled };
 }
 
 /**
